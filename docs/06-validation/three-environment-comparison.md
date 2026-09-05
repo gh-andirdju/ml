@@ -25,8 +25,8 @@ flowchart LR
 
 | Workload | MPS vs CPU | MPS vs T4 | CPU vs T4 | Training time: MPS / CPU / T4 |
 | --- | ---: | ---: | ---: | ---: |
-| Karate GCN | 100.0000% | 100.0000% | 100.0000% | MPS 0.72s; CPU/T4 not timed |
-| WikiCS GCN | 97.8463% | 98.1540% | 97.7523% | MPS 34.88s; CPU/T4 not timed |
+| Karate GCN | 100.0000% | 100.0000% | 100.0000% | Not timed comparably |
+| WikiCS GCN | 97.8463% | 98.1540% | 97.7523% | Not timed comparably |
 | Flickr GraphSAGE 256 | 98.7126% | 99.9686% | 98.7395% | 38.10s / 246.06s / 6.31s |
 | Flickr GraphSAGE 1,024 | 99.3232% | 99.3580% | 99.9003% | 158.84s / 599.42s / 17.17s |
 

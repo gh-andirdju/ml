@@ -10,7 +10,6 @@ import re
 import resource
 import subprocess
 import sys
-import time
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Literal
@@ -76,7 +75,6 @@ def maximum_rss_bytes() -> int:
 
 
 def _karate(device: torch.device) -> tuple[torch.Tensor, dict, dict, ArtifactSpec]:
-    started_at = time.perf_counter()
     logits, initial, final, accuracy, actual_device = train_karate(
         karate_graph(), 100, device, 42, 0.1, 5e-4
     )
@@ -89,7 +87,6 @@ def _karate(device: torch.device) -> tuple[torch.Tensor, dict, dict, ArtifactSpe
             "seed": 42,
             "initial_loss": round(initial, 6),
             "final_loss": round(final, 6),
-            "training_seconds": round(time.perf_counter() - started_at, 6),
         },
         {
             "type": "one-layer GCN",
@@ -101,7 +98,6 @@ def _karate(device: torch.device) -> tuple[torch.Tensor, dict, dict, ArtifactSpe
 
 
 def _wikics(device: torch.device) -> tuple[torch.Tensor, dict, dict, ArtifactSpec]:
-    started_at = time.perf_counter()
     logits, metrics = train_wikics(
         wikics_graph(PROJECT_ROOT / ".artifacts/datasets/wikics", 0),
         100,
@@ -114,7 +110,6 @@ def _wikics(device: torch.device) -> tuple[torch.Tensor, dict, dict, ArtifactSpe
         5e-4,
     )
     metrics["accuracy"] = metrics["test_accuracy"]
-    metrics["training_seconds"] = round(time.perf_counter() - started_at, 6)
     return (
         logits,
         metrics,
@@ -218,7 +213,7 @@ def main(workload: Workload, argv: Sequence[str] | None = None) -> int:
                 "sha256": digest,
                 "device": execution["device"],
                 "accuracy": execution["accuracy"],
-                "training_seconds": execution["training_seconds"],
+                "training_seconds": execution.get("training_seconds"),
                 "maximum_process_rss_bytes": execution["maximum_process_rss_bytes"],
                 "predictions_exported": len(artifact["predictions"]),
             },
