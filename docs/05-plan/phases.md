@@ -1,14 +1,14 @@
 # Implementation phases
 
 Both laptop proofs and the four small/medium Kaggle CPU and CUDA proofs are
-complete. A larger timed Flickr comparison is being validated. Data-center
+complete. The larger timed Flickr comparison also passes. Data-center
 implementation remains pending.
 
 ```mermaid
 flowchart LR
     local[Two laptop POCs<br/>verified] --> kaggle[Two Kaggle CUDA POCs<br/>verified]
     kaggle --> cpu[Two Kaggle CPU comparisons<br/>verified]
-    cpu --> larger[Larger Flickr timing pair]
+    cpu --> larger[Larger Flickr timing pair<br/>verified]
     larger --> foundation[Project foundation]
     foundation --> cluster[H200 packaging]
     cluster --> operations[Operations]

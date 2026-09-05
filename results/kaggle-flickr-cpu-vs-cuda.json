@@ -1,0 +1,82 @@
+{
+  "class_agreement": 0.987395,
+  "class_matches": 88125,
+  "classes": 7,
+  "cpu": {
+    "artifact_sha256": "baadd7f57ecee9f993ed47900e8964042cbda4a5e78103cd7615a6e09418352f",
+    "cpu_count": 4,
+    "cpu_model": "AMD EPYC 7B12",
+    "device": "cpu",
+    "metrics": {
+      "accuracy": 0.428136,
+      "best_epoch": 16,
+      "best_validation_loss": 1.58813,
+      "epochs_completed": 24,
+      "final_training_loss": 1.592376,
+      "initial_training_loss": 1.953907,
+      "model_parameters": 391175,
+      "test_accuracy": 0.428136,
+      "training_seconds": 186.154324,
+      "validation_accuracy": 0.429007
+    },
+    "poc_id": "kaggle-flickr-cpu-v1",
+    "source_revision": "95ccbccd57dc4ec9f0c7c9f143dc941e615dc520"
+  },
+  "dataset": "Flickr",
+  "framework_releases_match": {
+    "python": true,
+    "torch": true,
+    "torch_geometric": true
+  },
+  "frameworks": {
+    "cpu": {
+      "python": "3.12.13",
+      "torch": "2.10.0+cpu",
+      "torch_cuda": null,
+      "torch_geometric": "2.8.0.post1"
+    },
+    "gpu": {
+      "python": "3.12.13",
+      "torch": "2.10.0+cu128",
+      "torch_cuda": "12.8",
+      "torch_geometric": "2.8.0.post1"
+    }
+  },
+  "generated_at": "2026-09-05T13:12:46Z",
+  "gpu": {
+    "artifact_sha256": "5cca1a63b9c4726828855bd97f31280bf0798954213dbcd2a47d34c4e5d130bb",
+    "cuda_capability": [
+      7,
+      5
+    ],
+    "cuda_device_name": "Tesla T4",
+    "cuda_peak_memory_bytes": 2384444416,
+    "device": "cuda:0",
+    "metrics": {
+      "accuracy": 0.423475,
+      "best_epoch": 16,
+      "best_validation_loss": 1.5836,
+      "epochs_completed": 24,
+      "final_training_loss": 1.587552,
+      "initial_training_loss": 1.953907,
+      "model_parameters": 391175,
+      "test_accuracy": 0.423475,
+      "training_seconds": 6.313473,
+      "validation_accuracy": 0.423808
+    },
+    "poc_id": "kaggle-flickr-cuda-v1",
+    "source_revision": "95ccbccd57dc4ec9f0c7c9f143dc941e615dc520"
+  },
+  "maximum_absolute_score_difference": 0.2800816,
+  "mean_absolute_score_difference": 0.009053496,
+  "minimum_agreement": 0.95,
+  "model_parameters_match": true,
+  "nodes": 89250,
+  "predictions_compared": 89250,
+  "status": "PASS",
+  "timing": {
+    "cpu_over_gpu_speedup": 29.485,
+    "cpu_training_seconds": 186.154324,
+    "gpu_training_seconds": 6.313473
+  }
+}

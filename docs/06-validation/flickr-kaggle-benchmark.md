@@ -2,7 +2,7 @@
 
 - POC 7: Flickr GraphSAGE on Kaggle CPU only
 - POC 8: identical Flickr GraphSAGE on Kaggle Tesla T4
-- Status: prepared; remote execution pending
+- Status: Verified PASS on 2026-09-05
 
 This pair is large enough to compare compute rather than merely prove device
 compatibility. Flickr has 89,250 nodes, 899,756 edges, 500 node features, seven
@@ -33,6 +33,24 @@ flowchart LR
   model size, framework versions, and GPU peak allocated memory where relevant.
 - These artifacts are comparison-only and are not accepted by the Neo4j
   importer.
+
+## Verified evidence
+
+| Check | Kaggle CPU | Kaggle Tesla T4 |
+| --- | ---: | ---: |
+| Kernel | `andird/ml-poc-7-flickr-graphsage-cpu` v2 | `andird/ml-poc-8-flickr-graphsage-cuda` v2 |
+| Processor | AMD EPYC 7B12, 4 cores | Tesla T4, capability 7.5 |
+| Training time | 186.154 seconds | 6.313 seconds |
+| Epochs completed; best epoch | 24; 16 | 24; 16 |
+| Validation accuracy | 42.90% | 42.38% |
+| Test accuracy | 42.81% | 42.35% |
+| Model parameters | 391,175 | 391,175 |
+
+The T4 completed the measured region 29.485 times faster. Across all 89,250
+nodes, 88,125 predicted classes matched, or 98.7395%. Both ran Python 3.12.13,
+PyTorch 2.10.0, PyG 2.8.0.post1, and source revision
+`95ccbccd57dc4ec9f0c7c9f143dc941e615dc520`. The T4 peak allocated PyTorch
+memory was approximately 2.38 GB.
 
 ## Sources
 

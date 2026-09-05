@@ -2,11 +2,11 @@
 
 ## Scope and mode
 
-These instructions apply to this repository. Karate and WikiCS are verified on
-the laptop and on private Kaggle T4 CUDA jobs. Matching Kaggle CPU-only jobs
-pass the prediction-parity gate. A larger Flickr CPU/T4 benchmark is the current
-validation target. Kaggle GPU predictions pass checksum-checked local Neo4j
-import. H200 and production Neo4j remain design-only.
+These instructions apply to this repository. All eight POCs pass. Karate and
+WikiCS are verified on the laptop and private Kaggle CPU/T4 jobs. The larger
+Flickr CPU/T4 timing comparison also passes. Kaggle GPU predictions for Karate
+and WikiCS pass checksum-checked local Neo4j import. H200 and production Neo4j
+remain design-only.
 
 ```mermaid
 flowchart LR
@@ -48,7 +48,7 @@ are allowed.
 - Apple M2 Pro MacBook Pro with 16 GB memory.
 - Homebrew Python 3.14.7 and a project `.venv` are active for the POC.
 - The local POCs pin PyTorch 2.14.0, PyG 2.8.0.post1, and Neo4j Driver 6.3.0.
-- MPS and CPU profiles pass locally; both CUDA artifact proofs pass on Kaggle T4.
+- MPS and CPU profiles pass locally; all six Kaggle CPU/T4 jobs pass.
 - Temurin 21 and 25 are installed; interactive shells select Temurin 25.
 - No Homebrew OpenJDK formula or `uv` is installed.
 - Homebrew Apple Container 1.3.1 runs Neo4j Community 2026.07.1 as Linux ARM64.
@@ -68,6 +68,18 @@ are allowed.
   reports `+cpu`, while T4 reports `+cu128` for the same release.
 - Small Karate and WikiCS artifacts prove portability but contain no
   training-only timing, so they cannot establish a GPU speed benefit.
+- Flickr GraphSAGE provides the useful scale comparison: 186.15 seconds on four
+  AMD EPYC 7B12 CPU cores versus 6.31 seconds on Tesla T4, a 29.485x speedup,
+  with 98.7395% class agreement.
+- Flickr peaked at 2.38 GB of PyTorch-allocated T4 memory, leaving room for a
+  larger POC. This is not total GPU use: future memory benchmarks must also
+  record peak reserved memory and device capacity, and should use neighbor
+  sampling rather than assuming full-batch memory scales linearly.
+- Standard free Kaggle notebooks document 4 CPU cores and 30 GB RAM. GPU choices
+  document one P100 or two T4s with 4 CPU cores and 29 GB host RAM; accelerator
+  availability and quota are variable.
+- The current default Kaggle PyTorch `cu128` image cannot execute on P100
+  `sm_60`. Prefer T4 unless intentionally installing a Pascal-compatible build.
 - For a newly created Kaggle kernel, the title-derived slug must match the
   metadata `id`; use the canonical ID returned by the first push.
 - In the current Kaggle T4 image, passing a `torch.device` to CUDA peak-memory

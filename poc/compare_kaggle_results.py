@@ -76,6 +76,7 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
         "best_epoch",
         "epochs_completed",
         "training_seconds",
+        "model_parameters",
     )
     cpu_training_seconds = cpu_execution.get("training_seconds")
     gpu_training_seconds = gpu_execution.get("training_seconds")
@@ -120,11 +121,22 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
             "torch_geometric": cpu_execution.get("torch_geometric")
             == gpu_execution.get("torch_geometric"),
         },
+        "frameworks": {
+            "cpu": {
+                key: cpu_execution.get(key)
+                for key in ("python", "torch", "torch_geometric", "torch_cuda")
+            },
+            "gpu": {
+                key: gpu_execution.get(key)
+                for key in ("python", "torch", "torch_geometric", "torch_cuda")
+            },
+        },
         "timing": timing,
         "cpu": {
             "poc_id": cpu["poc_id"],
             "device": cpu_execution["device"],
             "cpu_model": cpu_execution["cpu_model"],
+            "cpu_count": cpu_execution.get("cpu_count"),
             "source_revision": cpu_execution["source_revision"],
             "metrics": {
                 key: cpu_execution[key]
@@ -136,6 +148,8 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
             "poc_id": gpu["poc_id"],
             "device": gpu_execution["device"],
             "cuda_device_name": gpu_execution["cuda_device_name"],
+            "cuda_capability": gpu_execution.get("cuda_capability"),
+            "cuda_peak_memory_bytes": gpu_execution.get("cuda_peak_memory_bytes"),
             "source_revision": gpu_execution["source_revision"],
             "metrics": {
                 key: gpu_execution[key]

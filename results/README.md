@@ -13,8 +13,7 @@ on 2026-09-05. They contain no credentials or generated model artifacts.
 | 4 - Larger WikiCS | Kaggle Tesla T4 CUDA | [`kaggle-wikics-cuda.json`](kaggle-wikics-cuda.json) |
 | 5 - Minimal Karate | Kaggle CPU versus T4 | [`kaggle-karate-cpu-vs-cuda.json`](kaggle-karate-cpu-vs-cuda.json) |
 | 6 - Larger WikiCS | Kaggle CPU versus T4 | [`kaggle-wikics-cpu-vs-cuda.json`](kaggle-wikics-cpu-vs-cuda.json) |
-| 7 - Flickr GraphSAGE | Kaggle CPU only | Pending execution |
-| 8 - Flickr GraphSAGE | Kaggle Tesla T4 CUDA | Pending execution |
+| 7 and 8 - Flickr GraphSAGE | Kaggle CPU versus T4 | [`kaggle-flickr-cpu-vs-cuda.json`](kaggle-flickr-cpu-vs-cuda.json) |
 
 Full Kaggle prediction artifacts and detached checksums are downloaded under
 ignored `.artifacts/` storage. Only compact execution/import evidence is kept in

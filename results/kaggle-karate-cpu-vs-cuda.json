@@ -4,6 +4,7 @@
   "classes": 4,
   "cpu": {
     "artifact_sha256": "ff0ddc02c47c5ec3d09d27fefc15aa37efcdea11ffab53b6638dcf0fa503781d",
+    "cpu_count": 4,
     "cpu_model": "x86_64",
     "device": "cpu",
     "metrics": {
@@ -20,10 +21,29 @@
     "torch": true,
     "torch_geometric": true
   },
-  "generated_at": "2026-09-05T12:57:04Z",
+  "frameworks": {
+    "cpu": {
+      "python": "3.12.13",
+      "torch": "2.10.0+cpu",
+      "torch_cuda": null,
+      "torch_geometric": "2.8.0.post1"
+    },
+    "gpu": {
+      "python": "3.12.13",
+      "torch": "2.10.0+cu128",
+      "torch_cuda": "12.8",
+      "torch_geometric": "2.8.0.post1"
+    }
+  },
+  "generated_at": "2026-09-05T13:12:41Z",
   "gpu": {
     "artifact_sha256": "5f85dce9373e0bac87be77829176483870ac63e27a19dbff0e3566b2e16b7453",
+    "cuda_capability": [
+      7,
+      5
+    ],
     "cuda_device_name": "Tesla T4",
+    "cuda_peak_memory_bytes": null,
     "device": "cuda:0",
     "metrics": {
       "accuracy": 0.764706,

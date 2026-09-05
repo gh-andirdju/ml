@@ -9,7 +9,7 @@ Observed and verified on 2026-09-05.
 | Storage | Approximately 512 GiB free when observed |
 | Homebrew | 6.0.21 |
 | Python | 3.14.7 project `.venv`; dependency check passes |
-| GNN | Karate and WikiCS verified locally and on Kaggle CPU/T4; Flickr benchmark pending |
+| GNN | All eight laptop and Kaggle CPU/T4 POCs pass |
 | Java | Temurin 21 and 25; interactive `JAVA_HOME` selects Temurin 25 |
 | Apple Container | Homebrew CLI and service 1.3.1; active |
 | Neo4j | Community 2026.07.1, Linux ARM64, running as `neo4j-poc` |
@@ -21,7 +21,7 @@ Observed and verified on 2026-09-05.
 | Larger POC | PASS: 11,701 nodes, 216,123 relationships, 11,701 predictions |
 | CUDA proofs | PASS on Tesla T4; 34 and 11,701 predictions imported locally |
 | Kaggle CPU proofs | PASS: Karate 100% and WikiCS 97.75% class agreement with T4 |
-| Larger Kaggle benchmark | POCs 7 and 8: Flickr GraphSAGE CPU/T4 prepared |
+| Larger Kaggle benchmark | PASS: Flickr T4 training is 29.485x faster than CPU |
 | PDF tooling | Bun 1.4.1 with local Playwright, Chromium, Marked, and Mermaid |
 | Constraints | 16 GB limit; MPS needs host Python; container needs Local Network access |
 

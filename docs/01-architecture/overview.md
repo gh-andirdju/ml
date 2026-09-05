@@ -50,8 +50,8 @@ flowchart LR
 | 4 | Kaggle Tesla T4 CUDA | WikiCS export and local Neo4j import verified |
 | 5 | Kaggle CPU only | Karate: 100% class agreement with POC 3 |
 | 6 | Kaggle CPU only | WikiCS: 97.75% class agreement with POC 4 |
-| 7 | Kaggle CPU only | Timed Flickr GraphSAGE benchmark pending |
-| 8 | Kaggle Tesla T4 CUDA | Timed Flickr GraphSAGE benchmark pending |
+| 7 | Kaggle CPU only | Flickr GraphSAGE: 186.15 seconds, 42.81% test accuracy |
+| 8 | Kaggle Tesla T4 CUDA | Flickr GraphSAGE: 6.31 seconds, 42.35% test accuracy |
 
 All eight keep compute selection outside model definitions. Kaggle receives no
 database credential and runs no Neo4j process.
