@@ -36,6 +36,8 @@ MPS and CPU are verified for both POCs on this laptop. CUDA entry points are
 ready for later NVIDIA validation. Each executable automatically uses the
 project `.venv` when present. `bun run poc:verify` and
 `bun run poc:wikics:verify` perform read-only database checks.
+The latest committed CPU and MPS outputs are indexed in
+[`results/README.md`](results/README.md).
 Regenerate all project PDFs with `bun run md:pdf:all`; output is written under
 `pdf/` with the Markdown directory structure preserved.
 
