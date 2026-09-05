@@ -14,7 +14,9 @@ patience of six.
 To fit the laptop's 16 GB unified memory without reducing the requested width,
 all environments use exact mean aggregation in fixed 262,144-edge chunks. This
 changes only the temporary workspace: every edge and node remains in the graph,
-and the layer formula and trainable parameters remain GraphSAGE-equivalent.
+and the layer formula and trainable parameters remain GraphSAGE-equivalent. A
+pure-PyTorch autograd rule recomputes the same bounded chunks during backward
+instead of retaining every gathered edge message. It is not a CUDA extension.
 
 ```mermaid
 flowchart LR

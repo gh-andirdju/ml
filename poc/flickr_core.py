@@ -27,6 +27,59 @@ EXPECTED_TEST_NODES = 22_313
 MINIMUM_GENERALIZATION_ACCURACY = 0.30
 
 
+class _ChunkedMeanAggregation(torch.autograd.Function):
+    """Differentiate exact neighborhood means without retaining edge messages."""
+
+    @staticmethod
+    def forward(
+        context,
+        features: Tensor,
+        edge_index: Tensor,
+        edge_chunk_size: int,
+    ) -> Tensor:
+        source, destination = edge_index
+        aggregated = features.new_zeros((features.size(0), features.size(1)))
+        for start in range(0, edge_index.size(1), edge_chunk_size):
+            stop = min(start + edge_chunk_size, edge_index.size(1))
+            aggregated.index_add_(
+                0,
+                destination[start:stop],
+                features.index_select(0, source[start:stop]),
+            )
+        degree = features.new_zeros(features.size(0))
+        degree.index_add_(
+            0,
+            destination,
+            torch.ones(
+                destination.numel(),
+                dtype=features.dtype,
+                device=features.device,
+            ),
+        )
+        degree.clamp_min_(1)
+        context.save_for_backward(edge_index, degree)
+        context.edge_chunk_size = edge_chunk_size
+        context.feature_count = features.size(1)
+        return aggregated / degree.unsqueeze(1)
+
+    @staticmethod
+    def backward(context, gradient: Tensor) -> tuple[Tensor, None, None]:
+        edge_index, degree = context.saved_tensors
+        source, destination = edge_index
+        feature_gradient = gradient.new_zeros(
+            (degree.numel(), context.feature_count)
+        )
+        for start in range(0, edge_index.size(1), context.edge_chunk_size):
+            stop = min(start + context.edge_chunk_size, edge_index.size(1))
+            destinations = destination[start:stop]
+            contribution = gradient.index_select(0, destinations)
+            contribution = contribution / degree.index_select(
+                0, destinations
+            ).unsqueeze(1)
+            feature_gradient.index_add_(0, source[start:stop], contribution)
+        return feature_gradient, None, None
+
+
 class ChunkedSAGEConv(SAGEConv):
     """Exact GraphSAGE mean aggregation with a bounded edge workspace."""
 
@@ -52,22 +105,11 @@ class ChunkedSAGEConv(SAGEConv):
             edge_index.ndim == 2 and edge_index.size(0) == 2,
             "Edge index must have shape [2, edges]",
         )
-        source, destination = edge_index
-        aggregated = x.new_zeros((x.size(0), x.size(1)))
-        for start in range(0, edge_index.size(1), self.edge_chunk_size):
-            stop = min(start + self.edge_chunk_size, edge_index.size(1))
-            aggregated.index_add_(
-                0,
-                destination[start:stop],
-                x.index_select(0, source[start:stop]),
-            )
-        degree = x.new_zeros(x.size(0))
-        degree.index_add_(
-            0,
-            destination,
-            torch.ones(destination.numel(), dtype=x.dtype, device=x.device),
+        aggregated = _ChunkedMeanAggregation.apply(
+            x,
+            edge_index,
+            self.edge_chunk_size,
         )
-        aggregated = aggregated / degree.clamp_min(1).unsqueeze(1)
         return self.lin_l(aggregated) + self.lin_r(x)
 
 
