@@ -17,7 +17,7 @@ FLICKR_WIDE_KAGGLE_SOURCE_REVISION = "d4115e3e408f992354a7ceced768d3e19977b54b"
 FLICKR_WIDE_MINIMUM_CUDA_PEAK_BYTES = 4 * 1024**3
 FLICKR_2048_KAGGLE_SOURCE_REVISION = "3836213605a257f70371de55036bd91ce99480a4"
 FLICKR_2048_MINIMUM_CUDA_PEAK_BYTES = 8 * 1024**3
-FLICKR_4096_KAGGLE_SOURCE_REVISION = "0670ea47352b07defdafd5638833572e1432a72a"
+FLICKR_4096_KAGGLE_SOURCE_REVISION = "bb766a2055fca069889799b7ce8cfc4762886e29"
 FLICKR_4096_MINIMUM_CUDA_PEAK_BYTES = 10 * 1024**3
 
 
@@ -316,13 +316,13 @@ KAGGLE_RUNS_BY_POC_ID = {
     ),
     FLICKR_4096_KAGGLE_CPU_SPEC.poc_id: KaggleRunSpec(
         "andird/ml-poc-13-flickr-4096-graphsage-cpu",
-        1,
+        2,
         "kaggle/flickr-4096-cpu",
         False,
     ),
     FLICKR_4096_KAGGLE_CUDA_SPEC.poc_id: KaggleRunSpec(
         "andird/ml-poc-14-flickr-4096-graphsage-cuda",
-        1,
+        2,
         "kaggle/flickr-4096-cuda",
         True,
     ),
