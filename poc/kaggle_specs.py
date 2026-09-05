@@ -126,6 +126,54 @@ FLICKR_WIDE_KAGGLE_CUDA_SPEC = ArtifactSpec(
     source_revision=FLICKR_WIDE_KAGGLE_SOURCE_REVISION,
 )
 
+KARATE_MPS_SPEC = ArtifactSpec(
+    poc_id="macos-karate-mps-v1",
+    target_poc_id="comparison-only",
+    dataset_name="KarateClub",
+    nodes=KARATE_NODES,
+    classes=KARATE_CLASSES,
+    minimum_accuracy=0.50,
+    identity={"source": "torch_geometric.datasets.KarateClub"},
+    device_type="mps",
+)
+
+WIKICS_MPS_SPEC = ArtifactSpec(
+    poc_id="macos-wikics-mps-v1",
+    target_poc_id="comparison-only",
+    dataset_name="WikiCS",
+    nodes=WIKICS_NODES,
+    classes=WIKICS_CLASSES,
+    minimum_accuracy=0.50,
+    identity={
+        "dataset_commit": DATASET_COMMIT,
+        "dataset_sha256": DATASET_SHA256,
+        "split": 0,
+    },
+    device_type="mps",
+)
+
+FLICKR_MPS_SPEC = ArtifactSpec(
+    poc_id="macos-flickr-mps-v1",
+    target_poc_id="comparison-only",
+    dataset_name="Flickr",
+    nodes=89_250,
+    classes=7,
+    minimum_accuracy=0.30,
+    identity=FLICKR_IDENTITY,
+    device_type="mps",
+)
+
+FLICKR_WIDE_MPS_SPEC = ArtifactSpec(
+    poc_id="macos-flickr-wide-mps-v1",
+    target_poc_id="comparison-only",
+    dataset_name="Flickr",
+    nodes=89_250,
+    classes=7,
+    minimum_accuracy=0.30,
+    identity=FLICKR_IDENTITY,
+    device_type="mps",
+)
+
 SPECS_BY_POC_ID = {
     KARATE_KAGGLE_SPEC.poc_id: KARATE_KAGGLE_SPEC,
     WIKICS_KAGGLE_SPEC.poc_id: WIKICS_KAGGLE_SPEC,
@@ -139,6 +187,10 @@ COMPARISON_SPECS_BY_POC_ID = {
     FLICKR_KAGGLE_CUDA_SPEC.poc_id: FLICKR_KAGGLE_CUDA_SPEC,
     FLICKR_WIDE_KAGGLE_CPU_SPEC.poc_id: FLICKR_WIDE_KAGGLE_CPU_SPEC,
     FLICKR_WIDE_KAGGLE_CUDA_SPEC.poc_id: FLICKR_WIDE_KAGGLE_CUDA_SPEC,
+    KARATE_MPS_SPEC.poc_id: KARATE_MPS_SPEC,
+    WIKICS_MPS_SPEC.poc_id: WIKICS_MPS_SPEC,
+    FLICKR_MPS_SPEC.poc_id: FLICKR_MPS_SPEC,
+    FLICKR_WIDE_MPS_SPEC.poc_id: FLICKR_WIDE_MPS_SPEC,
 }
 
 KAGGLE_RUNS_BY_POC_ID = {

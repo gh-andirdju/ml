@@ -31,6 +31,7 @@ SPEC = ArtifactSpec(
     identity={"revision": "fixed"},
 )
 CPU_SPEC = replace(SPEC, poc_id="test-cpu-v1", device_type="cpu")
+MPS_SPEC = replace(SPEC, poc_id="test-mps-v1", device_type="mps")
 
 
 def valid_artifact() -> dict:
@@ -57,6 +58,21 @@ def valid_cpu_artifact() -> dict:
             "device": "cpu",
             "cpu_model": "Test CPU",
             "cuda_available": False,
+            "accuracy": 1.0,
+        },
+    )
+
+
+def valid_mps_artifact() -> dict:
+    return artifact_from_logits(
+        spec=MPS_SPEC,
+        logits=torch.tensor([[3.0, 1.0], [1.0, 3.0]]),
+        model={"type": "test"},
+        execution={
+            "status": "PASS",
+            "device": "mps:0",
+            "mps_available": True,
+            "mps_fallback_enabled": False,
             "accuracy": 1.0,
         },
     )
@@ -103,6 +119,22 @@ class ArtifactTests(unittest.TestCase):
             write_artifact(path, artifact)
             with self.assertRaisesRegex(ProofError, "had CUDA available"):
                 load_and_validate_artifact(path, CPU_SPEC)
+
+    def test_mps_execution_is_accepted_without_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "result.json"
+            write_artifact(path, valid_mps_artifact())
+            artifact, _ = load_and_validate_artifact(path, MPS_SPEC)
+            self.assertEqual(artifact["execution"]["device"], "mps:0")
+
+    def test_mps_execution_rejects_cpu_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "result.json"
+            artifact = valid_mps_artifact()
+            artifact["execution"]["mps_fallback_enabled"] = True
+            write_artifact(path, artifact)
+            with self.assertRaisesRegex(ProofError, "allowed CPU fallback"):
+                load_and_validate_artifact(path, MPS_SPEC)
 
     def test_wrong_source_revision_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

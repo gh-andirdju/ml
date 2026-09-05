@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import os
 import time
 from pathlib import Path
 
@@ -70,6 +71,8 @@ def masked_accuracy(logits: Tensor, labels: Tensor, mask: Tensor) -> float:
 def synchronize(device: torch.device) -> None:
     if device.type == "cuda":
         torch.cuda.synchronize(device)
+    elif device.type == "mps":
+        torch.mps.synchronize()
 
 
 def train_on_device(
@@ -83,7 +86,15 @@ def train_on_device(
     learning_rate: float,
     weight_decay: float,
 ) -> tuple[Tensor, dict[str, float | int | str]]:
-    require(device.type in {"cpu", "cuda"}, "Flickr benchmark supports CPU or CUDA")
+    require(
+        device.type in {"cpu", "cuda", "mps"},
+        "Flickr benchmark supports CPU, CUDA, or MPS",
+    )
+    if device.type == "mps":
+        require(
+            os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK", "0") != "1",
+            "CPU fallback is enabled; this would not prove MPS execution",
+        )
     torch.manual_seed(seed)
     device_graph = graph.to(device)
     model = FlickrGraphSAGE(hidden_channels, dropout).to(device)

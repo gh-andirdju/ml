@@ -139,7 +139,10 @@ def load_and_validate_artifact(
     execution = artifact.get("execution")
     require(isinstance(execution, dict), "Execution metadata is missing")
     require(execution.get("status") == "PASS", "Execution did not pass")
-    require(spec.device_type in {"cpu", "cuda"}, "Artifact spec has an invalid device type")
+    require(
+        spec.device_type in {"cpu", "cuda", "mps"},
+        "Artifact spec has an invalid device type",
+    )
     if spec.device_type == "cuda":
         require(
             str(execution.get("device", "")).startswith("cuda:"),
@@ -149,12 +152,22 @@ def load_and_validate_artifact(
             bool(str(execution.get("cuda_device_name", "")).strip()),
             "CUDA device name is missing",
         )
-    else:
+    elif spec.device_type == "cpu":
         require(execution.get("device") == "cpu", "Artifact did not run on CPU")
         require(execution.get("cuda_available") is False, "CPU artifact had CUDA available")
         require(
             bool(str(execution.get("cpu_model", "")).strip()),
             "CPU model is missing",
+        )
+    else:
+        require(
+            str(execution.get("device", "")).startswith("mps"),
+            "Artifact did not run on MPS",
+        )
+        require(execution.get("mps_available") is True, "MPS was not available")
+        require(
+            execution.get("mps_fallback_enabled") is False,
+            "MPS artifact allowed CPU fallback",
         )
     if spec.source_revision is not None:
         require(
