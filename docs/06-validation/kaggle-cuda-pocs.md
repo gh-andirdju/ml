@@ -45,6 +45,10 @@ the laptop outputs.
 # After downloading both JSON and .sha256 files
 ./poc/import_kaggle_result.py .artifacts/karate/karate-cuda-result.json
 ./poc/import_kaggle_result.py .artifacts/wikics/wikics-cuda-result.json
+
+# Repeat the complete artifact/database audit without writing
+./poc/import_kaggle_result.py --verify-only .artifacts/karate/karate-cuda-result.json
+./poc/import_kaggle_result.py --verify-only .artifacts/wikics/wikics-cuda-result.json
 ```
 
 Kaggle currently documents free GPU notebooks, 12-hour sessions, and weekly GPU

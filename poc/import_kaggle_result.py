@@ -108,11 +108,25 @@ def write_wikics_batch(transaction, updates: list[dict[str, Any]], metadata: dic
     ).consume()
 
 
-def count_imported(session, spec: ArtifactSpec, digest: str) -> int:
-    label = "KarateMember" if spec == KARATE_KAGGLE_SPEC else "WikiPage"
+def count_imported(
+    session,
+    spec: ArtifactSpec,
+    digest: str,
+    metadata: dict[str, Any],
+) -> int:
+    if spec == KARATE_KAGGLE_SPEC:
+        label = "KarateMember"
+        prediction_property = "cuda_predicted_community"
+    else:
+        label = "WikiPage"
+        prediction_property = "cuda_predicted_category"
     query = f"""
         MATCH (node:{label} {{poc_id: $poc_id, cuda_artifact_sha256: $sha256}})
-        WHERE size(node.cuda_scores) = $classes
+        WHERE node.{prediction_property} IS NOT NULL
+          AND size(node.cuda_scores) = $classes
+          AND node.cuda_device_name = $device_name
+          AND node.cuda_accuracy = $accuracy
+          AND node.cuda_generated_at = $generated_at
         RETURN count(node) AS count
     """
     return int(session.run(
@@ -120,6 +134,9 @@ def count_imported(session, spec: ArtifactSpec, digest: str) -> int:
         poc_id=spec.target_poc_id,
         sha256=digest,
         classes=spec.classes,
+        device_name=metadata["device_name"],
+        accuracy=metadata["accuracy"],
+        generated_at=metadata["generated_at"],
     ).single(strict=True)["count"])
 
 
@@ -150,6 +167,11 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--expected-server-version", default="2026.07.1")
     parser.add_argument("--connection-timeout", type=float, default=60)
     parser.add_argument("--batch-size", type=int, default=500)
+    parser.add_argument(
+        "--verify-only",
+        action="store_true",
+        help="Validate the artifact and existing Neo4j import without writing",
+    )
     return parser.parse_args(argv)
 
 
@@ -184,10 +206,17 @@ def main(argv: Sequence[str] | None = None) -> int:
             verify_target_graph(session, spec)
             local_predictions = count_local_predictions(session, spec)
             require(local_predictions == spec.nodes, "Laptop predictions are incomplete")
-            writer = write_karate_batch if spec == KARATE_KAGGLE_SPEC else write_wikics_batch
-            for update_batch in batches(artifact["predictions"], arguments.batch_size):
-                session.execute_write(writer, update_batch, metadata)
-            imported = count_imported(session, spec, digest)
+            if not arguments.verify_only:
+                writer = (
+                    write_karate_batch
+                    if spec == KARATE_KAGGLE_SPEC
+                    else write_wikics_batch
+                )
+                for update_batch in batches(
+                    artifact["predictions"], arguments.batch_size
+                ):
+                    session.execute_write(writer, update_batch, metadata)
+            imported = count_imported(session, spec, digest, metadata)
             require(imported == spec.nodes, "CUDA prediction import is incomplete")
             require(
                 count_local_predictions(session, spec) == local_predictions,
@@ -197,6 +226,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         driver.close()
     print(json.dumps({
         "status": "PASS",
+        "mode": "verify-only" if arguments.verify_only else "import",
         "poc_id": spec.poc_id,
         "target_poc_id": spec.target_poc_id,
         "artifact_sha256": digest,
