@@ -75,8 +75,13 @@ class KaggleComparisonTests(unittest.TestCase):
         gpu = artifact("cuda:0")
         cpu["execution"]["training_seconds"] = 20.0
         gpu["execution"]["training_seconds"] = 4.0
+        gpu["execution"]["cuda_peak_reserved_memory_bytes"] = 6_000_000_000
+        gpu["execution"]["cuda_device_total_memory_bytes"] = 16_000_000_000
         result = compare(cpu, gpu, 0.95)
         self.assertEqual(result["timing"]["cpu_over_gpu_speedup"], 5.0)
+        self.assertEqual(
+            result["gpu"]["cuda_peak_reserved_memory_bytes"], 6_000_000_000
+        )
 
     def test_one_sided_timing_fails(self) -> None:
         cpu = artifact("cpu")

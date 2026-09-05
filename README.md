@@ -2,12 +2,14 @@
 
 ## Current summary
 
-Eight proofs use three datasets across laptop and Kaggle compute. The laptop runs
+Eight verified proofs and two ready high-memory proofs use three datasets across
+laptop and Kaggle compute. The laptop runs
 Karate and WikiCS on MPS or CPU with local Neo4j. Private Kaggle jobs run the
 same models on CPU and a free NVIDIA GPU, export checksummed predictions, and
 leave Neo4j on the laptop. A larger Flickr GraphSAGE CPU/T4 benchmark is the
-timed comparison and shows a 38.974x T4 speedup. All eight POCs pass. Production
-remains a design for a self-managed Linux H200 cluster and separate Neo4j tier.
+timed comparison and shows a 38.974x T4 speedup. POCs 9 and 10 widen that model
+to 1,024 channels for a higher-memory CPU/T4 comparison. Production remains a
+design for a self-managed Linux H200 cluster and separate Neo4j tier.
 
 ```mermaid
 flowchart LR
@@ -42,6 +44,8 @@ the model code:
 ./poc/run_kaggle_wikics_cpu.py
 ./poc/run_kaggle_flickr_cpu.py
 ./poc/run_kaggle_flickr_cuda.py
+./poc/run_kaggle_flickr_wide_cpu.py
+./poc/run_kaggle_flickr_wide_cuda.py
 ```
 
 MPS and CPU are verified for both laptop POCs. Both Kaggle CUDA proofs pass on
@@ -71,4 +75,5 @@ local RTX Blackwell `sm_120` targets.
 |  | [Kaggle CUDA proofs](docs/06-validation/kaggle-cuda-pocs.md) |
 |  | [Kaggle CPU comparison](docs/06-validation/kaggle-cpu-comparison.md) |
 |  | [Flickr CPU and GPU benchmark](docs/06-validation/flickr-kaggle-benchmark.md) |
+|  | [Flickr wide CPU and GPU benchmark](docs/06-validation/flickr-wide-kaggle-benchmark.md) |
 |  | [CUDA portability validator](docs/06-validation/cuda-portability-validator.md) |

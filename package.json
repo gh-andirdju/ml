@@ -22,6 +22,8 @@
     "poc:kaggle:wikics:cpu": ".venv/bin/python ./poc/run_kaggle_wikics_cpu.py",
     "poc:kaggle:flickr:cpu": ".venv/bin/python ./poc/run_kaggle_flickr_cpu.py",
     "poc:kaggle:flickr:cuda": ".venv/bin/python ./poc/run_kaggle_flickr_cuda.py",
+    "poc:kaggle:flickr:wide:cpu": ".venv/bin/python ./poc/run_kaggle_flickr_wide_cpu.py",
+    "poc:kaggle:flickr:wide:cuda": ".venv/bin/python ./poc/run_kaggle_flickr_wide_cuda.py",
     "poc:kaggle:compare": ".venv/bin/python ./poc/compare_kaggle_results.py",
     "poc:kaggle:import": ".venv/bin/python ./poc/import_kaggle_result.py",
     "cuda:validate": ".venv/bin/python ./poc/cuda_portability_validator.py --root . --json-output .artifacts/cuda-portability/report.json --markdown-output .artifacts/cuda-portability/report.md"

@@ -22,6 +22,7 @@ Observed and verified on 2026-09-05.
 | CUDA proofs | PASS on Tesla T4; 34 and 11,701 predictions imported locally |
 | Kaggle CPU proofs | PASS: Karate 100% and WikiCS 97.75% class agreement with T4 |
 | Larger Kaggle benchmark | PASS: Flickr T4 training is 38.974x faster than latest CPU run |
+| High-memory Kaggle pair | POCs 9 and 10 ready: 1,024-channel Flickr GraphSAGE on CPU/T4 |
 | PDF tooling | Bun 1.4.1 with local Playwright, Chromium, Marked, and Mermaid |
 | Constraints | 16 GB limit; MPS needs host Python; container needs Local Network access |
 

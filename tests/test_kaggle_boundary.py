@@ -27,6 +27,8 @@ import run_kaggle_karate_cpu
 import run_kaggle_wikics_cpu
 import run_kaggle_flickr_cpu
 import run_kaggle_flickr_cuda
+import run_kaggle_flickr_wide_cpu
+import run_kaggle_flickr_wide_cuda
 """
         subprocess.run([sys.executable, "-c", script], check=True)
 

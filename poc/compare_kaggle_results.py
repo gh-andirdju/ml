@@ -243,6 +243,18 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
             "cuda_device_name": gpu_execution["cuda_device_name"],
             "cuda_capability": gpu_execution.get("cuda_capability"),
             "cuda_peak_memory_bytes": gpu_execution.get("cuda_peak_memory_bytes"),
+            "cuda_peak_reserved_memory_bytes": gpu_execution.get(
+                "cuda_peak_reserved_memory_bytes"
+            ),
+            "cuda_device_total_memory_bytes": gpu_execution.get(
+                "cuda_device_total_memory_bytes"
+            ),
+            "cuda_peak_allocated_fraction": gpu_execution.get(
+                "cuda_peak_allocated_fraction"
+            ),
+            "cuda_peak_reserved_fraction": gpu_execution.get(
+                "cuda_peak_reserved_fraction"
+            ),
             "source_revision": gpu_execution["source_revision"],
             "metrics": {
                 key: gpu_execution[key]
@@ -333,7 +345,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     payload = json.dumps(result, indent=2, sort_keys=True, allow_nan=False) + "\n"
     if arguments.output is not None:
-        require(arguments.force or not arguments.output.exists(), f"Output already exists: {arguments.output}")
+        require(
+            arguments.force or not arguments.output.exists(),
+            f"Output already exists: {arguments.output}",
+        )
         arguments.output.parent.mkdir(parents=True, exist_ok=True)
         arguments.output.write_text(payload, encoding="utf8")
     print(payload, end="")

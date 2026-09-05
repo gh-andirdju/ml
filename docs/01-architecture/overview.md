@@ -52,8 +52,10 @@ flowchart LR
 | 6 | Kaggle CPU only | WikiCS: 97.75% class agreement with POC 4 |
 | 7 | Kaggle CPU only | Flickr GraphSAGE: 246.06 seconds, 42.81% test accuracy |
 | 8 | Kaggle Tesla T4 CUDA | Flickr GraphSAGE: 6.31 seconds, 42.35% test accuracy |
+| 9 | Kaggle CPU only | Wide Flickr GraphSAGE, ready for execution |
+| 10 | Kaggle Tesla T4 CUDA | Identical wide Flickr GraphSAGE, ready for execution |
 
-All eight keep compute selection outside model definitions. Kaggle receives no
+All ten keep compute selection outside model definitions. Kaggle receives no
 database credential and runs no Neo4j process.
 
 ## Open decisions

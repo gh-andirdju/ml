@@ -2,11 +2,11 @@
 
 ## Scope and mode
 
-These instructions apply to this repository. All eight POCs pass. Karate and
+These instructions apply to this repository. All eight executed POCs pass. Karate and
 WikiCS are verified on the laptop and private Kaggle CPU/T4 jobs. The larger
 Flickr CPU/T4 timing comparison also passes. Kaggle GPU predictions for Karate
 and WikiCS pass checksum-checked local Neo4j import. H200 and production Neo4j
-remain design-only.
+remain design-only. POCs 9 and 10 are the ready higher-memory Flickr CPU/T4 pair.
 
 ```mermaid
 flowchart LR
@@ -32,6 +32,9 @@ are allowed.
   node-class agreement; do not import CPU comparison artifacts into Neo4j.
 - Use POCs 7 and 8 only for a model-identical, training-timed Flickr GraphSAGE
   comparison; these artifacts are comparison-only and never enter Neo4j.
+- Use POCs 9 and 10 for the wider 1,024-channel Flickr comparison. Require the
+  T4 run to allocate at least 4 GiB and record peak allocated, peak reserved,
+  and total device memory; keep both artifacts comparison-only.
 - Use a single Tesla T4 as the fixed Kaggle GPU baseline. Keep T4x2 open for a
   future explicitly multi-GPU POC; do not use P100 or another accelerator
   without explicit approval.
