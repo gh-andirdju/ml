@@ -1,0 +1,159 @@
+{
+  "class_agreement": 0.998723,
+  "class_matches": 89136,
+  "classes": 7,
+  "cpu": {
+    "artifact_sha256": "36abf39a7040ab760487d491fea280700c96a4e63d9d6f5bbf2d3a848d90dcd2",
+    "cpu_count": 4,
+    "cpu_model": "AMD EPYC 7B12",
+    "cuda_available": false,
+    "device": "cpu",
+    "metrics": {
+      "accuracy": 0.423475,
+      "best_epoch": 19,
+      "best_validation_loss": 1.580818,
+      "epochs_completed": 20,
+      "final_training_loss": 1.583941,
+      "initial_training_loss": 2.164903,
+      "model_parameters": 10469383,
+      "test_accuracy": 0.423475,
+      "training_seconds": 1521.328635,
+      "validation_accuracy": 0.424032
+    },
+    "poc_id": "kaggle-flickr-2048-cpu-v1",
+    "resource_usage": {
+      "average_process_cpu_percent": 179.083,
+      "exit_status": 0,
+      "maximum_resident_set_bytes": 12129570816,
+      "maximum_resident_set_kib": 11845284,
+      "measurement": "Linux wait4 resource usage for the complete Python runner",
+      "system_cpu_seconds": 838.821272,
+      "user_cpu_seconds": 2052.648203,
+      "wall_clock_seconds": 1614.596436
+    },
+    "source_revision": "3836213605a257f70371de55036bd91ce99480a4"
+  },
+  "dataset": "Flickr",
+  "dataset_identity": {
+    "classes": 7,
+    "edges": 899756,
+    "features": 500,
+    "name": "Flickr",
+    "nodes": 89250,
+    "source": "torch_geometric.datasets.Flickr",
+    "test_nodes": 22313,
+    "training_nodes": 44625,
+    "validation_nodes": 22312
+  },
+  "framework_releases_match": {
+    "python": true,
+    "torch": true,
+    "torch_geometric": true
+  },
+  "frameworks": {
+    "cpu": {
+      "python": "3.12.13",
+      "torch": "2.10.0+cpu",
+      "torch_cuda": null,
+      "torch_geometric": "2.8.0.post1"
+    },
+    "gpu": {
+      "python": "3.12.13",
+      "torch": "2.10.0+cu128",
+      "torch_cuda": "12.8",
+      "torch_geometric": "2.8.0.post1"
+    }
+  },
+  "generated_at": "2026-09-05T16:34:45Z",
+  "gpu": {
+    "artifact_sha256": "ee9da90164a7752893ec390e630f34c44a74481c836a7c76e8c2bbf6f3ed513e",
+    "cuda_capability": [
+      7,
+      5
+    ],
+    "cuda_device_name": "Tesla T4",
+    "cuda_device_total_memory_bytes": 15636037632,
+    "cuda_peak_allocated_fraction": 0.661853,
+    "cuda_peak_memory_bytes": 10348755456,
+    "cuda_peak_reserved_fraction": 0.888699,
+    "cuda_peak_reserved_memory_bytes": 13895729152,
+    "device": "cuda:0",
+    "metrics": {
+      "accuracy": 0.423341,
+      "best_epoch": 17,
+      "best_validation_loss": 1.588939,
+      "epochs_completed": 20,
+      "final_training_loss": 1.591733,
+      "initial_training_loss": 2.164903,
+      "model_parameters": 10469383,
+      "test_accuracy": 0.423341,
+      "training_seconds": 56.579336,
+      "validation_accuracy": 0.423808
+    },
+    "poc_id": "kaggle-flickr-2048-cuda-v1",
+    "source_revision": "3836213605a257f70371de55036bd91ce99480a4"
+  },
+  "kaggle_runs": {
+    "cpu": {
+      "enable_gpu": false,
+      "enable_tpu": false,
+      "is_private": true,
+      "kernel_id": "andird/ml-poc-11-flickr-2048-graphsage-cpu",
+      "kernel_version": 3,
+      "machine_shape": null,
+      "status": "COMPLETE",
+      "status_checked_at": "2026-09-05T16:34:46Z",
+      "url": "https://www.kaggle.com/code/andird/ml-poc-11-flickr-2048-graphsage-cpu",
+      "version_reference": "andird/ml-poc-11-flickr-2048-graphsage-cpu/3"
+    },
+    "gpu": {
+      "enable_gpu": true,
+      "enable_tpu": false,
+      "is_private": true,
+      "kernel_id": "andird/ml-poc-12-flickr-2048-graphsage-cuda",
+      "kernel_version": 3,
+      "machine_shape": "NvidiaTeslaT4",
+      "status": "COMPLETE",
+      "status_checked_at": "2026-09-05T16:34:47Z",
+      "url": "https://www.kaggle.com/code/andird/ml-poc-12-flickr-2048-graphsage-cuda",
+      "version_reference": "andird/ml-poc-12-flickr-2048-graphsage-cuda/3"
+    }
+  },
+  "maximum_absolute_score_difference": 0.420619035,
+  "mean_absolute_score_difference": 0.015876527,
+  "minimum_agreement": 0.95,
+  "model": {
+    "aggregation": "exact chunked mean",
+    "benchmark_variant": "2048",
+    "dropout": 0.5,
+    "edge_chunk_size": 262144,
+    "epochs_requested": 20,
+    "hidden_channels": 2048,
+    "learning_rate": 0.01,
+    "patience": 6,
+    "seed": 42,
+    "type": "three-layer GraphSAGE",
+    "weight_decay": 0.0005
+  },
+  "model_parameters_match": true,
+  "nodes": 89250,
+  "predictions_compared": 89250,
+  "proof": {
+    "artifact_checksums_and_schema_valid": true,
+    "cpu_only": true,
+    "cpu_resource_measurement_present": true,
+    "dataset_identity_match": true,
+    "gpu_cuda": true,
+    "gpu_memory_target_met": true,
+    "immutable_kaggle_versions_complete": true,
+    "model_configuration_match": true,
+    "source_revisions_valid": true
+  },
+  "proof_status": "PASS",
+  "status": "PASS",
+  "timing": {
+    "cpu_over_gpu_speedup": 26.888,
+    "cpu_training_seconds": 1521.328635,
+    "gpu_training_seconds": 56.579336
+  }
+}

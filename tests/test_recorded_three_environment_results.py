@@ -11,6 +11,7 @@ EXPECTED_RESULTS = {
     "wikics-mps-cpu-cuda.json": "wikics",
     "flickr-mps-cpu-cuda.json": "flickr",
     "flickr-wide-mps-cpu-cuda.json": "flickr-wide",
+    "flickr-2048-mps-cpu-cuda.json": "flickr-2048",
 }
 EXPECTED_PAIRS = {
     "mps_vs_kaggle_cpu",

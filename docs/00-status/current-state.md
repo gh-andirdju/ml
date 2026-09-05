@@ -9,7 +9,7 @@ Observed and verified on 2026-09-05.
 | Storage | Approximately 512 GiB free when observed |
 | Homebrew | 6.0.21 |
 | Python | 3.14.7 project `.venv`; dependency check passes |
-| GNN | All ten execution POCs pass; all four workloads have MPS/CPU/T4 records |
+| GNN | All twelve execution POCs pass; all five workloads have MPS/CPU/T4 records |
 | Java | Temurin 21 and 25; interactive `JAVA_HOME` selects Temurin 25 |
 | Apple Container | Homebrew CLI and service 1.3.1; active |
 | Neo4j | Community 2026.07.1, Linux ARM64, running as `neo4j-poc` |
@@ -23,7 +23,8 @@ Observed and verified on 2026-09-05.
 | Kaggle CPU proofs | PASS: Karate 100% and WikiCS 97.75% class agreement with T4 |
 | Larger Kaggle benchmark | PASS: Flickr T4 training is 38.974x faster than latest CPU run |
 | High-memory Kaggle pair | PASS: T4 is 34.915x faster; 6.88 GB allocated, 9.76 GB reserved |
-| Three-environment matrix | PASS: all 12 pairwise/environment cells recorded |
+| 2,048-channel pair | PASS: T4 is 26.888x faster; 10.35 GB allocated, 13.90 GB reserved |
+| Three-environment matrix | PASS: all 15 pairwise/environment cells recorded |
 | PDF tooling | Bun 1.4.1 with local Playwright, Chromium, Marked, and Mermaid |
 | Constraints | 16 GB limit; MPS needs host Python; container needs Local Network access |
 
