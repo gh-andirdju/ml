@@ -89,6 +89,10 @@ are allowed.
   reset produced `Invalid device argument`. Calling peak-memory reset and read
   for the active device without an explicit argument works around that API
   behavior.
+- The Kaggle CPU image does not provide `/usr/bin/time`. Measure the Python
+  runner with Linux `wait4` resource usage instead; a submitted kernel that
+  fails before training is not evidence and must be superseded by a passing
+  immutable version.
 - Put downloads, extracted source, and datasets under `/kaggle/temp`; write only
   final artifacts and checksums under `/kaggle/working`.
 - Pin each wrapper to the commit containing executable code. A later pin-only

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import os
+import resource
 import subprocess
 import sys
+import time
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -23,16 +26,30 @@ subprocess.run(
     [sys.executable, "-m", "pip", "install", "--quiet", "--disable-pip-version-check", "-r", str(project / "requirements-kaggle.txt")],
     check=True,
 )
-subprocess.run(
-    [
-        "/usr/bin/time",
-        "--verbose",
-        "--output",
-        "/kaggle/working/flickr-cpu-resource-usage.txt",
-        sys.executable,
-        str(project / "poc" / "run_kaggle_flickr_cpu.py"),
-    ],
+started_at = time.monotonic()
+process = subprocess.Popen(
+    [sys.executable, str(project / "poc" / "run_kaggle_flickr_cpu.py")],
     cwd=project,
     env={**os.environ, "ML_SOURCE_REVISION": SOURCE_REVISION},
-    check=True,
+)
+_, wait_status, usage = os.wait4(process.pid, 0)
+elapsed_seconds = time.monotonic() - started_at
+process.returncode = os.waitstatus_to_exitcode(wait_status)
+if process.returncode != 0:
+    raise subprocess.CalledProcessError(process.returncode, process.args)
+resource_evidence = {
+    "measurement": "Linux wait4 resource usage for the complete Python runner",
+    "average_process_cpu_percent": round(
+        (usage.ru_utime + usage.ru_stime) / elapsed_seconds * 100, 3
+    ),
+    "maximum_resident_set_kib": usage.ru_maxrss,
+    "maximum_resident_set_bytes": usage.ru_maxrss * 1024,
+    "user_cpu_seconds": round(usage.ru_utime, 6),
+    "system_cpu_seconds": round(usage.ru_stime, 6),
+    "wall_clock_seconds": round(elapsed_seconds, 6),
+    "exit_status": process.returncode,
+}
+Path("/kaggle/working/flickr-cpu-resource-usage.json").write_text(
+    json.dumps(resource_evidence, indent=2, sort_keys=True) + "\n",
+    encoding="utf8",
 )

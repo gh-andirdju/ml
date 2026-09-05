@@ -13,7 +13,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "poc"))
 from compare_kaggle_results import (  # noqa: E402
     compare,
     kaggle_run_evidence,
-    load_gnu_time_evidence,
+    load_cpu_resource_evidence,
 )
 from kaggle_specs import KARATE_KAGGLE_CPU_SPEC, KARATE_KAGGLE_SPEC  # noqa: E402
 from poc_runtime import ProofError  # noqa: E402
@@ -96,17 +96,22 @@ class KaggleComparisonTests(unittest.TestCase):
         self.assertTrue(gpu["enable_gpu"])
         self.assertEqual(gpu["machine_shape"], "NvidiaTeslaT4")
 
-    def test_gnu_time_resource_evidence_is_parsed(self) -> None:
-        content = """\
-Percent of CPU this job got: 376%
-Elapsed (wall clock) time (h:mm:ss or m:ss): 3:12.00
-Maximum resident set size (kbytes): 8123456
-Exit status: 0
+    def test_cpu_resource_evidence_is_parsed(self) -> None:
+        content = """{
+  "average_process_cpu_percent": 376.0,
+  "exit_status": 0,
+  "maximum_resident_set_bytes": 8318418944,
+  "maximum_resident_set_kib": 8123456,
+  "measurement": "Linux wait4 resource usage",
+  "system_cpu_seconds": 12.5,
+  "user_cpu_seconds": 710.0,
+  "wall_clock_seconds": 192.0
+}
 """
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "resource.txt"
             path.write_text(content, encoding="utf8")
-            evidence = load_gnu_time_evidence(path)
+            evidence = load_cpu_resource_evidence(path)
         self.assertEqual(evidence["average_process_cpu_percent"], 376)
         self.assertEqual(evidence["maximum_resident_set_kib"], 8_123_456)
         self.assertEqual(evidence["maximum_resident_set_bytes"], 8_318_418_944)

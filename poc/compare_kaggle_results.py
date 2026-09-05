@@ -84,27 +84,36 @@ def kaggle_run_evidence(
     }
 
 
-def load_gnu_time_evidence(path: Path) -> dict[str, Any]:
-    require(path.is_file(), f"GNU time evidence not found: {path}")
-    fields: dict[str, str] = {}
-    for line in path.read_text(encoding="utf8").splitlines():
-        key, separator, value = line.strip().partition(": ")
-        if separator:
-            fields[key] = value.strip()
-    cpu_percent = fields.get("Percent of CPU this job got", "").removesuffix("%")
-    maximum_rss_kib = fields.get("Maximum resident set size (kbytes)", "")
-    require(cpu_percent.isdigit(), "GNU time CPU percentage is invalid")
-    require(maximum_rss_kib.isdigit(), "GNU time maximum RSS is invalid")
-    require(int(maximum_rss_kib) > 0, "GNU time maximum RSS is zero")
-    require(fields.get("Exit status") == "0", "GNU time command did not pass")
-    return {
-        "measurement": "GNU time --verbose around the complete Python runner",
-        "average_process_cpu_percent": int(cpu_percent),
-        "maximum_resident_set_kib": int(maximum_rss_kib),
-        "maximum_resident_set_bytes": int(maximum_rss_kib) * 1024,
-        "wall_clock": fields.get("Elapsed (wall clock) time (h:mm:ss or m:ss)"),
-        "exit_status": 0,
-    }
+def load_cpu_resource_evidence(path: Path) -> dict[str, Any]:
+    require(path.is_file(), f"CPU resource evidence not found: {path}")
+    try:
+        evidence = json.loads(path.read_text(encoding="utf8"))
+    except json.JSONDecodeError as error:
+        raise ProofError(f"CPU resource evidence is not valid JSON: {error}") from error
+    require(isinstance(evidence, dict), "CPU resource evidence must be an object")
+    require(evidence.get("exit_status") == 0, "Measured CPU runner did not pass")
+    cpu_percent = evidence.get("average_process_cpu_percent")
+    maximum_rss_kib = evidence.get("maximum_resident_set_kib")
+    maximum_rss_bytes = evidence.get("maximum_resident_set_bytes")
+    require(
+        isinstance(cpu_percent, (int, float)) and float(cpu_percent) > 0,
+        "CPU utilization evidence is invalid",
+    )
+    require(
+        isinstance(maximum_rss_kib, int) and maximum_rss_kib > 0,
+        "Maximum RSS evidence is invalid",
+    )
+    require(
+        maximum_rss_bytes == maximum_rss_kib * 1024,
+        "Maximum RSS byte conversion is invalid",
+    )
+    for field in ("user_cpu_seconds", "system_cpu_seconds", "wall_clock_seconds"):
+        value = evidence.get(field)
+        require(
+            isinstance(value, (int, float)) and float(value) >= 0,
+            f"CPU resource field is invalid: {field}",
+        )
+    return evidence
 
 
 def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) -> dict[str, Any]:
@@ -253,7 +262,7 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--cpu-resource-usage",
         type=Path,
-        help="Optional GNU time --verbose output from the CPU-only runner",
+        help="Optional wait4 resource JSON from the CPU-only runner",
     )
     return parser.parse_args(argv)
 
@@ -297,7 +306,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         ),
     }
     if arguments.cpu_resource_usage is not None:
-        result["cpu"]["resource_usage"] = load_gnu_time_evidence(
+        result["cpu"]["resource_usage"] = load_cpu_resource_evidence(
             arguments.cpu_resource_usage
         )
     local_proof_fields = {
