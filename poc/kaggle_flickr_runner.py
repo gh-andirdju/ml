@@ -140,6 +140,11 @@ def main(
         "accuracy": metrics["test_accuracy"],
         **metrics,
     }
+    edge_chunk_size = VARIANT_EDGE_CHUNK_SIZES.get(variant)
+    if edge_chunk_size is not None:
+        execution["aggregation"] = "exact chunked mean"
+        execution["edge_chunk_size"] = edge_chunk_size
+        execution["activation_checkpointing"] = variant in CHECKPOINTED_VARIANTS
     if device.type == "cpu":
         execution.update(
             {
@@ -203,11 +208,11 @@ def main(
     }
     if variant != "baseline":
         model["benchmark_variant"] = variant
-    if variant in {"2048", "4096"}:
+    if variant == "2048":
         model["edge_chunk_size"] = VARIANT_EDGE_CHUNK_SIZES[variant]
         model["aggregation"] = "exact chunked mean"
     if variant == "4096":
-        model["activation_checkpointing"] = True
+        model["aggregation"] = "exact chunked mean"
     artifact = artifact_from_logits(
         spec=spec, logits=logits, model=model, execution=execution
     )

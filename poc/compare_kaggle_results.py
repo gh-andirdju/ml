@@ -287,6 +287,15 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
             "cpu_count": cpu_execution.get("cpu_count"),
             "cuda_available": cpu_execution.get("cuda_available"),
             "source_revision": cpu_execution["source_revision"],
+            "execution_strategy": {
+                key: cpu_execution[key]
+                for key in (
+                    "aggregation",
+                    "edge_chunk_size",
+                    "activation_checkpointing",
+                )
+                if key in cpu_execution
+            },
             "metrics": {
                 key: cpu_execution[key]
                 for key in metric_names
@@ -312,6 +321,15 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
                 "cuda_peak_reserved_fraction"
             ),
             "source_revision": gpu_execution["source_revision"],
+            "execution_strategy": {
+                key: gpu_execution[key]
+                for key in (
+                    "aggregation",
+                    "edge_chunk_size",
+                    "activation_checkpointing",
+                )
+                if key in gpu_execution
+            },
             "metrics": {
                 key: gpu_execution[key]
                 for key in metric_names

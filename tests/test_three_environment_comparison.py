@@ -96,6 +96,30 @@ class ThreeEnvironmentComparisonTests(unittest.TestCase):
         self.assertEqual(result["workload"], "karate")
         self.assertEqual(result["pairwise"]["mps_vs_kaggle_gpu"]["class_agreement"], 1.0)
 
+    def test_execution_workspace_can_differ_without_changing_model(self) -> None:
+        mps = environment_artifact(KARATE_MPS_SPEC.poc_id, "mps:0")
+        cpu = environment_artifact(KARATE_KAGGLE_CPU_SPEC.poc_id, "cpu")
+        gpu = environment_artifact(KARATE_KAGGLE_SPEC.poc_id, "cuda:0")
+        for value, chunk_size in ((mps, 32), (cpu, 128), (gpu, 128)):
+            value["execution"].update(
+                {
+                    "aggregation": "exact chunked mean",
+                    "edge_chunk_size": chunk_size,
+                    "activation_checkpointing": True,
+                }
+            )
+        result = build_comparison(mps, cpu, gpu, 0.95)
+        self.assertEqual(
+            result["environments"]["mps"]["execution_strategy"]["edge_chunk_size"],
+            32,
+        )
+        self.assertEqual(
+            result["environments"]["kaggle_gpu"]["execution_strategy"][
+                "edge_chunk_size"
+            ],
+            128,
+        )
+
     def test_cross_workload_triplet_is_rejected(self) -> None:
         with self.assertRaisesRegex(ProofError, "CPU artifact is from another"):
             build_comparison(

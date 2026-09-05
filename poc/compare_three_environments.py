@@ -169,6 +169,15 @@ def build_comparison(
             "mps_available": mps["execution"]["mps_available"],
             "mps_fallback_enabled": mps["execution"]["mps_fallback_enabled"],
             "source_revision": mps["execution"]["source_revision"],
+            "execution_strategy": {
+                key: mps["execution"][key]
+                for key in (
+                    "aggregation",
+                    "edge_chunk_size",
+                    "activation_checkpointing",
+                )
+                if key in mps["execution"]
+            },
             "maximum_process_rss_bytes": mps["execution"].get(
                 "maximum_process_rss_bytes"
             ),

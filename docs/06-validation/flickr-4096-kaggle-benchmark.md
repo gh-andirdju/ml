@@ -22,15 +22,17 @@ flowchart LR
     cuda --> proof
 ```
 
-All environments use exact mean aggregation in fixed 131,072-edge chunks and
-pure-PyTorch activation checkpointing. The graph, width, layer formula, and
-trainable parameters are unchanged; the forward blocks are recomputed during
-backward to bound temporary storage. No compiled CUDA extension is introduced.
+All environments use exact mean aggregation and pure-PyTorch activation
+checkpointing. CPU and T4 use 131,072-edge workspaces; MPS uses 32,768 edges to
+fit shared memory. Chunk size controls only temporary execution storage, so the
+graph, width, layer formula, and trainable parameters are unchanged. Forward
+blocks are recomputed during backward. No compiled CUDA extension is introduced.
 
 ## Acceptance checks
 
 - Every artifact passes schema and detached SHA-256 validation.
 - Model and dataset metadata match exactly across MPS, CPU, and CUDA.
+- Each artifact records its backend-appropriate execution workspace separately.
 - All three predicted-class pairs agree on at least 95% of nodes.
 - The CPU runner proves CUDA unavailable and records Linux `wait4` resource use.
 - The CUDA runner proves one-T4 execution and at least 10 GiB peak allocation.

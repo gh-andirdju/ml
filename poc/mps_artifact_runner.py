@@ -53,6 +53,7 @@ WORKLOADS = {
     "flickr-2048",
     "flickr-4096",
 }
+MPS_VARIANT_EDGE_CHUNK_SIZES = {**VARIANT_EDGE_CHUNK_SIZES, "4096": 32_768}
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -151,6 +152,7 @@ def _flickr(
     epochs = VARIANT_EPOCHS[variant]
     patience = VARIANT_PATIENCE[variant]
     hidden_channels = VARIANT_HIDDEN_CHANNELS[variant]
+    edge_chunk_size = MPS_VARIANT_EDGE_CHUNK_SIZES.get(variant)
     logits, metrics = train_flickr(
         flickr_graph(PROJECT_ROOT / ".artifacts/datasets/flickr"),
         epochs,
@@ -161,10 +163,14 @@ def _flickr(
         42,
         0.01,
         5e-4,
-        VARIANT_EDGE_CHUNK_SIZES.get(variant),
+        edge_chunk_size,
         variant in CHECKPOINTED_VARIANTS,
     )
     metrics["accuracy"] = metrics["test_accuracy"]
+    if edge_chunk_size is not None:
+        metrics["aggregation"] = "exact chunked mean"
+        metrics["edge_chunk_size"] = edge_chunk_size
+        metrics["activation_checkpointing"] = variant in CHECKPOINTED_VARIANTS
     model = {
         "type": "three-layer GraphSAGE",
         "epochs_requested": epochs,
@@ -177,11 +183,11 @@ def _flickr(
     }
     if variant != "baseline":
         model["benchmark_variant"] = variant
-    if variant in {"2048", "4096"}:
+    if variant == "2048":
         model["edge_chunk_size"] = VARIANT_EDGE_CHUNK_SIZES[variant]
         model["aggregation"] = "exact chunked mean"
     if variant == "4096":
-        model["activation_checkpointing"] = True
+        model["aggregation"] = "exact chunked mean"
     specs = {
         "baseline": FLICKR_MPS_SPEC,
         "wide": FLICKR_WIDE_MPS_SPEC,
