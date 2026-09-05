@@ -1,5 +1,5 @@
 {
-  "id": "andird/ml-wikics-cuda-poc",
+  "id": "andird/ml-poc-4-wikics-cuda",
   "title": "ML POC 4 - WikiCS CUDA",
   "code_file": "kernel.py",
   "language": "python",

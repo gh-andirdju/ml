@@ -12,7 +12,7 @@ from torch_geometric.data import Data
 from torch_geometric.datasets import KarateClub
 from torch_geometric.nn import GCNConv
 
-from poc_runtime import require
+from proof_common import require
 
 
 EXPECTED_NODES = 34

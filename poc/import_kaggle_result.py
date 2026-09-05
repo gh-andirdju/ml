@@ -15,12 +15,11 @@ from neo4j.exceptions import Neo4jError
 
 from kaggle_specs import KARATE_KAGGLE_SPEC, SPECS_BY_POC_ID, WIKICS_KAGGLE_SPEC
 from poc_runtime import (
-    ProofError,
     connect_with_retry,
     neo4j_configuration,
-    require,
     verify_neo4j_community,
 )
+from proof_common import ProofError, require
 from result_artifact import MAX_ARTIFACT_BYTES, ArtifactSpec, load_and_validate_artifact
 
 

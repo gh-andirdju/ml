@@ -16,7 +16,7 @@ import torch
 import torch_geometric
 
 from kaggle_specs import WIKICS_KAGGLE_SPEC
-from poc_runtime import ProofError, require
+from proof_common import ProofError, require
 from result_artifact import artifact_from_logits, write_artifact
 from wikics_core import train_on_device, source_graph
 

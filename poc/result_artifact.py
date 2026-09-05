@@ -12,7 +12,7 @@ from typing import Any
 
 from torch import Tensor
 
-from poc_runtime import ProofError, require
+from proof_common import ProofError, require
 
 
 SCHEMA_VERSION = 1

@@ -14,7 +14,7 @@ from torch_geometric.data import Data
 from torch_geometric.datasets import WikiCS
 from torch_geometric.nn import GCNConv
 
-from poc_runtime import require
+from proof_common import require
 
 
 DATASET_COMMIT = "f5207315d649377f936edb66d7d93f5342f01d81"

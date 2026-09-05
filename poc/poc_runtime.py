@@ -11,9 +11,7 @@ from pathlib import Path
 import torch
 from neo4j import Driver, GraphDatabase
 
-
-class ProofError(RuntimeError):
-    """Raised when an end-to-end proof condition is not satisfied."""
+from proof_common import ProofError, require
 
 
 @dataclass(frozen=True)
@@ -21,11 +19,6 @@ class Neo4jConfiguration:
     uri: str
     user: str
     password: str
-
-
-def require(condition: bool, message: str) -> None:
-    if not condition:
-        raise ProofError(message)
 
 
 def load_environment_file(path: Path) -> None:

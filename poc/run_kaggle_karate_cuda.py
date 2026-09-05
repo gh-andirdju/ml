@@ -17,7 +17,7 @@ import torch_geometric
 
 from kaggle_specs import KARATE_KAGGLE_SPEC
 from karate_core import train_on_device, source_graph
-from poc_runtime import ProofError, require
+from proof_common import ProofError, require
 from result_artifact import artifact_from_logits, write_artifact
 
 
