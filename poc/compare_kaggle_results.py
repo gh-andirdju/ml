@@ -70,10 +70,34 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
         "initial_training_loss",
         "final_training_loss",
         "best_stopping_loss",
+        "best_validation_loss",
         "validation_accuracy",
         "test_accuracy",
         "best_epoch",
+        "epochs_completed",
+        "training_seconds",
     )
+    cpu_training_seconds = cpu_execution.get("training_seconds")
+    gpu_training_seconds = gpu_execution.get("training_seconds")
+    timing = None
+    if cpu_training_seconds is not None or gpu_training_seconds is not None:
+        require(
+            isinstance(cpu_training_seconds, (int, float))
+            and float(cpu_training_seconds) > 0,
+            "CPU training time is invalid",
+        )
+        require(
+            isinstance(gpu_training_seconds, (int, float))
+            and float(gpu_training_seconds) > 0,
+            "GPU training time is invalid",
+        )
+        timing = {
+            "cpu_training_seconds": cpu_training_seconds,
+            "gpu_training_seconds": gpu_training_seconds,
+            "cpu_over_gpu_speedup": round(
+                float(cpu_training_seconds) / float(gpu_training_seconds), 3
+            ),
+        }
     return {
         "status": "PASS",
         "generated_at": utc_now(),
@@ -89,10 +113,14 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
         ),
         "maximum_absolute_score_difference": round(maximum_score_difference, 9),
         "model_parameters_match": True,
-        "framework_versions_match": {
-            key: cpu_execution.get(key) == gpu_execution.get(key)
-            for key in ("python", "torch", "torch_geometric", "torch_cuda")
+        "framework_releases_match": {
+            "python": cpu_execution.get("python") == gpu_execution.get("python"),
+            "torch": str(cpu_execution.get("torch", "")).split("+")[0]
+            == str(gpu_execution.get("torch", "")).split("+")[0],
+            "torch_geometric": cpu_execution.get("torch_geometric")
+            == gpu_execution.get("torch_geometric"),
         },
+        "timing": timing,
         "cpu": {
             "poc_id": cpu["poc_id"],
             "device": cpu_execution["device"],

@@ -3,9 +3,10 @@
 ## Scope and mode
 
 These instructions apply to this repository. Karate and WikiCS are verified on
-the laptop and on private Kaggle T4 CUDA jobs. Matching Kaggle CPU-only jobs are
-the current validation target. Kaggle GPU predictions pass checksum-checked
-local Neo4j import. H200 and production Neo4j remain design-only.
+the laptop and on private Kaggle T4 CUDA jobs. Matching Kaggle CPU-only jobs
+pass the prediction-parity gate. A larger Flickr CPU/T4 benchmark is the current
+validation target. Kaggle GPU predictions pass checksum-checked local Neo4j
+import. H200 and production Neo4j remain design-only.
 
 ```mermaid
 flowchart LR
@@ -29,6 +30,8 @@ are allowed.
   and detached SHA-256 files back to the local Neo4j importer.
 - Keep Kaggle CPU and GPU comparisons model-identical and require at least 95%
   node-class agreement; do not import CPU comparison artifacts into Neo4j.
+- Use POCs 7 and 8 only for a model-identical, training-timed Flickr GraphSAGE
+  comparison; these artifacts are comparison-only and never enter Neo4j.
 - Keep Mac Python host-native so PyTorch can use MPS.
 - Use Apple Container for the verified local Neo4j proof.
 - Pin Neo4j and workload images to explicit versions.

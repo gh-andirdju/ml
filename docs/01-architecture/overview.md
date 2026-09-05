@@ -48,10 +48,12 @@ flowchart LR
 | 2 | Laptop MPS or CPU | Pinned WikiCS round trip through local Neo4j |
 | 3 | Kaggle Tesla T4 CUDA | Karate export and local Neo4j import verified |
 | 4 | Kaggle Tesla T4 CUDA | WikiCS export and local Neo4j import verified |
-| 5 | Kaggle CPU only | Karate comparison artifact pending |
-| 6 | Kaggle CPU only | WikiCS comparison artifact pending |
+| 5 | Kaggle CPU only | Karate: 100% class agreement with POC 3 |
+| 6 | Kaggle CPU only | WikiCS: 97.75% class agreement with POC 4 |
+| 7 | Kaggle CPU only | Timed Flickr GraphSAGE benchmark pending |
+| 8 | Kaggle Tesla T4 CUDA | Timed Flickr GraphSAGE benchmark pending |
 
-All six keep compute selection outside model definitions. Kaggle receives no
+All eight keep compute selection outside model definitions. Kaggle receives no
 database credential and runs no Neo4j process.
 
 ## Open decisions

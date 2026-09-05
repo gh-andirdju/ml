@@ -1,0 +1,54 @@
+{
+  "class_agreement": 0.977523,
+  "class_matches": 11438,
+  "classes": 10,
+  "cpu": {
+    "artifact_sha256": "344ee9455865f374bb5257c7052d11a32d4aafadb7d3134075ad064f44d8c5bf",
+    "cpu_model": "x86_64",
+    "device": "cpu",
+    "metrics": {
+      "accuracy": 0.790149,
+      "best_epoch": 84,
+      "best_stopping_loss": 0.70724,
+      "epochs_completed": 100,
+      "final_training_loss": 0.397165,
+      "initial_training_loss": 2.30157,
+      "test_accuracy": 0.790149,
+      "validation_accuracy": 0.820237
+    },
+    "poc_id": "kaggle-wikics-cpu-v1",
+    "source_revision": "1af9d656bd7d59e4a8bb6bc3d82271eb5fb4aa2f"
+  },
+  "dataset": "WikiCS",
+  "framework_releases_match": {
+    "python": true,
+    "torch": true,
+    "torch_geometric": true
+  },
+  "generated_at": "2026-09-05T12:57:06Z",
+  "gpu": {
+    "artifact_sha256": "bd63c85ecc038a97c09ab87c45f3e0f2e03c7cee0fbdbcef247cde256abc9308",
+    "cuda_device_name": "Tesla T4",
+    "device": "cuda:0",
+    "metrics": {
+      "accuracy": 0.793227,
+      "best_epoch": 81,
+      "best_stopping_loss": 0.705936,
+      "epochs_completed": 100,
+      "final_training_loss": 0.415897,
+      "initial_training_loss": 2.30157,
+      "test_accuracy": 0.793227,
+      "validation_accuracy": 0.813454
+    },
+    "poc_id": "kaggle-wikics-cuda-v1",
+    "source_revision": "c9fe91f0de80ad82d5c76ce4908ee3e8473b6165"
+  },
+  "maximum_absolute_score_difference": 0.399772495,
+  "mean_absolute_score_difference": 0.004768312,
+  "minimum_agreement": 0.95,
+  "model_parameters_match": true,
+  "nodes": 11701,
+  "predictions_compared": 11701,
+  "status": "PASS",
+  "timing": null
+}

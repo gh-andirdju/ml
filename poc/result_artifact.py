@@ -17,7 +17,7 @@ from proof_common import ProofError, require
 
 SCHEMA_VERSION = 1
 ARTIFACT_TYPE = "gnn-node-predictions"
-MAX_ARTIFACT_BYTES = 25 * 1024 * 1024
+MAX_ARTIFACT_BYTES = 50 * 1024 * 1024
 
 
 @dataclass(frozen=True)

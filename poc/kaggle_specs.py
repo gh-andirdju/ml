@@ -10,6 +10,7 @@ from wikics_core import EXPECTED_NODES as WIKICS_NODES
 
 KAGGLE_SOURCE_REVISION = "c9fe91f0de80ad82d5c76ce4908ee3e8473b6165"
 CPU_KAGGLE_SOURCE_REVISION = "1af9d656bd7d59e4a8bb6bc3d82271eb5fb4aa2f"
+FLICKR_KAGGLE_SOURCE_REVISION: str | None = None
 
 
 KARATE_KAGGLE_SPEC = ArtifactSpec(
@@ -58,6 +59,38 @@ WIKICS_KAGGLE_CPU_SPEC = ArtifactSpec(
     device_type="cpu",
 )
 
+FLICKR_IDENTITY = {
+    "source": "torch_geometric.datasets.Flickr",
+    "edges": 899_756,
+    "features": 500,
+    "training_nodes": 44_625,
+    "validation_nodes": 22_312,
+    "test_nodes": 22_313,
+}
+
+FLICKR_KAGGLE_CPU_SPEC = ArtifactSpec(
+    poc_id="kaggle-flickr-cpu-v1",
+    target_poc_id="comparison-only",
+    dataset_name="Flickr",
+    nodes=89_250,
+    classes=7,
+    minimum_accuracy=0.30,
+    identity=FLICKR_IDENTITY,
+    source_revision=FLICKR_KAGGLE_SOURCE_REVISION,
+    device_type="cpu",
+)
+
+FLICKR_KAGGLE_CUDA_SPEC = ArtifactSpec(
+    poc_id="kaggle-flickr-cuda-v1",
+    target_poc_id="comparison-only",
+    dataset_name="Flickr",
+    nodes=89_250,
+    classes=7,
+    minimum_accuracy=0.30,
+    identity=FLICKR_IDENTITY,
+    source_revision=FLICKR_KAGGLE_SOURCE_REVISION,
+)
+
 SPECS_BY_POC_ID = {
     KARATE_KAGGLE_SPEC.poc_id: KARATE_KAGGLE_SPEC,
     WIKICS_KAGGLE_SPEC.poc_id: WIKICS_KAGGLE_SPEC,
@@ -67,4 +100,6 @@ COMPARISON_SPECS_BY_POC_ID = {
     **SPECS_BY_POC_ID,
     KARATE_KAGGLE_CPU_SPEC.poc_id: KARATE_KAGGLE_CPU_SPEC,
     WIKICS_KAGGLE_CPU_SPEC.poc_id: WIKICS_KAGGLE_CPU_SPEC,
+    FLICKR_KAGGLE_CPU_SPEC.poc_id: FLICKR_KAGGLE_CPU_SPEC,
+    FLICKR_KAGGLE_CUDA_SPEC.poc_id: FLICKR_KAGGLE_CUDA_SPEC,
 }

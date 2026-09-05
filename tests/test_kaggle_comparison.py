@@ -64,6 +64,20 @@ class KaggleComparisonTests(unittest.TestCase):
         with self.assertRaisesRegex(ProofError, "Model parameters differ"):
             compare(artifact("cpu"), gpu, 0.95)
 
+    def test_timed_comparison_reports_speedup(self) -> None:
+        cpu = artifact("cpu")
+        gpu = artifact("cuda:0")
+        cpu["execution"]["training_seconds"] = 20.0
+        gpu["execution"]["training_seconds"] = 4.0
+        result = compare(cpu, gpu, 0.95)
+        self.assertEqual(result["timing"]["cpu_over_gpu_speedup"], 5.0)
+
+    def test_one_sided_timing_fails(self) -> None:
+        cpu = artifact("cpu")
+        cpu["execution"]["training_seconds"] = 20.0
+        with self.assertRaisesRegex(ProofError, "GPU training time is invalid"):
+            compare(cpu, artifact("cuda:0"), 0.95)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -2,11 +2,12 @@
 
 ## Current summary
 
-Six proofs use two datasets across laptop and Kaggle compute. The laptop runs
+Eight proofs use three datasets across laptop and Kaggle compute. The laptop runs
 Karate and WikiCS on MPS or CPU with local Neo4j. Private Kaggle jobs run the
 same models on CPU and a free NVIDIA GPU, export checksummed predictions, and
-leave Neo4j on the laptop. The Kaggle CPU pair is being validated. Production
-remains a design for a self-managed Linux H200 cluster and separate Neo4j tier.
+leave Neo4j on the laptop. A larger Flickr GraphSAGE CPU/T4 benchmark is the
+current validation target. Production remains a design for a self-managed Linux
+H200 cluster and separate Neo4j tier.
 
 ```mermaid
 flowchart LR
@@ -39,6 +40,8 @@ the model code:
 ./poc/run_kaggle_wikics_cuda.py
 ./poc/run_kaggle_karate_cpu.py
 ./poc/run_kaggle_wikics_cpu.py
+./poc/run_kaggle_flickr_cpu.py
+./poc/run_kaggle_flickr_cuda.py
 ```
 
 MPS and CPU are verified for both laptop POCs. Both Kaggle CUDA proofs pass on
@@ -63,3 +66,4 @@ Regenerate all project PDFs with `bun run md:pdf:all`; output is written under
 |  | [Larger WikiCS proof](docs/06-validation/larger-wikics-poc.md) |
 |  | [Kaggle CUDA proofs](docs/06-validation/kaggle-cuda-pocs.md) |
 |  | [Kaggle CPU comparison](docs/06-validation/kaggle-cpu-comparison.md) |
+|  | [Flickr CPU and GPU benchmark](docs/06-validation/flickr-kaggle-benchmark.md) |

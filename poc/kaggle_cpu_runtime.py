@@ -27,13 +27,12 @@ def source_revision() -> str:
 
 
 def cpu_model() -> str:
-    model = platform.processor().strip()
     cpuinfo = Path("/proc/cpuinfo")
-    if not model and cpuinfo.is_file():
+    if cpuinfo.is_file():
         for line in cpuinfo.read_text(encoding="utf8").splitlines():
             key, separator, value = line.partition(":")
             if separator and key.strip() in {"model name", "Hardware"}:
                 model = value.strip()
                 if model:
-                    break
-    return model or platform.machine()
+                    return model
+    return platform.processor().strip() or platform.machine()

@@ -1,0 +1,44 @@
+{
+  "class_agreement": 1.0,
+  "class_matches": 34,
+  "classes": 4,
+  "cpu": {
+    "artifact_sha256": "ff0ddc02c47c5ec3d09d27fefc15aa37efcdea11ffab53b6638dcf0fa503781d",
+    "cpu_model": "x86_64",
+    "device": "cpu",
+    "metrics": {
+      "accuracy": 0.764706,
+      "final_loss": 0.050713,
+      "initial_loss": 1.430153
+    },
+    "poc_id": "kaggle-karate-cpu-v1",
+    "source_revision": "1af9d656bd7d59e4a8bb6bc3d82271eb5fb4aa2f"
+  },
+  "dataset": "KarateClub",
+  "framework_releases_match": {
+    "python": true,
+    "torch": true,
+    "torch_geometric": true
+  },
+  "generated_at": "2026-09-05T12:57:04Z",
+  "gpu": {
+    "artifact_sha256": "5f85dce9373e0bac87be77829176483870ac63e27a19dbff0e3566b2e16b7453",
+    "cuda_device_name": "Tesla T4",
+    "device": "cuda:0",
+    "metrics": {
+      "accuracy": 0.764706,
+      "final_loss": 0.050713,
+      "initial_loss": 1.430153
+    },
+    "poc_id": "kaggle-karate-cuda-v1",
+    "source_revision": "c9fe91f0de80ad82d5c76ce4908ee3e8473b6165"
+  },
+  "maximum_absolute_score_difference": 1.79e-07,
+  "mean_absolute_score_difference": 4e-08,
+  "minimum_agreement": 0.95,
+  "model_parameters_match": true,
+  "nodes": 34,
+  "predictions_compared": 34,
+  "status": "PASS",
+  "timing": null
+}
