@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
+import re
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -45,6 +47,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     require(arguments.learning_rate > 0, "Learning rate must be positive")
     require(arguments.weight_decay >= 0, "Weight decay cannot be negative")
     require(torch.cuda.is_available(), "CUDA is unavailable; this POC is GPU-only")
+    source_revision = os.environ.get("ML_SOURCE_REVISION", "")
+    require(re.fullmatch(r"[0-9a-f]{40}", source_revision) is not None, "ML_SOURCE_REVISION must be a full Git commit")
     device = torch.device("cuda:0")
     graph = source_graph(arguments.data_root, arguments.split)
     logits, metrics = train_on_device(
@@ -67,6 +71,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "python": platform.python_version(),
         "torch": torch.__version__,
         "torch_geometric": torch_geometric.__version__,
+        "source_revision": source_revision,
         "accuracy": metrics["test_accuracy"],
         **metrics,
     }

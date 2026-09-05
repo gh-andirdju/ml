@@ -29,6 +29,7 @@ class ArtifactSpec:
     classes: int
     minimum_accuracy: float
     identity: dict[str, Any]
+    source_revision: str | None = None
 
 
 def utc_now() -> str:
@@ -130,6 +131,11 @@ def load_and_validate_artifact(
     require(execution.get("status") == "PASS", "GPU execution did not pass")
     require(str(execution.get("device", "")).startswith("cuda:"), "Artifact did not run on CUDA")
     require(bool(str(execution.get("cuda_device_name", "")).strip()), "CUDA device name is missing")
+    if spec.source_revision is not None:
+        require(
+            execution.get("source_revision") == spec.source_revision,
+            "Artifact source revision does not match the importer",
+        )
     accuracy = execution.get("accuracy")
     require(
         isinstance(accuracy, (int, float)) and not isinstance(accuracy, bool),
