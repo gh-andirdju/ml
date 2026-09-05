@@ -23,6 +23,7 @@ are allowed.
 
 - Share device-neutral PyTorch, PyTorch Geometric, tensor, and checkpoint logic.
 - Select CUDA, MPS, or CPU at runtime; Metal does not implement the CUDA API.
+- Keep training in one shared runner and use ready environment profile files.
 - Keep Mac Python host-native so PyTorch can use MPS.
 - Use Apple Container for the verified local Neo4j proof.
 - Pin Neo4j and workload images to explicit versions.
@@ -39,6 +40,7 @@ are allowed.
 - Apple M2 Pro MacBook Pro with 16 GB memory.
 - Homebrew Python 3.14.7 and a project `.venv` are active for the POC.
 - The POC pins PyTorch 2.14.0, PyG 2.8.0.post1, and Neo4j Driver 6.3.0.
+- MPS and CPU profiles pass locally; the Linux CUDA profile awaits NVIDIA validation.
 - Temurin 21 and 25 are installed; interactive shells select Temurin 25.
 - No Homebrew OpenJDK formula or `uv` is installed.
 - Homebrew Apple Container 1.3.1 runs Neo4j Community 2026.07.1 as Linux ARM64.

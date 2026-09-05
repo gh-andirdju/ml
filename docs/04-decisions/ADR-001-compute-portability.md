@@ -36,7 +36,9 @@ mixed precision, and CUDA-specific paths require NVIDIA validation.
 ## Consequences
 
 - One core codebase supports Mac development and H200 deployment.
+- Ready profile files call the same parameterized runner for MPS, CUDA, or CPU.
 - The verified one-layer GCN runs forward, backward, and optimization on MPS
   with CPU fallback disabled.
+- The CPU profile is also verified; the CUDA profile awaits NVIDIA hardware.
 - Other MPS operator gaps may still require CPU fallback.
 - Numerical tests use tolerances rather than bit-for-bit equality.

@@ -28,8 +28,13 @@ flowchart LR
     write --> neo[Neo4j Community<br/>Apple Container]
     neo --> read[Read through Bolt]
     read --> data[Rebuild PyG Data]
-    data --> mps[One-layer GCN<br/>MPS training]
-    mps --> result[34 predictions]
+    data --> choose{Environment profile}
+    choose --> mps[macOS MPS]
+    choose --> cuda[Linux CUDA]
+    choose --> cpu[CPU]
+    mps --> result[One-layer GCN<br/>34 predictions]
+    cuda --> result
+    cpu --> result
     result --> neo
     neo --> verify[Cypher verification]
 ```
@@ -41,7 +46,7 @@ flowchart LR
 | Python | 3.14.7 in `.venv` |
 | Python packages | PyTorch 2.14.0, PyG 2.8.0.post1, Neo4j Driver 6.3.0 |
 | Dataset | `torch_geometric.datasets.KarateClub` |
-| GNN | One `GCNConv(34, 4)` layer |
+| GNN | One `GCNConv(34, 4)` layer with a parameterized device runner |
 | Database | `docker.io/library/neo4j:2026.07.1` Community |
 | Runtime | Apple Container 1.3.1, native Linux ARM64 |
 | Container resources | 2 CPUs, 2 GB memory, 2 GB named volume |
@@ -67,8 +72,8 @@ to every node.
 2. Neo4j contains exactly 34 POC nodes and 78 `KNOWS` relationships.
 3. Data read from Neo4j reconstructs tensors with shapes `[34, 34]` and
    `[2, 156]`, four classes, and four training nodes.
-4. `torch.backends.mps.is_available()` is true; model parameters, graph tensors,
-   and output remain on `mps` with no CPU fallback enabled.
+4. The resolved device matches the requested profile. For the MPS proof, model
+   parameters, graph tensors, and output remain on MPS with fallback disabled.
 5. The GCN output shape is `[34, 4]`, loss is finite, backward propagation and
    an optimizer step succeed, and final training loss is below initial loss.
 6. Cypher reads predictions and four scores for all 34 nodes.
@@ -86,6 +91,8 @@ Two consecutive full runs produced the same result:
 | --- | --- |
 | Status | PASS |
 | MPS execution | Model, features, and output on `mps`; fallback disabled |
+| CPU execution | Same runner passed on `cpu` |
+| CUDA entry point | Ready; execution awaits NVIDIA validation |
 | Neo4j identity | Community 2026.07.1 |
 | Graph | 34 nodes, 78 stored relationships, 156 reconstructed edge entries |
 | Tensor shapes | Features `[34, 34]`; output `[34, 4]` |
@@ -99,18 +106,25 @@ source tensors, and 34 prediction payloads still present.
 
 ## Run the proof
 
-With `neo4j-poc` running:
+With Neo4j reachable, execute the file matching the environment:
 
 ```bash
-bun run poc:test
-bun run poc:verify
+./poc/run_macos_mps.py
+./poc/run_cpu.py
+./poc/run_linux_cuda.py
 ```
 
-`poc:test` performs the complete write, exact read-back, MPS training, and
-prediction write-back. `poc:verify` does not mutate the database and is suitable
-for persistence checks. The scripts never print the database password.
+Each file supplies device, epochs, seed, learning rate, and weight decay to the
+same runner. Optional trailing flags override profile defaults. For example,
+`./poc/run_cpu.py --epochs 20 --learning-rate 0.05` is verified. Run
+`bun run poc:verify` for a non-mutating persistence check. The scripts never
+print the database password. Direct execution automatically selects the project
+`.venv` when it exists.
 
-The implementation is [poc/karate_mps_neo4j.py](../../poc/karate_mps_neo4j.py),
+The shared implementation is
+[poc/karate_gnn_neo4j.py](../../poc/karate_gnn_neo4j.py), with environment
+profiles in `poc/run_macos_mps.py`, `poc/run_cpu.py`, and
+`poc/run_linux_cuda.py`,
 with exact direct dependencies in
 [requirements-poc.txt](../../requirements-poc.txt). The ignored secret file is
 created with `bun run poc:secret`.
@@ -120,7 +134,7 @@ created with `bun run poc:secret`.
 - Neo4j Browser, APOC, Graph Data Science, Enterprise Edition, and clustering.
 - Jupyter, large datasets, batching, sampling, mixed precision, and tuning.
 - Apple Container GPU access; MPS remains host-native.
-- CUDA and H200 parity testing.
+- Actual CUDA and H200 execution, performance, and parity testing.
 
 ## Sources
 

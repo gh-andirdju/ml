@@ -14,13 +14,14 @@ flowchart LR
 
 - Host-native Python 3.14.7 environment with pinned direct dependencies.
 - Karate Club graph round trip through Neo4j Community 2026.07.1.
-- One-layer GCN forward, backward, and optimization on MPS.
+- One shared parameterized GCN runner with ready MPS, CPU, and CUDA profiles.
+- Forward, backward, and optimization verified on MPS and CPU.
 - Idempotent rerun and named-volume persistence checks.
 
 ## Next: project foundation
 
 - Decide the long-term Python and dependency-locking policy.
-- Extract reusable device, schema, query, and tensor adapters from the POC.
+- Extract reusable schema, query, and tensor adapters from the POC.
 - Add automated tests and experiment reproducibility only when needed.
 
 ## H200 packaging

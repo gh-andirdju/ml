@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prove a Karate Club -> Neo4j -> PyG/MPS -> Neo4j round trip."""
+"""Prove a Karate Club -> Neo4j -> PyG -> selected device -> Neo4j round trip."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ import math
 import os
 import sys
 import time
+from collections.abc import Sequence
 from pathlib import Path
 
 import neo4j
@@ -23,7 +24,8 @@ from torch_geometric.datasets import KarateClub
 from torch_geometric.nn import GCNConv
 
 
-POC_ID = "karate-mps-neo4j-v1"
+POC_ID = "karate-gnn-neo4j-v1"
+LEGACY_POC_IDS = ["karate-mps-neo4j-v1"]
 EXPECTED_NODES = 34
 EXPECTED_DIRECTED_EDGES = 156
 EXPECTED_RELATIONSHIPS = 78
@@ -95,8 +97,8 @@ def graph_payload(graph: Data) -> tuple[list[dict[str, object]], list[dict[str, 
 
 def replace_graph(transaction, nodes, edges) -> None:
     transaction.run(
-        "MATCH (node:KarateMember {poc_id: $poc_id}) DETACH DELETE node",
-        poc_id=POC_ID,
+        "MATCH (node:KarateMember) WHERE node.poc_id IN $poc_ids DETACH DELETE node",
+        poc_ids=[POC_ID, *LEGACY_POC_IDS],
     ).consume()
     transaction.run(
         """
@@ -191,19 +193,50 @@ def verify_round_trip(source: Data, rebuilt: Data) -> None:
     )
 
 
-def train_on_mps(graph: Data, epochs: int) -> tuple[Tensor, float, float, float]:
-    require(torch.backends.mps.is_built(), "PyTorch was not built with MPS")
-    require(torch.backends.mps.is_available(), "MPS is not available on this laptop")
-    require(
-        os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK", "0") != "1",
-        "CPU fallback is enabled; this would not prove MPS execution",
-    )
+def resolve_device(requested: str) -> torch.device:
+    """Resolve auto, CPU, MPS, or CUDA without leaking backend logic downstream."""
+    normalized = requested.strip().lower()
+    if normalized == "auto":
+        accelerator = torch.accelerator.current_accelerator(check_available=True)
+        return accelerator if accelerator is not None else torch.device("cpu")
 
-    torch.manual_seed(42)
-    device = torch.device("mps")
+    try:
+        device = torch.device(normalized)
+    except (RuntimeError, ValueError) as error:
+        raise ProofError(f"Invalid device {requested!r}: {error}") from error
+
+    require(
+        device.type in {"cpu", "cuda", "mps"},
+        f"Unsupported device type {device.type!r}; use auto, cpu, cuda, cuda:N, or mps",
+    )
+    if device.type != "cpu":
+        try:
+            torch.empty(1, device=device)
+        except Exception as error:
+            raise ProofError(f"Requested device {requested!r} is unavailable: {error}") from error
+    return device
+
+
+def train_on_device(
+    graph: Data,
+    epochs: int,
+    device: torch.device,
+    seed: int,
+    learning_rate: float,
+    weight_decay: float,
+) -> tuple[Tensor, float, float, float, str]:
+    if device.type == "mps":
+        require(
+            os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK", "0") != "1",
+            "CPU fallback is enabled; this would not prove MPS execution",
+        )
+
+    torch.manual_seed(seed)
     device_graph = graph.to(device)
     model = SmallestGCN().to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.1, weight_decay=5e-4)
+    optimizer = torch.optim.Adam(
+        model.parameters(), lr=learning_rate, weight_decay=weight_decay
+    )
 
     model.train()
     with torch.no_grad():
@@ -233,14 +266,18 @@ def train_on_mps(graph: Data, epochs: int) -> tuple[Tensor, float, float, float]
         predictions = final_logits.argmax(dim=1)
         accuracy = float((predictions == device_graph.y).float().mean().item())
 
-    torch.mps.synchronize()
-    require(next(model.parameters()).device.type == "mps", "Model is not on MPS")
-    require(device_graph.x.device.type == "mps", "Features are not on MPS")
-    require(final_logits.device.type == "mps", "Output is not on MPS")
+    if device.type != "cpu":
+        torch.accelerator.synchronize(device)
+    actual_device = final_logits.device
+    require(next(model.parameters()).device == actual_device, "Model device mismatch")
+    require(device_graph.x.device == actual_device, "Feature device mismatch")
+    require(actual_device.type == device.type, "Requested device type was not used")
+    if device.index is not None:
+        require(actual_device.index == device.index, "Requested device index was not used")
     require(tuple(final_logits.shape) == (EXPECTED_NODES, EXPECTED_CLASSES), "Output shape mismatch")
     require(math.isfinite(initial_loss) and math.isfinite(final_loss), "Loss is not finite")
     require(final_loss < initial_loss, "Training loss did not decrease")
-    return final_logits.cpu(), initial_loss, final_loss, accuracy
+    return final_logits.cpu(), initial_loss, final_loss, accuracy, str(actual_device)
 
 
 def write_predictions(session, logits: Tensor) -> int:
@@ -295,24 +332,34 @@ def connect_with_retry(uri: str, user: str, password: str, timeout: float):
     raise ProofError(f"Neo4j did not become ready within {timeout:g}s: {last_error}")
 
 
-def parse_arguments() -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--env-file", type=Path, default=Path(".secrets/neo4j-poc.env"))
     parser.add_argument("--database", default="neo4j")
     parser.add_argument("--expected-server-version", default="2026.07.1")
+    parser.add_argument(
+        "--device",
+        default="auto",
+        help="Execution device: auto, cpu, mps, cuda, or cuda:N (default: auto)",
+    )
     parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--learning-rate", type=float, default=0.1)
+    parser.add_argument("--weight-decay", type=float, default=5e-4)
     parser.add_argument("--connection-timeout", type=float, default=60)
     parser.add_argument(
         "--verify-existing",
         action="store_true",
         help="Read and verify the existing graph without replacing or training it",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main() -> int:
-    arguments = parse_arguments()
+def main(argv: Sequence[str] | None = None) -> int:
+    arguments = parse_arguments(argv)
     require(arguments.epochs > 0, "Epoch count must be positive")
+    require(arguments.learning_rate > 0, "Learning rate must be positive")
+    require(arguments.weight_decay >= 0, "Weight decay cannot be negative")
     load_environment_file(arguments.env_file)
     uri = os.environ.get("NEO4J_URI", "bolt://127.0.0.1:7687")
     user = os.environ.get("NEO4J_USER", "neo4j")
@@ -325,6 +372,7 @@ def main() -> int:
     require(bool(password), "NEO4J_PASSWORD is missing")
 
     source = source_graph()
+    device = None if arguments.verify_existing else resolve_device(arguments.device)
     driver = connect_with_retry(uri, user, password, arguments.connection_timeout)
     try:
         with driver.session(database=arguments.database) as session:
@@ -371,8 +419,14 @@ def main() -> int:
             session.execute_write(replace_graph, nodes, edges)
             rebuilt = read_graph(session)
             verify_round_trip(source, rebuilt)
-            logits, initial_loss, final_loss, accuracy = train_on_mps(
-                rebuilt, arguments.epochs
+            require(device is not None, "Training device was not resolved")
+            logits, initial_loss, final_loss, accuracy, actual_device = train_on_device(
+                rebuilt,
+                arguments.epochs,
+                device,
+                arguments.seed,
+                arguments.learning_rate,
+                arguments.weight_decay,
             )
             predictions_written = write_predictions(session, logits)
             require(
@@ -385,7 +439,8 @@ def main() -> int:
     evidence = {
         "status": "PASS",
         "poc_id": POC_ID,
-        "device": "mps",
+        "device_requested": arguments.device,
+        "device": actual_device,
         "python": ".".join(map(str, sys.version_info[:3])),
         "torch": torch.__version__,
         "torch_geometric": torch_geometric.__version__,
@@ -399,6 +454,9 @@ def main() -> int:
         "output": [EXPECTED_NODES, EXPECTED_CLASSES],
         "training_nodes": EXPECTED_TRAINING_NODES,
         "epochs": arguments.epochs,
+        "seed": arguments.seed,
+        "learning_rate": arguments.learning_rate,
+        "weight_decay": arguments.weight_decay,
         "initial_loss": round(initial_loss, 6),
         "final_loss": round(final_loss, 6),
         "all_node_accuracy": round(accuracy, 6),
@@ -408,9 +466,14 @@ def main() -> int:
     return 0
 
 
-if __name__ == "__main__":
+def cli(argv: Sequence[str] | None = None) -> int:
+    """Run the shared CLI with consistent user-facing error handling."""
     try:
-        raise SystemExit(main())
+        return main(argv)
     except (ProofError, Neo4jError, OSError, RuntimeError, ValueError) as error:
         print(f"POC FAILED: {error}", file=sys.stderr)
-        raise SystemExit(1)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(cli())

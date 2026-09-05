@@ -16,15 +16,18 @@ flowchart LR
 ```
 
 The verified POC uses the bundled 34-node Karate Club dataset, a single
-`GCNConv(34, 4)`, and a Neo4j round trip. Run it with:
+`GCNConv(34, 4)`, and a Neo4j round trip. Ready entry points select the correct
+shared-runner profile:
 
 ```bash
-bun run poc:test
-bun run poc:verify
+./poc/run_macos_mps.py
+./poc/run_cpu.py
+./poc/run_linux_cuda.py
 ```
 
-The first command replaces only the tagged POC subgraph, trains on MPS with CPU
-fallback disabled, and writes predictions. The second command is read-only.
+MPS and CPU are verified on this laptop. The CUDA entry point is ready for later
+NVIDIA validation. Each executable automatically uses the project `.venv` when
+present. `bun run poc:verify` performs a read-only database check.
 Regenerate all project PDFs with `bun run md:pdf:all`; output is written under
 `pdf/` with the Markdown directory structure preserved.
 

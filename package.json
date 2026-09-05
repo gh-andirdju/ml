@@ -3,8 +3,11 @@
     "md:pdf": "bun ./scripts/md-to-pdf",
     "md:pdf:all": "bun ./scripts/md-to-pdf-all",
     "poc:secret": "bun ./scripts/create-poc-secret",
-    "poc:test": ".venv/bin/python ./poc/karate_mps_neo4j.py",
-    "poc:verify": ".venv/bin/python ./poc/karate_mps_neo4j.py --verify-existing"
+    "poc:test": ".venv/bin/python ./poc/karate_gnn_neo4j.py",
+    "poc:macos": ".venv/bin/python ./poc/run_macos_mps.py",
+    "poc:cpu": ".venv/bin/python ./poc/run_cpu.py",
+    "poc:nvidia": ".venv/bin/python ./poc/run_linux_cuda.py",
+    "poc:verify": ".venv/bin/python ./poc/karate_gnn_neo4j.py --verify-existing"
   },
   "dependencies": {},
   "devDependencies": {

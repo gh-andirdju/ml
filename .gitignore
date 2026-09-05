@@ -1,7 +1,33 @@
-node_modules/
-*.pdf
-.DS_Store
+# Python
 .venv/
-.secrets/
+venv/
 __pycache__/
 *.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+.ipynb_checkpoints/
+
+# Secrets and local environment
+.secrets/
+.env
+.env.*
+!.env.example
+.direnv/
+
+# Bun and JavaScript
+node_modules/
+
+# Generated documentation
+*.pdf
+
+# Logs, editors, and macOS
+*.log
+.DS_Store
+.idea/
+.vscode/
