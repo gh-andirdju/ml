@@ -11,6 +11,11 @@ GraphSAGE layer to 2,048 channels. All three environments use FP32, the same
 model, data split, seed, optimizer, requested 20 epochs, and early-stopping
 patience of six.
 
+To fit the laptop's 16 GB unified memory without reducing the requested width,
+all environments use exact mean aggregation in fixed 262,144-edge chunks. This
+changes only the temporary workspace: every edge and node remains in the graph,
+and the layer formula and trainable parameters remain GraphSAGE-equivalent.
+
 ```mermaid
 flowchart LR
     data["Flickr: 89,250 nodes"] --> model["GraphSAGE: 2,048 hidden channels"]
@@ -26,6 +31,7 @@ flowchart LR
 
 - Every artifact passes schema and detached SHA-256 validation.
 - Model and dataset metadata match exactly across MPS, CPU, and CUDA.
+- The model records the same exact chunked-aggregation strategy everywhere.
 - All three predicted-class pairs agree on at least 95% of nodes.
 - The CPU runner proves CUDA unavailable and records Linux `wait4` resource use.
 - The CUDA runner proves single-T4 execution and at least 8 GiB peak allocation.

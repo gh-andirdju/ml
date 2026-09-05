@@ -27,17 +27,73 @@ EXPECTED_TEST_NODES = 22_313
 MINIMUM_GENERALIZATION_ACCURACY = 0.30
 
 
+class ChunkedSAGEConv(SAGEConv):
+    """Exact GraphSAGE mean aggregation with a bounded edge workspace."""
+
+    def __init__(
+        self, in_channels: int, out_channels: int, *, edge_chunk_size: int
+    ) -> None:
+        require(edge_chunk_size > 0, "Edge chunk size must be positive")
+        super().__init__(in_channels, out_channels)
+        self.edge_chunk_size = edge_chunk_size
+
+    def forward(
+        self,
+        x: Tensor,
+        edge_index: Tensor,
+        size: tuple[int, int] | None = None,
+    ) -> Tensor:
+        require(size is None, "Chunked GraphSAGE supports homogeneous graphs only")
+        require(
+            isinstance(edge_index, Tensor) and edge_index.layout == torch.strided,
+            "Chunked GraphSAGE requires a dense COO edge-index tensor",
+        )
+        require(
+            edge_index.ndim == 2 and edge_index.size(0) == 2,
+            "Edge index must have shape [2, edges]",
+        )
+        source, destination = edge_index
+        aggregated = x.new_zeros((x.size(0), x.size(1)))
+        for start in range(0, edge_index.size(1), self.edge_chunk_size):
+            stop = min(start + self.edge_chunk_size, edge_index.size(1))
+            aggregated.index_add_(
+                0,
+                destination[start:stop],
+                x.index_select(0, source[start:stop]),
+            )
+        degree = x.new_zeros(x.size(0))
+        degree.index_add_(
+            0,
+            destination,
+            torch.ones(destination.numel(), dtype=x.dtype, device=x.device),
+        )
+        aggregated = aggregated / degree.clamp_min(1).unsqueeze(1)
+        return self.lin_l(aggregated) + self.lin_r(x)
+
+
 class FlickrGraphSAGE(torch.nn.Module):
     """A three-layer, full-batch GraphSAGE node classifier."""
 
-    def __init__(self, hidden_channels: int, dropout: float) -> None:
+    def __init__(
+        self,
+        hidden_channels: int,
+        dropout: float,
+        edge_chunk_size: int | None = None,
+    ) -> None:
         super().__init__()
         self.dropout = dropout
+        convolution = (
+            SAGEConv
+            if edge_chunk_size is None
+            else lambda inputs, outputs: ChunkedSAGEConv(
+                inputs, outputs, edge_chunk_size=edge_chunk_size
+            )
+        )
         self.convolutions = torch.nn.ModuleList(
             [
-                SAGEConv(EXPECTED_FEATURES, hidden_channels),
-                SAGEConv(hidden_channels, hidden_channels),
-                SAGEConv(hidden_channels, EXPECTED_CLASSES),
+                convolution(EXPECTED_FEATURES, hidden_channels),
+                convolution(hidden_channels, hidden_channels),
+                convolution(hidden_channels, EXPECTED_CLASSES),
             ]
         )
 
@@ -85,6 +141,7 @@ def train_on_device(
     seed: int,
     learning_rate: float,
     weight_decay: float,
+    edge_chunk_size: int | None = None,
 ) -> tuple[Tensor, dict[str, float | int | str]]:
     require(
         device.type in {"cpu", "cuda", "mps"},
@@ -97,7 +154,7 @@ def train_on_device(
         )
     torch.manual_seed(seed)
     device_graph = graph.to(device)
-    model = FlickrGraphSAGE(hidden_channels, dropout).to(device)
+    model = FlickrGraphSAGE(hidden_channels, dropout, edge_chunk_size).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(), lr=learning_rate, weight_decay=weight_decay
     )

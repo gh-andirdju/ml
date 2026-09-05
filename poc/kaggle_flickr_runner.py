@@ -34,6 +34,7 @@ DeviceProfile = Literal["cpu", "cuda"]
 BenchmarkVariant = Literal["baseline", "wide", "2048"]
 WIDE_HIDDEN_CHANNELS = 1_024
 ULTRAWIDE_HIDDEN_CHANNELS = 2_048
+ULTRAWIDE_EDGE_CHUNK_SIZE = 262_144
 WIDE_EPOCHS = 20
 WIDE_PATIENCE = 6
 
@@ -118,6 +119,7 @@ def main(
         arguments.seed,
         arguments.learning_rate,
         arguments.weight_decay,
+        ULTRAWIDE_EDGE_CHUNK_SIZE if variant == "2048" else None,
     )
     execution = {
         "status": "PASS",
@@ -189,6 +191,9 @@ def main(
     }
     if variant != "baseline":
         model["benchmark_variant"] = variant
+    if variant == "2048":
+        model["edge_chunk_size"] = ULTRAWIDE_EDGE_CHUNK_SIZE
+        model["aggregation"] = "exact chunked mean"
     artifact = artifact_from_logits(
         spec=spec, logits=logits, model=model, execution=execution
     )

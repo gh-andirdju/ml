@@ -19,6 +19,7 @@ import torch_geometric
 
 from flickr_core import source_graph as flickr_graph
 from flickr_core import train_on_device as train_flickr
+from kaggle_flickr_runner import ULTRAWIDE_EDGE_CHUNK_SIZE
 from kaggle_specs import (
     FLICKR_2048_MPS_SPEC,
     FLICKR_MPS_SPEC,
@@ -147,6 +148,7 @@ def _flickr(
         42,
         0.01,
         5e-4,
+        ULTRAWIDE_EDGE_CHUNK_SIZE if variant == "2048" else None,
     )
     metrics["accuracy"] = metrics["test_accuracy"]
     model = {
@@ -161,6 +163,9 @@ def _flickr(
     }
     if variant != "baseline":
         model["benchmark_variant"] = variant
+    if variant == "2048":
+        model["edge_chunk_size"] = ULTRAWIDE_EDGE_CHUNK_SIZE
+        model["aggregation"] = "exact chunked mean"
     specs = {
         "baseline": FLICKR_MPS_SPEC,
         "wide": FLICKR_WIDE_MPS_SPEC,

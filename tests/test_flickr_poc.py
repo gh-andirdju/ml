@@ -26,6 +26,24 @@ class FlickrModelTests(unittest.TestCase):
         self.assertEqual(tuple(model(graph).shape), (3, poc.EXPECTED_CLASSES))
         self.assertEqual(len(model.convolutions), 3)
 
+    def test_chunked_mean_aggregation_matches_standard_graphsage(self) -> None:
+        features = torch.tensor(
+            [[1.0, 2.0], [3.0, 5.0], [7.0, 11.0]], requires_grad=True
+        )
+        edge_index = torch.tensor([[0, 1, 2, 1], [1, 0, 1, 2]])
+        standard = poc.SAGEConv(2, 3)
+        chunked = poc.ChunkedSAGEConv(2, 3, edge_chunk_size=2)
+        chunked.load_state_dict(standard.state_dict())
+        expected = standard(features, edge_index)
+        actual = chunked(features, edge_index)
+        torch.testing.assert_close(actual, expected)
+
+        expected.sum().backward(retain_graph=True)
+        expected_gradient = features.grad.detach().clone()
+        features.grad = None
+        actual.sum().backward()
+        torch.testing.assert_close(features.grad, expected_gradient)
+
 
 class FlickrArgumentTests(unittest.TestCase):
     def test_ready_profiles_have_identical_model_defaults(self) -> None:
