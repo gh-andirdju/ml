@@ -14,6 +14,7 @@ on 2026-09-05. They contain no credentials or generated model artifacts.
 | 5 - Minimal Karate | Kaggle CPU versus T4 | [`kaggle-karate-cpu-vs-cuda.json`](kaggle-karate-cpu-vs-cuda.json) |
 | 6 - Larger WikiCS | Kaggle CPU versus T4 | [`kaggle-wikics-cpu-vs-cuda.json`](kaggle-wikics-cpu-vs-cuda.json) |
 | 7 and 8 - Flickr GraphSAGE | Kaggle CPU versus T4 | [`kaggle-flickr-cpu-vs-cuda.json`](kaggle-flickr-cpu-vs-cuda.json) |
+| 9 and 10 - Wide Flickr GraphSAGE | Kaggle CPU versus T4 | [`kaggle-flickr-wide-cpu-vs-cuda.json`](kaggle-flickr-wide-cpu-vs-cuda.json) |
 
 Full Kaggle prediction artifacts and detached checksums are downloaded under
 ignored `.artifacts/` storage. Only compact execution/import evidence is kept in
@@ -27,4 +28,5 @@ Reproduce the live proof checks after downloading the ignored artifacts:
 ./poc/compare_kaggle_results.py .artifacts/karate-cpu/karate-cpu-result.json .artifacts/karate/karate-cuda-result.json --verify-kaggle-status
 ./poc/compare_kaggle_results.py .artifacts/wikics-cpu/wikics-cpu-result.json .artifacts/wikics/wikics-cuda-result.json --verify-kaggle-status
 ./poc/compare_kaggle_results.py .artifacts/flickr-cpu/flickr-cpu-result.json .artifacts/flickr-cuda/flickr-cuda-result.json --verify-kaggle-status --cpu-resource-usage .artifacts/flickr-cpu/flickr-cpu-resource-usage.json
+./poc/compare_kaggle_results.py .artifacts/flickr-wide-cpu/flickr-wide-cpu-result.json .artifacts/flickr-wide-cuda/flickr-wide-cuda-result.json --verify-kaggle-status --cpu-resource-usage .artifacts/flickr-wide-cpu/flickr-wide-cpu-resource-usage.json
 ```

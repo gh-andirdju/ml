@@ -21,6 +21,7 @@ from kaggle_specs import (
     FLICKR_KAGGLE_CUDA_SPEC,
     FLICKR_WIDE_KAGGLE_CPU_SPEC,
     FLICKR_WIDE_KAGGLE_CUDA_SPEC,
+    FLICKR_WIDE_MINIMUM_CUDA_PEAK_BYTES,
 )
 from proof_common import ProofError, require
 from result_artifact import artifact_from_logits, write_artifact
@@ -31,7 +32,6 @@ BenchmarkVariant = Literal["baseline", "wide"]
 WIDE_HIDDEN_CHANNELS = 1_024
 WIDE_EPOCHS = 20
 WIDE_PATIENCE = 6
-MINIMUM_WIDE_CUDA_PEAK_BYTES = 4 * 1024**3
 
 
 def parse_arguments(
@@ -137,7 +137,7 @@ def main(
         total_memory = torch.cuda.get_device_properties(device).total_memory
         if variant == "wide":
             require(
-                peak_allocated >= MINIMUM_WIDE_CUDA_PEAK_BYTES,
+                peak_allocated >= FLICKR_WIDE_MINIMUM_CUDA_PEAK_BYTES,
                 "Wide CUDA workload did not reach its 4 GiB memory target",
             )
         execution.update(

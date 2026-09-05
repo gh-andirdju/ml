@@ -12,7 +12,12 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from kaggle_specs import COMPARISON_SPECS_BY_POC_ID, KAGGLE_RUNS_BY_POC_ID
+from kaggle_specs import (
+    COMPARISON_SPECS_BY_POC_ID,
+    FLICKR_WIDE_KAGGLE_CUDA_SPEC,
+    FLICKR_WIDE_MINIMUM_CUDA_PEAK_BYTES,
+    KAGGLE_RUNS_BY_POC_ID,
+)
 from proof_common import ProofError, require
 from result_artifact import MAX_ARTIFACT_BYTES, load_and_validate_artifact, utc_now
 
@@ -122,12 +127,49 @@ def load_cpu_resource_evidence(path: Path) -> dict[str, Any]:
     return evidence
 
 
+def validate_wide_gpu_memory(execution: dict[str, Any]) -> None:
+    allocated = execution.get("cuda_peak_memory_bytes")
+    reserved = execution.get("cuda_peak_reserved_memory_bytes")
+    total = execution.get("cuda_device_total_memory_bytes")
+    for name, value in (
+        ("allocated", allocated),
+        ("reserved", reserved),
+        ("total", total),
+    ):
+        require(
+            isinstance(value, int) and not isinstance(value, bool) and value > 0,
+            f"CUDA {name} memory evidence is invalid",
+        )
+    require(
+        allocated >= FLICKR_WIDE_MINIMUM_CUDA_PEAK_BYTES,
+        "Wide CUDA artifact did not meet the 4 GiB allocation target",
+    )
+    require(allocated <= reserved <= total, "CUDA memory evidence is inconsistent")
+    for name, observed, expected in (
+        (
+            "allocated",
+            execution.get("cuda_peak_allocated_fraction"),
+            allocated / total,
+        ),
+        ("reserved", execution.get("cuda_peak_reserved_fraction"), reserved / total),
+    ):
+        require(
+            isinstance(observed, (int, float))
+            and not isinstance(observed, bool)
+            and math.isfinite(float(observed))
+            and math.isclose(float(observed), expected, abs_tol=1e-6),
+            f"CUDA {name} memory fraction is invalid",
+        )
+
+
 def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) -> dict[str, Any]:
     require(cpu["execution"]["device"] == "cpu", "First artifact is not CPU-only")
     require(str(gpu["execution"]["device"]).startswith("cuda:"), "Second artifact is not CUDA")
     require(cpu["dataset"] == gpu["dataset"], "Dataset metadata differs")
     require(cpu["model"] == gpu["model"], "Model parameters differ")
     require(0 <= minimum_agreement <= 1, "Minimum agreement must be in [0, 1]")
+    if gpu["poc_id"] == FLICKR_WIDE_KAGGLE_CUDA_SPEC.poc_id:
+        validate_wide_gpu_memory(gpu["execution"])
 
     class_matches = 0
     total_score_difference = 0.0
@@ -290,6 +332,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     cpu, cpu_digest = load_known_artifact(arguments.cpu_artifact)
     gpu, gpu_digest = load_known_artifact(arguments.gpu_artifact)
     result = compare(cpu, gpu, arguments.minimum_agreement)
+    wide_pair = gpu["poc_id"] == FLICKR_WIDE_KAGGLE_CUDA_SPEC.poc_id
+    if wide_pair:
+        require(
+            arguments.cpu_resource_usage is not None,
+            "Wide benchmark requires CPU resource evidence",
+        )
     result["cpu"]["artifact_sha256"] = cpu_digest
     result["gpu"]["artifact_sha256"] = gpu_digest
     result["kaggle_runs"] = {
@@ -327,6 +375,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         result["cpu"]["resource_usage"] = load_cpu_resource_evidence(
             arguments.cpu_resource_usage
         )
+    if wide_pair:
+        result["proof"]["gpu_memory_target_met"] = True
+        result["proof"]["cpu_resource_measurement_present"] = True
     local_proof_fields = {
         key: value
         for key, value in result["proof"].items()

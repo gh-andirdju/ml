@@ -2,11 +2,11 @@
 
 ## Scope and mode
 
-These instructions apply to this repository. All eight executed POCs pass. Karate and
-WikiCS are verified on the laptop and private Kaggle CPU/T4 jobs. The larger
-Flickr CPU/T4 timing comparison also passes. Kaggle GPU predictions for Karate
-and WikiCS pass checksum-checked local Neo4j import. H200 and production Neo4j
-remain design-only. POCs 9 and 10 are the ready higher-memory Flickr CPU/T4 pair.
+These instructions apply to this repository. All ten POCs pass. Karate and
+WikiCS are verified on the laptop and private Kaggle CPU/T4 jobs. Both Flickr
+CPU/T4 comparisons pass. Kaggle GPU predictions for Karate and WikiCS pass
+checksum-checked local Neo4j import. H200 and production Neo4j remain
+design-only.
 
 ```mermaid
 flowchart LR
@@ -57,7 +57,7 @@ are allowed.
 - Apple M2 Pro MacBook Pro with 16 GB memory.
 - Homebrew Python 3.14.7 and a project `.venv` are active for the POC.
 - The local POCs pin PyTorch 2.14.0, PyG 2.8.0.post1, and Neo4j Driver 6.3.0.
-- MPS and CPU profiles pass locally; all six Kaggle CPU/T4 jobs pass.
+- MPS and CPU profiles pass locally; all eight Kaggle CPU/T4 jobs pass.
 - Temurin 21 and 25 are installed; interactive shells select Temurin 25.
 - No Homebrew OpenJDK formula or `uv` is installed.
 - Homebrew Apple Container 1.3.1 runs Neo4j Community 2026.07.1 as Linux ARM64.
@@ -84,10 +84,13 @@ are allowed.
 - Linux `wait4` measured 2.94 GB peak resident memory and 160.267% average
   process CPU across the complete CPU runner. The percentage is an average
   equivalent to about 1.60 busy cores, not peak utilization.
-- Flickr peaked at 2.38 GB of PyTorch-allocated T4 memory, leaving room for a
-  larger POC. This is not total GPU use: future memory benchmarks must also
-  record peak reserved memory and device capacity, and should use neighbor
-  sampling rather than assuming full-batch memory scales linearly.
+- Wide Flickr uses 1,024 hidden channels and 3,137,543 parameters. It measured
+  599.42 CPU training seconds versus 17.17 T4 seconds, a 34.915x speedup, with
+  99.9003% class agreement.
+- Wide Flickr measured 6.88 GB peak T4 allocation and 9.76 GB peak reservation
+  from 15.64 GB capacity. Its four-core AMD EPYC CPU run measured 8.01 GB peak
+  RSS, 660.25 seconds complete-runner wall time, and 169.281% average process
+  CPU. CUDA allocator memory and CPU RSS are not directly equivalent.
 - Standard free Kaggle notebooks document 4 CPU cores and 30 GB RAM. GPU choices
   document one P100 or two T4s with 4 CPU cores and 29 GB host RAM; accelerator
   availability and quota are variable.

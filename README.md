@@ -2,14 +2,15 @@
 
 ## Current summary
 
-Eight verified proofs and two ready high-memory proofs use three datasets across
-laptop and Kaggle compute. The laptop runs
+Ten verified proofs use three datasets across laptop and Kaggle compute. The
+laptop runs
 Karate and WikiCS on MPS or CPU with local Neo4j. Private Kaggle jobs run the
 same models on CPU and a free NVIDIA GPU, export checksummed predictions, and
 leave Neo4j on the laptop. A larger Flickr GraphSAGE CPU/T4 benchmark is the
 timed comparison and shows a 38.974x T4 speedup. POCs 9 and 10 widen that model
-to 1,024 channels for a higher-memory CPU/T4 comparison. Production remains a
-design for a self-managed Linux H200 cluster and separate Neo4j tier.
+to 1,024 channels: the T4 is 34.915x faster and peaks at 6.88 GB allocated and
+9.76 GB reserved memory. Production remains a design for a self-managed Linux
+H200 cluster and separate Neo4j tier.
 
 ```mermaid
 flowchart LR

@@ -1,16 +1,15 @@
 # Implementation phases
 
 Both laptop proofs and the four small/medium Kaggle CPU and CUDA proofs are
-complete. The larger timed Flickr comparison also passes. A wider Flickr pair
-is ready to measure higher memory pressure. Data-center implementation remains
-pending.
+complete. Both timed Flickr comparisons pass, including the wider model that
+exercises higher GPU memory pressure. Data-center implementation remains pending.
 
 ```mermaid
 flowchart LR
     local[Two laptop POCs<br/>verified] --> kaggle[Two Kaggle CUDA POCs<br/>verified]
     kaggle --> cpu[Two Kaggle CPU comparisons<br/>verified]
     cpu --> larger[Larger Flickr timing pair<br/>verified]
-    larger --> memory[Wide Flickr memory pair<br/>ready]
+    larger --> memory[Wide Flickr memory pair<br/>verified]
     memory --> foundation[Project foundation]
     foundation --> cluster[H200 packaging]
     cluster --> operations[Operations]
