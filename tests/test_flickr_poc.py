@@ -137,8 +137,8 @@ class FlickrArgumentTests(unittest.TestCase):
         cpu = parse_arguments("cpu", [], variant="4096")
         cuda = parse_arguments("cuda", [], variant="4096")
         self.assertEqual(cpu.hidden_channels, 4_096)
-        self.assertEqual(cpu.epochs, 10)
-        self.assertEqual(cpu.patience, 4)
+        self.assertEqual(cpu.epochs, 20)
+        self.assertEqual(cpu.patience, 6)
         for name in (
             "epochs",
             "patience",

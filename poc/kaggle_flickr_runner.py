@@ -41,9 +41,9 @@ VARIANT_HIDDEN_CHANNELS = {
     "2048": 2_048,
     "4096": 4_096,
 }
-VARIANT_EPOCHS = {"baseline": 30, "wide": 20, "2048": 20, "4096": 10}
-VARIANT_PATIENCE = {"baseline": 8, "wide": 6, "2048": 6, "4096": 4}
-VARIANT_EDGE_CHUNK_SIZES = {"2048": 262_144, "4096": 32_768}
+VARIANT_EPOCHS = {"baseline": 30, "wide": 20, "2048": 20, "4096": 20}
+VARIANT_PATIENCE = {"baseline": 8, "wide": 6, "2048": 6, "4096": 6}
+VARIANT_EDGE_CHUNK_SIZES = {"2048": 262_144, "4096": 131_072}
 CHECKPOINTED_VARIANTS = {"4096"}
 
 
@@ -167,7 +167,8 @@ def main(
         if minimum_peak is not None:
             require(
                 peak_allocated >= minimum_peak,
-                f"{variant} CUDA workload did not reach its memory target",
+                f"{variant} CUDA peak {peak_allocated} bytes is below "
+                f"the {minimum_peak}-byte memory target",
             )
         execution.update(
             {

@@ -8,7 +8,7 @@
 
 This workload retains the full open Flickr graph and increases each hidden
 GraphSAGE layer to 4,096 channels. MPS, CPU, and CUDA use FP32, the same data
-split, seed, optimizer, ten requested epochs, and early-stopping patience four.
+split, seed, optimizer, 20 requested epochs, and early-stopping patience six.
 
 ```mermaid
 flowchart LR
@@ -22,7 +22,7 @@ flowchart LR
     cuda --> proof
 ```
 
-All environments use exact mean aggregation in fixed 32,768-edge chunks and
+All environments use exact mean aggregation in fixed 131,072-edge chunks and
 pure-PyTorch activation checkpointing. The graph, width, layer formula, and
 trainable parameters are unchanged; the forward blocks are recomputed during
 backward to bound temporary storage. No compiled CUDA extension is introduced.
