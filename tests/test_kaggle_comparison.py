@@ -16,7 +16,10 @@ from compare_kaggle_results import (  # noqa: E402
     load_cpu_resource_evidence,
 )
 from kaggle_specs import KARATE_KAGGLE_CPU_SPEC, KARATE_KAGGLE_SPEC  # noqa: E402
-from kaggle_specs import FLICKR_WIDE_KAGGLE_CUDA_SPEC  # noqa: E402
+from kaggle_specs import (  # noqa: E402
+    FLICKR_2048_KAGGLE_CUDA_SPEC,
+    FLICKR_WIDE_KAGGLE_CUDA_SPEC,
+)
 from poc_runtime import ProofError  # noqa: E402
 
 
@@ -110,7 +113,7 @@ class KaggleComparisonTests(unittest.TestCase):
                 "cuda_device_total_memory_bytes": 16 * 1024**3,
             }
         )
-        with self.assertRaisesRegex(ProofError, "4 GiB allocation target"):
+        with self.assertRaisesRegex(ProofError, "allocation target"):
             compare(cpu, gpu, 0.95)
 
     def test_wide_gpu_memory_fraction_is_validated(self) -> None:
@@ -128,6 +131,21 @@ class KaggleComparisonTests(unittest.TestCase):
             }
         )
         with self.assertRaisesRegex(ProofError, "allocated memory fraction"):
+            compare(cpu, gpu, 0.95)
+
+    def test_2048_gpu_memory_target_is_enforced(self) -> None:
+        cpu = artifact("cpu")
+        gpu = artifact("cuda:0")
+        cpu["poc_id"] = "kaggle-flickr-2048-cpu-v1"
+        gpu["poc_id"] = FLICKR_2048_KAGGLE_CUDA_SPEC.poc_id
+        gpu["execution"].update(
+            {
+                "cuda_peak_memory_bytes": 7 * 1024**3,
+                "cuda_peak_reserved_memory_bytes": 8 * 1024**3,
+                "cuda_device_total_memory_bytes": 16 * 1024**3,
+            }
+        )
+        with self.assertRaisesRegex(ProofError, "allocation target"):
             compare(cpu, gpu, 0.95)
 
     def test_registered_metadata_proves_cpu_and_t4_configuration(self) -> None:

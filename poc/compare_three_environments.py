@@ -20,6 +20,9 @@ from compare_kaggle_results import (
     load_known_artifact,
 )
 from kaggle_specs import (
+    FLICKR_2048_KAGGLE_CPU_SPEC,
+    FLICKR_2048_KAGGLE_CUDA_SPEC,
+    FLICKR_2048_MPS_SPEC,
     FLICKR_KAGGLE_CPU_SPEC,
     FLICKR_KAGGLE_CUDA_SPEC,
     FLICKR_MPS_SPEC,
@@ -57,6 +60,11 @@ TRIPLETS = {
         "flickr-wide",
         FLICKR_WIDE_KAGGLE_CPU_SPEC.poc_id,
         FLICKR_WIDE_KAGGLE_CUDA_SPEC.poc_id,
+    ),
+    FLICKR_2048_MPS_SPEC.poc_id: (
+        "flickr-2048",
+        FLICKR_2048_KAGGLE_CPU_SPEC.poc_id,
+        FLICKR_2048_KAGGLE_CUDA_SPEC.poc_id,
     ),
 }
 
@@ -242,11 +250,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             gpu["poc_id"], verify_remote_status=arguments.verify_kaggle_status
         ),
     }
-    wide = mps["poc_id"] == FLICKR_WIDE_MPS_SPEC.poc_id
-    if wide:
+    memory_intensive = mps["poc_id"] in {
+        FLICKR_WIDE_MPS_SPEC.poc_id,
+        FLICKR_2048_MPS_SPEC.poc_id,
+    }
+    if memory_intensive:
         require(
             arguments.cpu_resource_usage is not None,
-            "Wide workload requires CPU resource evidence",
+            "Memory-intensive workload requires CPU resource evidence",
         )
     if arguments.cpu_resource_usage is not None:
         result["environments"]["kaggle_cpu"]["resource_usage"] = (
@@ -267,9 +278,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         ),
         "immutable_kaggle_versions_complete": remote_complete,
     }
-    if wide:
-        result["proof"]["wide_cpu_resource_evidence_present"] = True
-        result["proof"]["wide_gpu_memory_target_met"] = True
+    if memory_intensive:
+        result["proof"]["cpu_resource_evidence_present"] = True
+        result["proof"]["gpu_memory_target_met"] = True
     local_fields = {
         key: value
         for key, value in result["proof"].items()

@@ -29,6 +29,8 @@ import run_kaggle_flickr_cpu
 import run_kaggle_flickr_cuda
 import run_kaggle_flickr_wide_cpu
 import run_kaggle_flickr_wide_cuda
+import run_kaggle_flickr_2048_cpu
+import run_kaggle_flickr_2048_cuda
 """
         subprocess.run([sys.executable, "-c", script], check=True)
 
@@ -47,6 +49,7 @@ import run_mps_karate_artifact
 import run_mps_wikics_artifact
 import run_mps_flickr
 import run_mps_flickr_wide
+import run_mps_flickr_2048
 """
         subprocess.run([sys.executable, "-c", script], check=True)
 

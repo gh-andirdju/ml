@@ -20,6 +20,7 @@ import torch_geometric
 from flickr_core import source_graph as flickr_graph
 from flickr_core import train_on_device as train_flickr
 from kaggle_specs import (
+    FLICKR_2048_MPS_SPEC,
     FLICKR_MPS_SPEC,
     FLICKR_WIDE_MPS_SPEC,
     KARATE_MPS_SPEC,
@@ -33,8 +34,8 @@ from wikics_core import source_graph as wikics_graph
 from wikics_core import train_on_device as train_wikics
 
 
-Workload = Literal["karate", "wikics", "flickr", "flickr-wide"]
-WORKLOADS = {"karate", "wikics", "flickr", "flickr-wide"}
+Workload = Literal["karate", "wikics", "flickr", "flickr-wide", "flickr-2048"]
+WORKLOADS = {"karate", "wikics", "flickr", "flickr-wide", "flickr-2048"}
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -128,11 +129,14 @@ def _wikics(device: torch.device) -> tuple[torch.Tensor, dict, dict, ArtifactSpe
 
 
 def _flickr(
-    device: torch.device, *, wide: bool
+    device: torch.device, *, variant: Literal["baseline", "wide", "2048"]
 ) -> tuple[torch.Tensor, dict, dict, ArtifactSpec]:
-    epochs = 20 if wide else 30
-    patience = 6 if wide else 8
-    hidden_channels = 1_024 if wide else 256
+    high_memory = variant in {"wide", "2048"}
+    epochs = 20 if high_memory else 30
+    patience = 6 if high_memory else 8
+    hidden_channels = (
+        2_048 if variant == "2048" else 1_024 if variant == "wide" else 256
+    )
     logits, metrics = train_flickr(
         flickr_graph(PROJECT_ROOT / ".artifacts/datasets/flickr"),
         epochs,
@@ -155,9 +159,14 @@ def _flickr(
         "learning_rate": 0.01,
         "weight_decay": 5e-4,
     }
-    if wide:
-        model["benchmark_variant"] = "wide"
-    return logits, metrics, model, FLICKR_WIDE_MPS_SPEC if wide else FLICKR_MPS_SPEC
+    if variant != "baseline":
+        model["benchmark_variant"] = variant
+    specs = {
+        "baseline": FLICKR_MPS_SPEC,
+        "wide": FLICKR_WIDE_MPS_SPEC,
+        "2048": FLICKR_2048_MPS_SPEC,
+    }
+    return logits, metrics, model, specs[variant]
 
 
 def run(workload: Workload) -> tuple[torch.Tensor, dict, dict, ArtifactSpec]:
@@ -166,7 +175,10 @@ def run(workload: Workload) -> tuple[torch.Tensor, dict, dict, ArtifactSpec]:
         return _karate(device)
     if workload == "wikics":
         return _wikics(device)
-    return _flickr(device, wide=workload == "flickr-wide")
+    variant: Literal["baseline", "wide", "2048"] = (
+        workload.removeprefix("flickr-") if workload != "flickr" else "baseline"
+    )
+    return _flickr(device, variant=variant)
 
 
 def main(workload: Workload, argv: Sequence[str] | None = None) -> int:

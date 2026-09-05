@@ -17,6 +17,9 @@ import torch_geometric
 from flickr_core import source_graph, train_on_device
 from kaggle_cpu_runtime import cpu_model, require_cpu_only, source_revision
 from kaggle_specs import (
+    FLICKR_2048_KAGGLE_CPU_SPEC,
+    FLICKR_2048_KAGGLE_CUDA_SPEC,
+    FLICKR_2048_MINIMUM_CUDA_PEAK_BYTES,
     FLICKR_KAGGLE_CPU_SPEC,
     FLICKR_KAGGLE_CUDA_SPEC,
     FLICKR_WIDE_KAGGLE_CPU_SPEC,
@@ -28,8 +31,9 @@ from result_artifact import artifact_from_logits, write_artifact
 
 
 DeviceProfile = Literal["cpu", "cuda"]
-BenchmarkVariant = Literal["baseline", "wide"]
+BenchmarkVariant = Literal["baseline", "wide", "2048"]
 WIDE_HIDDEN_CHANNELS = 1_024
+ULTRAWIDE_HIDDEN_CHANNELS = 2_048
 WIDE_EPOCHS = 20
 WIDE_PATIENCE = 6
 
@@ -40,8 +44,8 @@ def parse_arguments(
     *,
     variant: BenchmarkVariant = "baseline",
 ) -> argparse.Namespace:
-    wide = variant == "wide"
-    name = "flickr-wide" if wide else "flickr"
+    high_memory = variant in {"wide", "2048"}
+    name = "flickr" if variant == "baseline" else f"flickr-{variant}"
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--output",
@@ -53,12 +57,20 @@ def parse_arguments(
         type=Path,
         default=Path(f"/kaggle/temp/ml-{name}-{profile}/data"),
     )
-    parser.add_argument("--epochs", type=int, default=WIDE_EPOCHS if wide else 30)
-    parser.add_argument("--patience", type=int, default=WIDE_PATIENCE if wide else 8)
+    parser.add_argument(
+        "--epochs", type=int, default=WIDE_EPOCHS if high_memory else 30
+    )
+    parser.add_argument(
+        "--patience", type=int, default=WIDE_PATIENCE if high_memory else 8
+    )
     parser.add_argument(
         "--hidden-channels",
         type=int,
-        default=WIDE_HIDDEN_CHANNELS if wide else 256,
+        default=(
+            ULTRAWIDE_HIDDEN_CHANNELS
+            if variant == "2048"
+            else WIDE_HIDDEN_CHANNELS if variant == "wide" else 256
+        ),
     )
     parser.add_argument("--dropout", type=float, default=0.5)
     parser.add_argument("--seed", type=int, default=42)
@@ -126,19 +138,24 @@ def main(
                 "cuda_available": torch.cuda.is_available(),
             }
         )
-        spec = (
-            FLICKR_WIDE_KAGGLE_CPU_SPEC
-            if variant == "wide"
-            else FLICKR_KAGGLE_CPU_SPEC
-        )
+        cpu_specs = {
+            "baseline": FLICKR_KAGGLE_CPU_SPEC,
+            "wide": FLICKR_WIDE_KAGGLE_CPU_SPEC,
+            "2048": FLICKR_2048_KAGGLE_CPU_SPEC,
+        }
+        spec = cpu_specs[variant]
     else:
         peak_allocated = torch.cuda.max_memory_allocated()
         peak_reserved = torch.cuda.max_memory_reserved()
         total_memory = torch.cuda.get_device_properties(device).total_memory
-        if variant == "wide":
+        minimum_peak = {
+            "wide": FLICKR_WIDE_MINIMUM_CUDA_PEAK_BYTES,
+            "2048": FLICKR_2048_MINIMUM_CUDA_PEAK_BYTES,
+        }.get(variant)
+        if minimum_peak is not None:
             require(
-                peak_allocated >= FLICKR_WIDE_MINIMUM_CUDA_PEAK_BYTES,
-                "Wide CUDA workload did not reach its 4 GiB memory target",
+                peak_allocated >= minimum_peak,
+                f"{variant} CUDA workload did not reach its memory target",
             )
         execution.update(
             {
@@ -153,15 +170,15 @@ def main(
                 "cuda_peak_reserved_fraction": round(peak_reserved / total_memory, 6),
             }
         )
-        spec = (
-            FLICKR_WIDE_KAGGLE_CUDA_SPEC
-            if variant == "wide"
-            else FLICKR_KAGGLE_CUDA_SPEC
-        )
+        cuda_specs = {
+            "baseline": FLICKR_KAGGLE_CUDA_SPEC,
+            "wide": FLICKR_WIDE_KAGGLE_CUDA_SPEC,
+            "2048": FLICKR_2048_KAGGLE_CUDA_SPEC,
+        }
+        spec = cuda_specs[variant]
 
     model = {
         "type": "three-layer GraphSAGE",
-        "benchmark_variant": variant,
         "epochs_requested": arguments.epochs,
         "patience": arguments.patience,
         "hidden_channels": arguments.hidden_channels,
@@ -170,6 +187,8 @@ def main(
         "learning_rate": arguments.learning_rate,
         "weight_decay": arguments.weight_decay,
     }
+    if variant != "baseline":
+        model["benchmark_variant"] = variant
     artifact = artifact_from_logits(
         spec=spec, logits=logits, model=model, execution=execution
     )

@@ -66,6 +66,25 @@ class FlickrArgumentTests(unittest.TestCase):
         self.assertIn("flickr-wide-cpu", str(cpu.output))
         self.assertIn("flickr-wide-cuda", str(cuda.output))
 
+    def test_2048_profiles_have_identical_exact_width(self) -> None:
+        cpu = parse_arguments("cpu", [], variant="2048")
+        cuda = parse_arguments("cuda", [], variant="2048")
+        self.assertEqual(cpu.hidden_channels, 2_048)
+        self.assertEqual(cpu.epochs, 20)
+        self.assertEqual(cpu.patience, 6)
+        for name in (
+            "epochs",
+            "patience",
+            "hidden_channels",
+            "dropout",
+            "seed",
+            "learning_rate",
+            "weight_decay",
+        ):
+            self.assertEqual(getattr(cpu, name), getattr(cuda, name))
+        self.assertIn("flickr-2048-cpu", str(cpu.output))
+        self.assertIn("flickr-2048-cuda", str(cuda.output))
+
 
 if __name__ == "__main__":
     unittest.main()

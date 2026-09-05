@@ -15,6 +15,8 @@ CPU_KAGGLE_SOURCE_REVISION = "1af9d656bd7d59e4a8bb6bc3d82271eb5fb4aa2f"
 FLICKR_KAGGLE_SOURCE_REVISION = "95ccbccd57dc4ec9f0c7c9f143dc941e615dc520"
 FLICKR_WIDE_KAGGLE_SOURCE_REVISION = "d4115e3e408f992354a7ceced768d3e19977b54b"
 FLICKR_WIDE_MINIMUM_CUDA_PEAK_BYTES = 4 * 1024**3
+FLICKR_2048_KAGGLE_SOURCE_REVISION: str | None = None
+FLICKR_2048_MINIMUM_CUDA_PEAK_BYTES = 8 * 1024**3
 
 
 @dataclass(frozen=True)
@@ -174,6 +176,40 @@ FLICKR_WIDE_MPS_SPEC = ArtifactSpec(
     device_type="mps",
 )
 
+FLICKR_2048_KAGGLE_CPU_SPEC = ArtifactSpec(
+    poc_id="kaggle-flickr-2048-cpu-v1",
+    target_poc_id="comparison-only",
+    dataset_name="Flickr",
+    nodes=89_250,
+    classes=7,
+    minimum_accuracy=0.30,
+    identity=FLICKR_IDENTITY,
+    source_revision=FLICKR_2048_KAGGLE_SOURCE_REVISION,
+    device_type="cpu",
+)
+
+FLICKR_2048_KAGGLE_CUDA_SPEC = ArtifactSpec(
+    poc_id="kaggle-flickr-2048-cuda-v1",
+    target_poc_id="comparison-only",
+    dataset_name="Flickr",
+    nodes=89_250,
+    classes=7,
+    minimum_accuracy=0.30,
+    identity=FLICKR_IDENTITY,
+    source_revision=FLICKR_2048_KAGGLE_SOURCE_REVISION,
+)
+
+FLICKR_2048_MPS_SPEC = ArtifactSpec(
+    poc_id="macos-flickr-2048-mps-v1",
+    target_poc_id="comparison-only",
+    dataset_name="Flickr",
+    nodes=89_250,
+    classes=7,
+    minimum_accuracy=0.30,
+    identity=FLICKR_IDENTITY,
+    device_type="mps",
+)
+
 SPECS_BY_POC_ID = {
     KARATE_KAGGLE_SPEC.poc_id: KARATE_KAGGLE_SPEC,
     WIKICS_KAGGLE_SPEC.poc_id: WIKICS_KAGGLE_SPEC,
@@ -191,6 +227,9 @@ COMPARISON_SPECS_BY_POC_ID = {
     WIKICS_MPS_SPEC.poc_id: WIKICS_MPS_SPEC,
     FLICKR_MPS_SPEC.poc_id: FLICKR_MPS_SPEC,
     FLICKR_WIDE_MPS_SPEC.poc_id: FLICKR_WIDE_MPS_SPEC,
+    FLICKR_2048_KAGGLE_CPU_SPEC.poc_id: FLICKR_2048_KAGGLE_CPU_SPEC,
+    FLICKR_2048_KAGGLE_CUDA_SPEC.poc_id: FLICKR_2048_KAGGLE_CUDA_SPEC,
+    FLICKR_2048_MPS_SPEC.poc_id: FLICKR_2048_MPS_SPEC,
 }
 
 KAGGLE_RUNS_BY_POC_ID = {
@@ -222,6 +261,18 @@ KAGGLE_RUNS_BY_POC_ID = {
         "andird/ml-poc-10-flickr-wide-graphsage-cuda",
         1,
         "kaggle/flickr-wide-cuda",
+        True,
+    ),
+    FLICKR_2048_KAGGLE_CPU_SPEC.poc_id: KaggleRunSpec(
+        "andird/ml-poc-11-flickr-2048-graphsage-cpu",
+        1,
+        "kaggle/flickr-2048-cpu",
+        False,
+    ),
+    FLICKR_2048_KAGGLE_CUDA_SPEC.poc_id: KaggleRunSpec(
+        "andird/ml-poc-12-flickr-2048-graphsage-cuda",
+        1,
+        "kaggle/flickr-2048-cuda",
         True,
     ),
 }
