@@ -44,6 +44,36 @@ class FlickrModelTests(unittest.TestCase):
         actual.sum().backward()
         torch.testing.assert_close(features.grad, expected_gradient)
 
+    def test_activation_checkpointing_preserves_training_gradients(self) -> None:
+        graph = Data(
+            x=torch.ones((3, poc.EXPECTED_FEATURES)),
+            edge_index=torch.tensor([[0, 1, 2, 1], [1, 0, 1, 2]]),
+        )
+        standard = poc.FlickrGraphSAGE(
+            hidden_channels=8,
+            dropout=0,
+            edge_chunk_size=2,
+            activation_checkpointing=False,
+        )
+        checkpointed = poc.FlickrGraphSAGE(
+            hidden_channels=8,
+            dropout=0,
+            edge_chunk_size=2,
+            activation_checkpointing=True,
+        )
+        checkpointed.load_state_dict(standard.state_dict())
+        expected = standard(graph)
+        actual = checkpointed(graph)
+        torch.testing.assert_close(actual, expected)
+        expected.sum().backward()
+        actual.sum().backward()
+        for standard_parameter, checkpointed_parameter in zip(
+            standard.parameters(), checkpointed.parameters(), strict=True
+        ):
+            torch.testing.assert_close(
+                checkpointed_parameter.grad, standard_parameter.grad
+            )
+
 
 class FlickrArgumentTests(unittest.TestCase):
     def test_ready_profiles_have_identical_model_defaults(self) -> None:
@@ -102,6 +132,25 @@ class FlickrArgumentTests(unittest.TestCase):
             self.assertEqual(getattr(cpu, name), getattr(cuda, name))
         self.assertIn("flickr-2048-cpu", str(cpu.output))
         self.assertIn("flickr-2048-cuda", str(cuda.output))
+
+    def test_4096_profiles_have_identical_bounded_memory_defaults(self) -> None:
+        cpu = parse_arguments("cpu", [], variant="4096")
+        cuda = parse_arguments("cuda", [], variant="4096")
+        self.assertEqual(cpu.hidden_channels, 4_096)
+        self.assertEqual(cpu.epochs, 10)
+        self.assertEqual(cpu.patience, 4)
+        for name in (
+            "epochs",
+            "patience",
+            "hidden_channels",
+            "dropout",
+            "seed",
+            "learning_rate",
+            "weight_decay",
+        ):
+            self.assertEqual(getattr(cpu, name), getattr(cuda, name))
+        self.assertIn("flickr-4096-cpu", str(cpu.output))
+        self.assertIn("flickr-4096-cuda", str(cuda.output))
 
 
 if __name__ == "__main__":

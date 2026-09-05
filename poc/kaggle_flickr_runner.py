@@ -20,6 +20,9 @@ from kaggle_specs import (
     FLICKR_2048_KAGGLE_CPU_SPEC,
     FLICKR_2048_KAGGLE_CUDA_SPEC,
     FLICKR_2048_MINIMUM_CUDA_PEAK_BYTES,
+    FLICKR_4096_KAGGLE_CPU_SPEC,
+    FLICKR_4096_KAGGLE_CUDA_SPEC,
+    FLICKR_4096_MINIMUM_CUDA_PEAK_BYTES,
     FLICKR_KAGGLE_CPU_SPEC,
     FLICKR_KAGGLE_CUDA_SPEC,
     FLICKR_WIDE_KAGGLE_CPU_SPEC,
@@ -31,12 +34,17 @@ from result_artifact import artifact_from_logits, write_artifact
 
 
 DeviceProfile = Literal["cpu", "cuda"]
-BenchmarkVariant = Literal["baseline", "wide", "2048"]
-WIDE_HIDDEN_CHANNELS = 1_024
-ULTRAWIDE_HIDDEN_CHANNELS = 2_048
-ULTRAWIDE_EDGE_CHUNK_SIZE = 262_144
-WIDE_EPOCHS = 20
-WIDE_PATIENCE = 6
+BenchmarkVariant = Literal["baseline", "wide", "2048", "4096"]
+VARIANT_HIDDEN_CHANNELS = {
+    "baseline": 256,
+    "wide": 1_024,
+    "2048": 2_048,
+    "4096": 4_096,
+}
+VARIANT_EPOCHS = {"baseline": 30, "wide": 20, "2048": 20, "4096": 10}
+VARIANT_PATIENCE = {"baseline": 8, "wide": 6, "2048": 6, "4096": 4}
+VARIANT_EDGE_CHUNK_SIZES = {"2048": 262_144, "4096": 32_768}
+CHECKPOINTED_VARIANTS = {"4096"}
 
 
 def parse_arguments(
@@ -45,7 +53,6 @@ def parse_arguments(
     *,
     variant: BenchmarkVariant = "baseline",
 ) -> argparse.Namespace:
-    high_memory = variant in {"wide", "2048"}
     name = "flickr" if variant == "baseline" else f"flickr-{variant}"
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -59,19 +66,19 @@ def parse_arguments(
         default=Path(f"/kaggle/temp/ml-{name}-{profile}/data"),
     )
     parser.add_argument(
-        "--epochs", type=int, default=WIDE_EPOCHS if high_memory else 30
+        "--epochs",
+        type=int,
+        default=VARIANT_EPOCHS[variant],
     )
     parser.add_argument(
-        "--patience", type=int, default=WIDE_PATIENCE if high_memory else 8
+        "--patience",
+        type=int,
+        default=VARIANT_PATIENCE[variant],
     )
     parser.add_argument(
         "--hidden-channels",
         type=int,
-        default=(
-            ULTRAWIDE_HIDDEN_CHANNELS
-            if variant == "2048"
-            else WIDE_HIDDEN_CHANNELS if variant == "wide" else 256
-        ),
+        default=VARIANT_HIDDEN_CHANNELS[variant],
     )
     parser.add_argument("--dropout", type=float, default=0.5)
     parser.add_argument("--seed", type=int, default=42)
@@ -119,7 +126,8 @@ def main(
         arguments.seed,
         arguments.learning_rate,
         arguments.weight_decay,
-        ULTRAWIDE_EDGE_CHUNK_SIZE if variant == "2048" else None,
+        VARIANT_EDGE_CHUNK_SIZES.get(variant),
+        variant in CHECKPOINTED_VARIANTS,
     )
     execution = {
         "status": "PASS",
@@ -144,6 +152,7 @@ def main(
             "baseline": FLICKR_KAGGLE_CPU_SPEC,
             "wide": FLICKR_WIDE_KAGGLE_CPU_SPEC,
             "2048": FLICKR_2048_KAGGLE_CPU_SPEC,
+            "4096": FLICKR_4096_KAGGLE_CPU_SPEC,
         }
         spec = cpu_specs[variant]
     else:
@@ -153,6 +162,7 @@ def main(
         minimum_peak = {
             "wide": FLICKR_WIDE_MINIMUM_CUDA_PEAK_BYTES,
             "2048": FLICKR_2048_MINIMUM_CUDA_PEAK_BYTES,
+            "4096": FLICKR_4096_MINIMUM_CUDA_PEAK_BYTES,
         }.get(variant)
         if minimum_peak is not None:
             require(
@@ -176,6 +186,7 @@ def main(
             "baseline": FLICKR_KAGGLE_CUDA_SPEC,
             "wide": FLICKR_WIDE_KAGGLE_CUDA_SPEC,
             "2048": FLICKR_2048_KAGGLE_CUDA_SPEC,
+            "4096": FLICKR_4096_KAGGLE_CUDA_SPEC,
         }
         spec = cuda_specs[variant]
 
@@ -191,9 +202,11 @@ def main(
     }
     if variant != "baseline":
         model["benchmark_variant"] = variant
-    if variant == "2048":
-        model["edge_chunk_size"] = ULTRAWIDE_EDGE_CHUNK_SIZE
+    if variant in {"2048", "4096"}:
+        model["edge_chunk_size"] = VARIANT_EDGE_CHUNK_SIZES[variant]
         model["aggregation"] = "exact chunked mean"
+    if variant == "4096":
+        model["activation_checkpointing"] = True
     artifact = artifact_from_logits(
         spec=spec, logits=logits, model=model, execution=execution
     )

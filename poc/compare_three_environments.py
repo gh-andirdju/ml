@@ -23,6 +23,9 @@ from kaggle_specs import (
     FLICKR_2048_KAGGLE_CPU_SPEC,
     FLICKR_2048_KAGGLE_CUDA_SPEC,
     FLICKR_2048_MPS_SPEC,
+    FLICKR_4096_KAGGLE_CPU_SPEC,
+    FLICKR_4096_KAGGLE_CUDA_SPEC,
+    FLICKR_4096_MPS_SPEC,
     FLICKR_KAGGLE_CPU_SPEC,
     FLICKR_KAGGLE_CUDA_SPEC,
     FLICKR_MPS_SPEC,
@@ -65,6 +68,11 @@ TRIPLETS = {
         "flickr-2048",
         FLICKR_2048_KAGGLE_CPU_SPEC.poc_id,
         FLICKR_2048_KAGGLE_CUDA_SPEC.poc_id,
+    ),
+    FLICKR_4096_MPS_SPEC.poc_id: (
+        "flickr-4096",
+        FLICKR_4096_KAGGLE_CPU_SPEC.poc_id,
+        FLICKR_4096_KAGGLE_CUDA_SPEC.poc_id,
     ),
 }
 
@@ -253,6 +261,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     memory_intensive = mps["poc_id"] in {
         FLICKR_WIDE_MPS_SPEC.poc_id,
         FLICKR_2048_MPS_SPEC.poc_id,
+        FLICKR_4096_MPS_SPEC.poc_id,
     }
     if memory_intensive:
         require(

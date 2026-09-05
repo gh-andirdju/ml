@@ -17,6 +17,8 @@ FLICKR_WIDE_KAGGLE_SOURCE_REVISION = "d4115e3e408f992354a7ceced768d3e19977b54b"
 FLICKR_WIDE_MINIMUM_CUDA_PEAK_BYTES = 4 * 1024**3
 FLICKR_2048_KAGGLE_SOURCE_REVISION = "3836213605a257f70371de55036bd91ce99480a4"
 FLICKR_2048_MINIMUM_CUDA_PEAK_BYTES = 8 * 1024**3
+FLICKR_4096_KAGGLE_SOURCE_REVISION: str | None = None
+FLICKR_4096_MINIMUM_CUDA_PEAK_BYTES = 10 * 1024**3
 
 
 @dataclass(frozen=True)
@@ -210,6 +212,40 @@ FLICKR_2048_MPS_SPEC = ArtifactSpec(
     device_type="mps",
 )
 
+FLICKR_4096_KAGGLE_CPU_SPEC = ArtifactSpec(
+    poc_id="kaggle-flickr-4096-cpu-v1",
+    target_poc_id="comparison-only",
+    dataset_name="Flickr",
+    nodes=89_250,
+    classes=7,
+    minimum_accuracy=0.30,
+    identity=FLICKR_IDENTITY,
+    source_revision=FLICKR_4096_KAGGLE_SOURCE_REVISION,
+    device_type="cpu",
+)
+
+FLICKR_4096_KAGGLE_CUDA_SPEC = ArtifactSpec(
+    poc_id="kaggle-flickr-4096-cuda-v1",
+    target_poc_id="comparison-only",
+    dataset_name="Flickr",
+    nodes=89_250,
+    classes=7,
+    minimum_accuracy=0.30,
+    identity=FLICKR_IDENTITY,
+    source_revision=FLICKR_4096_KAGGLE_SOURCE_REVISION,
+)
+
+FLICKR_4096_MPS_SPEC = ArtifactSpec(
+    poc_id="macos-flickr-4096-mps-v1",
+    target_poc_id="comparison-only",
+    dataset_name="Flickr",
+    nodes=89_250,
+    classes=7,
+    minimum_accuracy=0.30,
+    identity=FLICKR_IDENTITY,
+    device_type="mps",
+)
+
 SPECS_BY_POC_ID = {
     KARATE_KAGGLE_SPEC.poc_id: KARATE_KAGGLE_SPEC,
     WIKICS_KAGGLE_SPEC.poc_id: WIKICS_KAGGLE_SPEC,
@@ -230,6 +266,9 @@ COMPARISON_SPECS_BY_POC_ID = {
     FLICKR_2048_KAGGLE_CPU_SPEC.poc_id: FLICKR_2048_KAGGLE_CPU_SPEC,
     FLICKR_2048_KAGGLE_CUDA_SPEC.poc_id: FLICKR_2048_KAGGLE_CUDA_SPEC,
     FLICKR_2048_MPS_SPEC.poc_id: FLICKR_2048_MPS_SPEC,
+    FLICKR_4096_KAGGLE_CPU_SPEC.poc_id: FLICKR_4096_KAGGLE_CPU_SPEC,
+    FLICKR_4096_KAGGLE_CUDA_SPEC.poc_id: FLICKR_4096_KAGGLE_CUDA_SPEC,
+    FLICKR_4096_MPS_SPEC.poc_id: FLICKR_4096_MPS_SPEC,
 }
 
 KAGGLE_RUNS_BY_POC_ID = {
@@ -273,6 +312,18 @@ KAGGLE_RUNS_BY_POC_ID = {
         "andird/ml-poc-12-flickr-2048-graphsage-cuda",
         3,
         "kaggle/flickr-2048-cuda",
+        True,
+    ),
+    FLICKR_4096_KAGGLE_CPU_SPEC.poc_id: KaggleRunSpec(
+        "andird/ml-poc-13-flickr-4096-graphsage-cpu",
+        1,
+        "kaggle/flickr-4096-cpu",
+        False,
+    ),
+    FLICKR_4096_KAGGLE_CUDA_SPEC.poc_id: KaggleRunSpec(
+        "andird/ml-poc-14-flickr-4096-graphsage-cuda",
+        1,
+        "kaggle/flickr-4096-cuda",
         True,
     ),
 }

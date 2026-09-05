@@ -10,6 +10,7 @@ from pathlib import Path
 import torch
 import torch.nn.functional as functional
 from torch import Tensor
+from torch.utils.checkpoint import checkpoint
 from torch_geometric.data import Data
 from torch_geometric.datasets import Flickr
 from torch_geometric.nn import SAGEConv
@@ -121,9 +122,11 @@ class FlickrGraphSAGE(torch.nn.Module):
         hidden_channels: int,
         dropout: float,
         edge_chunk_size: int | None = None,
+        activation_checkpointing: bool = False,
     ) -> None:
         super().__init__()
         self.dropout = dropout
+        self.activation_checkpointing = activation_checkpointing
         convolution = (
             SAGEConv
             if edge_chunk_size is None
@@ -142,10 +145,19 @@ class FlickrGraphSAGE(torch.nn.Module):
     def forward(self, graph: Data) -> Tensor:
         features = graph.x
         for convolution in self.convolutions[:-1]:
-            features = convolution(features, graph.edge_index).relu()
-            features = functional.dropout(
-                features, p=self.dropout, training=self.training
-            )
+            def hidden_block(
+                inputs: Tensor,
+                layer: torch.nn.Module = convolution,
+            ) -> Tensor:
+                outputs = layer(inputs, graph.edge_index).relu()
+                return functional.dropout(
+                    outputs, p=self.dropout, training=self.training
+                )
+
+            if self.activation_checkpointing and self.training:
+                features = checkpoint(hidden_block, features, use_reentrant=False)
+            else:
+                features = hidden_block(features)
         return self.convolutions[-1](features, graph.edge_index)
 
 
@@ -184,6 +196,7 @@ def train_on_device(
     learning_rate: float,
     weight_decay: float,
     edge_chunk_size: int | None = None,
+    activation_checkpointing: bool = False,
 ) -> tuple[Tensor, dict[str, float | int | str]]:
     require(
         device.type in {"cpu", "cuda", "mps"},
@@ -196,7 +209,12 @@ def train_on_device(
         )
     torch.manual_seed(seed)
     device_graph = graph.to(device)
-    model = FlickrGraphSAGE(hidden_channels, dropout, edge_chunk_size).to(device)
+    model = FlickrGraphSAGE(
+        hidden_channels,
+        dropout,
+        edge_chunk_size,
+        activation_checkpointing,
+    ).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(), lr=learning_rate, weight_decay=weight_decay
     )

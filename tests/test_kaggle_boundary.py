@@ -31,6 +31,8 @@ import run_kaggle_flickr_wide_cpu
 import run_kaggle_flickr_wide_cuda
 import run_kaggle_flickr_2048_cpu
 import run_kaggle_flickr_2048_cuda
+import run_kaggle_flickr_4096_cpu
+import run_kaggle_flickr_4096_cuda
 """
         subprocess.run([sys.executable, "-c", script], check=True)
 
@@ -50,6 +52,7 @@ import run_mps_wikics_artifact
 import run_mps_flickr
 import run_mps_flickr_wide
 import run_mps_flickr_2048
+import run_mps_flickr_4096
 """
         subprocess.run([sys.executable, "-c", script], check=True)
 

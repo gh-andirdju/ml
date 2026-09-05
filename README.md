@@ -89,5 +89,6 @@ local RTX Blackwell `sm_120` targets.
 |  | [Flickr CPU and GPU benchmark](docs/06-validation/flickr-kaggle-benchmark.md) |
 |  | [Flickr wide CPU and GPU benchmark](docs/06-validation/flickr-wide-kaggle-benchmark.md) |
 |  | [Flickr 2,048-channel benchmark](docs/06-validation/flickr-2048-kaggle-benchmark.md) |
+|  | [Flickr 4,096-channel benchmark](docs/06-validation/flickr-4096-kaggle-benchmark.md) |
 |  | [Three-environment comparison](docs/06-validation/three-environment-comparison.md) |
 |  | [CUDA portability validator](docs/06-validation/cuda-portability-validator.md) |
