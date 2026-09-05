@@ -8,6 +8,9 @@ from wikics_core import EXPECTED_CLASSES as WIKICS_CLASSES
 from wikics_core import EXPECTED_NODES as WIKICS_NODES
 
 
+KAGGLE_SOURCE_REVISION = "69610294508b61a2148199ccb74c7b5cca050602"
+
+
 KARATE_KAGGLE_SPEC = ArtifactSpec(
     poc_id="kaggle-karate-cuda-v1",
     target_poc_id="karate-gnn-neo4j-v1",
@@ -16,6 +19,7 @@ KARATE_KAGGLE_SPEC = ArtifactSpec(
     classes=KARATE_CLASSES,
     minimum_accuracy=0.50,
     identity={"source": "torch_geometric.datasets.KarateClub"},
+    source_revision=KAGGLE_SOURCE_REVISION,
 )
 
 WIKICS_KAGGLE_SPEC = ArtifactSpec(
@@ -26,6 +30,7 @@ WIKICS_KAGGLE_SPEC = ArtifactSpec(
     classes=WIKICS_CLASSES,
     minimum_accuracy=0.50,
     identity={"dataset_commit": DATASET_COMMIT, "dataset_sha256": DATASET_SHA256, "split": 0},
+    source_revision=KAGGLE_SOURCE_REVISION,
 )
 
 SPECS_BY_POC_ID = {

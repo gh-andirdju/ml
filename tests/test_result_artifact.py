@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 import torch
@@ -70,6 +71,16 @@ class ArtifactTests(unittest.TestCase):
             write_artifact(path, artifact)
             with self.assertRaisesRegex(ProofError, "did not run on CUDA"):
                 load_and_validate_artifact(path, SPEC)
+
+    def test_wrong_source_revision_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "result.json"
+            artifact = valid_artifact()
+            artifact["execution"]["source_revision"] = "a" * 40
+            write_artifact(path, artifact)
+            strict_spec = replace(SPEC, source_revision="b" * 40)
+            with self.assertRaisesRegex(ProofError, "source revision"):
+                load_and_validate_artifact(path, strict_spec)
 
     def test_inconsistent_prediction_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

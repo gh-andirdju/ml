@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import urllib.request
@@ -9,7 +10,8 @@ import zipfile
 from pathlib import Path
 
 
-SOURCE_ARCHIVE = "https://github.com/gh-andirdju/ml/archive/refs/heads/main.zip"
+SOURCE_REVISION = "69610294508b61a2148199ccb74c7b5cca050602"
+SOURCE_ARCHIVE = f"https://github.com/gh-andirdju/ml/archive/{SOURCE_REVISION}.zip"
 WORKING = Path("/kaggle/working")
 archive = WORKING / "ml-source.zip"
 urllib.request.urlretrieve(SOURCE_ARCHIVE, archive)
@@ -23,5 +25,6 @@ subprocess.run(
 subprocess.run(
     [sys.executable, str(project / "poc" / "run_kaggle_karate_cuda.py")],
     cwd=project,
+    env={**os.environ, "ML_SOURCE_REVISION": SOURCE_REVISION},
     check=True,
 )

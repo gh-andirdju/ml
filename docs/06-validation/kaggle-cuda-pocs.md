@@ -31,9 +31,9 @@ flowchart LR
 ## Artifact boundary
 
 Each GPU job requires `cuda:0`; it fails instead of falling back to CPU. The
-result records the CUDA device, framework versions, metrics, every node's class
-scores, dataset identity, and model parameters. A detached SHA-256 binds the
-download to that JSON file.
+result records the exact source commit, CUDA device, framework versions,
+metrics, every node's class scores, dataset identity, and model parameters. A
+detached SHA-256 binds the download to that JSON file.
 
 The local importer accepts only the two known POC IDs. Before any database
 write, it checks the checksum, schema version, pinned dataset identity, CUDA
