@@ -71,7 +71,7 @@ def main(profile: DeviceProfile, argv: Sequence[str] | None = None) -> int:
     revision = source_revision()
     device = selected_device(profile)
     if device.type == "cuda":
-        torch.cuda.reset_peak_memory_stats(device)
+        torch.cuda.reset_peak_memory_stats()
     logits, metrics = train_on_device(
         source_graph(arguments.data_root),
         arguments.epochs,
@@ -108,7 +108,7 @@ def main(profile: DeviceProfile, argv: Sequence[str] | None = None) -> int:
             {
                 "cuda_device_name": torch.cuda.get_device_name(device),
                 "cuda_capability": list(torch.cuda.get_device_capability(device)),
-                "cuda_peak_memory_bytes": torch.cuda.max_memory_allocated(device),
+                "cuda_peak_memory_bytes": torch.cuda.max_memory_allocated(),
             }
         )
         spec = FLICKR_KAGGLE_CUDA_SPEC
