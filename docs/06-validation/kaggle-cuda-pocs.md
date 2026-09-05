@@ -48,8 +48,9 @@ the laptop outputs.
 ```
 
 Kaggle currently documents free GPU notebooks, 12-hour sessions, and weekly GPU
-quotas that vary with demand. Available accelerator models can change. These
-proofs therefore record the assigned GPU rather than assume one model. They do
+quotas that vary with demand. Both kernels request `NvidiaTeslaT4`, because the
+current default Kaggle PyTorch image does not support the older P100's compute
+capability. The artifacts still record the actual assigned GPU. These proofs do
 not validate H200-specific precision, scaling, interconnect, or performance.
 
 ## Sources
