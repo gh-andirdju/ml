@@ -42,6 +42,9 @@ are allowed.
 - Run production on self-managed Linux systems in one data center: an H200
   cluster plus a separate Neo4j database tier.
 - Prefer a separate x86-64 Linux NVIDIA workstation for local CUDA development.
+- Run `bun run cuda:validate` before introducing native CUDA dependencies. Treat
+  `UNKNOWN`, `REBUILD_REQUIRED`, and `CUSTOM_BUILD_REQUIRED` as review gates for
+  the H200 `sm_90` and local RTX Blackwell `sm_120` targets.
 - Buy the local NVIDIA GPU new with an official Indonesian warranty; exclude
   used, refurbished, ex-display, repaired, and import-only units.
 - Treat every ADR marked `Proposed` as undecided.

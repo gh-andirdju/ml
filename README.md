@@ -54,6 +54,10 @@ The latest committed execution summaries are indexed in
 Regenerate all project PDFs with `bun run md:pdf:all`; output is written under
 `pdf/` with the Markdown directory structure preserved.
 
+Run `bun run cuda:validate` to detect project-owned CUDA/C++ compilation paths
+and write ignored JSON and Markdown reports for the planned H200 `sm_90` and
+local RTX Blackwell `sm_120` targets.
+
 ## Documents
 
 | Core | Decisions and validation |
@@ -67,3 +71,4 @@ Regenerate all project PDFs with `bun run md:pdf:all`; output is written under
 |  | [Kaggle CUDA proofs](docs/06-validation/kaggle-cuda-pocs.md) |
 |  | [Kaggle CPU comparison](docs/06-validation/kaggle-cpu-comparison.md) |
 |  | [Flickr CPU and GPU benchmark](docs/06-validation/flickr-kaggle-benchmark.md) |
+|  | [CUDA portability validator](docs/06-validation/cuda-portability-validator.md) |
