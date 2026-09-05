@@ -57,6 +57,32 @@ are allowed.
 - Bolt is published only on `127.0.0.1:7687`; authentication stays untracked.
 - Bun-based PDF tooling and project-local Playwright Chromium are available.
 
+## Verified Kaggle learnings
+
+- Kaggle CPU-only kernels work with `enable_gpu=false`; the runner must also
+  fail if CUDA is unexpectedly available so the result proves CPU execution.
+- Karate CPU and T4 predictions agree on 100% of nodes. WikiCS agrees on
+  97.7523% of nodes, with 79.01% CPU and 79.32% T4 test accuracy. Floating-point
+  scores need not be bit-identical across devices.
+- Compare the base PyTorch release separately from its build suffix: Kaggle CPU
+  reports `+cpu`, while T4 reports `+cu128` for the same release.
+- Small Karate and WikiCS artifacts prove portability but contain no
+  training-only timing, so they cannot establish a GPU speed benefit.
+- For a newly created Kaggle kernel, the title-derived slug must match the
+  metadata `id`; use the canonical ID returned by the first push.
+- In the current Kaggle T4 image, passing a `torch.device` to CUDA peak-memory
+  reset produced `Invalid device argument`. Calling peak-memory reset and read
+  for the active device without an explicit argument works around that API
+  behavior.
+- Put downloads, extracted source, and datasets under `/kaggle/temp`; write only
+  final artifacts and checksums under `/kaggle/working`.
+- Pin each wrapper to the commit containing executable code. A later pin-only
+  commit is expected and must not replace the executable revision recorded in
+  the artifact specification.
+- Kaggle failures must be diagnosed from the downloaded kernel log, fixed in a
+  new commit, repinned, and rerun. Never treat a submitted or running kernel as
+  a successful proof.
+
 ## Documentation rules
 
 - Keep documents concise and organized under `docs/NN-topic/`.
