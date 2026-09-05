@@ -30,6 +30,7 @@ SPEC = ArtifactSpec(
     minimum_accuracy=0.5,
     identity={"revision": "fixed"},
 )
+CPU_SPEC = replace(SPEC, poc_id="test-cpu-v1", device_type="cpu")
 
 
 def valid_artifact() -> dict:
@@ -41,6 +42,21 @@ def valid_artifact() -> dict:
             "status": "PASS",
             "device": "cuda:0",
             "cuda_device_name": "Test GPU",
+            "accuracy": 1.0,
+        },
+    )
+
+
+def valid_cpu_artifact() -> dict:
+    return artifact_from_logits(
+        spec=CPU_SPEC,
+        logits=torch.tensor([[3.0, 1.0], [1.0, 3.0]]),
+        model={"type": "test"},
+        execution={
+            "status": "PASS",
+            "device": "cpu",
+            "cpu_model": "Test CPU",
+            "cuda_available": False,
             "accuracy": 1.0,
         },
     )
@@ -71,6 +87,22 @@ class ArtifactTests(unittest.TestCase):
             write_artifact(path, artifact)
             with self.assertRaisesRegex(ProofError, "did not run on CUDA"):
                 load_and_validate_artifact(path, SPEC)
+
+    def test_cpu_execution_is_accepted_for_cpu_spec(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "result.json"
+            write_artifact(path, valid_cpu_artifact())
+            artifact, _ = load_and_validate_artifact(path, CPU_SPEC)
+            self.assertEqual(artifact["execution"]["device"], "cpu")
+
+    def test_cpu_execution_rejects_available_cuda(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "result.json"
+            artifact = valid_cpu_artifact()
+            artifact["execution"]["cuda_available"] = True
+            write_artifact(path, artifact)
+            with self.assertRaisesRegex(ProofError, "had CUDA available"):
+                load_and_validate_artifact(path, CPU_SPEC)
 
     def test_wrong_source_revision_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

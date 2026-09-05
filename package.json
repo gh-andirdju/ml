@@ -18,6 +18,9 @@
     "poc:wikics:verify": ".venv/bin/python ./poc/wikics_gnn_neo4j.py --verify-existing",
     "poc:kaggle:karate": ".venv/bin/python ./poc/run_kaggle_karate_cuda.py",
     "poc:kaggle:wikics": ".venv/bin/python ./poc/run_kaggle_wikics_cuda.py",
+    "poc:kaggle:karate:cpu": ".venv/bin/python ./poc/run_kaggle_karate_cpu.py",
+    "poc:kaggle:wikics:cpu": ".venv/bin/python ./poc/run_kaggle_wikics_cpu.py",
+    "poc:kaggle:compare": ".venv/bin/python ./poc/compare_kaggle_results.py",
     "poc:kaggle:import": ".venv/bin/python ./poc/import_kaggle_result.py"
   },
   "dependencies": {},

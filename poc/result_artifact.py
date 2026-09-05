@@ -30,6 +30,7 @@ class ArtifactSpec:
     minimum_accuracy: float
     identity: dict[str, Any]
     source_revision: str | None = None
+    device_type: str = "cuda"
 
 
 def utc_now() -> str:
@@ -137,9 +138,24 @@ def load_and_validate_artifact(
 
     execution = artifact.get("execution")
     require(isinstance(execution, dict), "Execution metadata is missing")
-    require(execution.get("status") == "PASS", "GPU execution did not pass")
-    require(str(execution.get("device", "")).startswith("cuda:"), "Artifact did not run on CUDA")
-    require(bool(str(execution.get("cuda_device_name", "")).strip()), "CUDA device name is missing")
+    require(execution.get("status") == "PASS", "Execution did not pass")
+    require(spec.device_type in {"cpu", "cuda"}, "Artifact spec has an invalid device type")
+    if spec.device_type == "cuda":
+        require(
+            str(execution.get("device", "")).startswith("cuda:"),
+            "Artifact did not run on CUDA",
+        )
+        require(
+            bool(str(execution.get("cuda_device_name", "")).strip()),
+            "CUDA device name is missing",
+        )
+    else:
+        require(execution.get("device") == "cpu", "Artifact did not run on CPU")
+        require(execution.get("cuda_available") is False, "CPU artifact had CUDA available")
+        require(
+            bool(str(execution.get("cpu_model", "")).strip()),
+            "CPU model is missing",
+        )
     if spec.source_revision is not None:
         require(
             execution.get("source_revision") == spec.source_revision,

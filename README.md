@@ -2,16 +2,16 @@
 
 ## Current summary
 
-Four proofs use two datasets across two compute environments. The laptop runs
-Karate and WikiCS on MPS or CPU with local Neo4j. Two private Kaggle jobs run the
-same device-neutral models on a free NVIDIA GPU, export checksummed predictions,
-and leave Neo4j on the laptop. Production remains a design for a self-managed
-Linux H200 cluster and separate Neo4j tier in one data center.
+Six proofs use two datasets across laptop and Kaggle compute. The laptop runs
+Karate and WikiCS on MPS or CPU with local Neo4j. Private Kaggle jobs run the
+same models on CPU and a free NVIDIA GPU, export checksummed predictions, and
+leave Neo4j on the laptop. The Kaggle CPU pair is being validated. Production
+remains a design for a self-managed Linux H200 cluster and separate Neo4j tier.
 
 ```mermaid
 flowchart LR
     mac[Mac<br/>MPS or CPU] --> shared[Portable PyTorch and PyG]
-    kaggle[Kaggle<br/>free NVIDIA GPU] --> shared
+    kaggle[Kaggle<br/>CPU or free NVIDIA GPU] --> shared
     shared --> h200[Linux H200 cluster<br/>CUDA]
     kaggle --> artifact[JSON and SHA-256]
     artifact --> importer[Validated local import]
@@ -34,9 +34,11 @@ the model code:
 ./poc/run_wikics_cpu.py
 ./poc/run_wikics_linux_cuda.py
 
-# CUDA-only artifact exporters; execute these through the Kaggle kernels
+# Database-free artifact exporters; execute through the Kaggle kernels
 ./poc/run_kaggle_karate_cuda.py
 ./poc/run_kaggle_wikics_cuda.py
+./poc/run_kaggle_karate_cpu.py
+./poc/run_kaggle_wikics_cpu.py
 ```
 
 MPS and CPU are verified for both laptop POCs. Both Kaggle CUDA proofs pass on
@@ -60,3 +62,4 @@ Regenerate all project PDFs with `bun run md:pdf:all`; output is written under
 | [Implementation phases](docs/05-plan/phases.md) | [Minimal local proof](docs/06-validation/minimal-local-poc.md) |
 |  | [Larger WikiCS proof](docs/06-validation/larger-wikics-poc.md) |
 |  | [Kaggle CUDA proofs](docs/06-validation/kaggle-cuda-pocs.md) |
+|  | [Kaggle CPU comparison](docs/06-validation/kaggle-cpu-comparison.md) |

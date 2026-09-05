@@ -10,7 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 class KaggleBoundaryTests(unittest.TestCase):
-    def test_gpu_exporters_do_not_import_neo4j(self) -> None:
+    def test_kaggle_exporters_do_not_import_neo4j(self) -> None:
         script = f"""
 import builtins
 import sys
@@ -23,6 +23,8 @@ def guarded_import(name, *args, **kwargs):
 builtins.__import__ = guarded_import
 import run_kaggle_karate_cuda
 import run_kaggle_wikics_cuda
+import run_kaggle_karate_cpu
+import run_kaggle_wikics_cpu
 """
         subprocess.run([sys.executable, "-c", script], check=True)
 
