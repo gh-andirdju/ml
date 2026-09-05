@@ -38,6 +38,8 @@ flowchart TB
 - Core models, tensors, preprocessing, and checkpoints remain device-neutral.
 - `poc/run_linux_cuda.py` supplies the CUDA profile to the shared POC runner;
   execution still requires validation on the NVIDIA environment.
+- `poc/run_wikics_linux_cuda.py` provides the equivalent larger-workload CUDA
+  validation entry point.
 - Checkpoints load through CPU and then move to the selected device.
 - BF16, FP8, NCCL, and CUDA/Triton kernels are optional H200 accelerators.
 - Final CUDA and PyTorch versions follow the deployed driver compatibility

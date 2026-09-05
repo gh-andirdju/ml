@@ -7,9 +7,7 @@ import argparse
 import json
 import math
 import os
-import re
 import sys
-import time
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -17,12 +15,20 @@ import neo4j
 import torch
 import torch.nn.functional as functional
 import torch_geometric
-from neo4j import GraphDatabase
 from neo4j.exceptions import Neo4jError
 from torch import Tensor
 from torch_geometric.data import Data
 from torch_geometric.datasets import KarateClub
 from torch_geometric.nn import GCNConv
+
+from poc_runtime import (
+    ProofError,
+    connect_with_retry,
+    neo4j_configuration,
+    require,
+    resolve_device,
+    verify_neo4j_community,
+)
 
 
 POC_ID = "karate-gnn-neo4j-v1"
@@ -35,10 +41,6 @@ EXPECTED_CLASSES = 4
 EXPECTED_TRAINING_NODES = 4
 
 
-class ProofError(RuntimeError):
-    """Raised when an end-to-end proof condition is not satisfied."""
-
-
 class SmallestGCN(torch.nn.Module):
     """A single graph-convolution layer for four-class node prediction."""
 
@@ -48,30 +50,6 @@ class SmallestGCN(torch.nn.Module):
 
     def forward(self, graph: Data) -> Tensor:
         return self.convolution(graph.x, graph.edge_index)
-
-
-def require(condition: bool, message: str) -> None:
-    if not condition:
-        raise ProofError(message)
-
-
-def load_environment_file(path: Path) -> None:
-    if not path.is_file():
-        raise ProofError(f"Secret environment file not found: {path}")
-    for line_number, raw_line in enumerate(
-        path.read_text(encoding="utf8").splitlines(), start=1
-    ):
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-        require("=" in line, f"Invalid environment entry at {path}:{line_number}")
-        key, value = line.split("=", 1)
-        key = key.strip()
-        require(
-            re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key) is not None,
-            f"Invalid environment key at {path}:{line_number}",
-        )
-        os.environ.setdefault(key, value)
 
 
 def source_graph() -> Data:
@@ -190,7 +168,10 @@ def read_graph(session) -> Data:
 
 
 def verify_round_trip(source: Data, rebuilt: Data) -> None:
-    require(tuple(rebuilt.x.shape) == (EXPECTED_NODES, EXPECTED_FEATURES), "Feature shape mismatch")
+    require(
+        tuple(rebuilt.x.shape) == (EXPECTED_NODES, EXPECTED_FEATURES),
+        "Feature shape mismatch",
+    )
     require(tuple(rebuilt.edge_index.shape) == (2, EXPECTED_DIRECTED_EDGES), "Edge shape mismatch")
     require(torch.equal(source.x, rebuilt.x), "Features changed during Neo4j round trip")
     require(torch.equal(source.y, rebuilt.y), "Labels changed during Neo4j round trip")
@@ -283,7 +264,10 @@ def train_on_device(
     require(actual_device.type == device.type, "Requested device type was not used")
     if device.index is not None:
         require(actual_device.index == device.index, "Requested device index was not used")
-    require(tuple(final_logits.shape) == (EXPECTED_NODES, EXPECTED_CLASSES), "Output shape mismatch")
+    require(
+        tuple(final_logits.shape) == (EXPECTED_NODES, EXPECTED_CLASSES),
+        "Output shape mismatch",
+    )
     require(math.isfinite(initial_loss) and math.isfinite(final_loss), "Loss is not finite")
     require(final_loss < initial_loss, "Training loss did not decrease")
     return final_logits.cpu(), initial_loss, final_loss, accuracy, str(actual_device)
@@ -326,30 +310,6 @@ def count_predictions(session) -> int:
     return int(record["count"])
 
 
-def connect_with_retry(uri: str, user: str, password: str, timeout: float):
-    deadline = time.monotonic() + timeout
-    last_error: Exception | None = None
-    while (remaining := deadline - time.monotonic()) > 0:
-        driver = None
-        try:
-            driver = GraphDatabase.driver(
-                uri,
-                auth=(user, password),
-                telemetry_disabled=True,
-                connection_timeout=remaining,
-            )
-            driver.verify_connectivity()
-            return driver
-        except Exception as error:  # Connection errors vary across driver versions.
-            last_error = error
-            if driver is not None:
-                driver.close()
-            remaining = deadline - time.monotonic()
-            if remaining > 0:
-                time.sleep(min(1, remaining))
-    raise ProofError(f"Neo4j did not become ready within {timeout:g}s: {last_error}")
-
-
 def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--env-file", type=Path, default=Path(".secrets/neo4j-poc.env"))
@@ -385,35 +345,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         require(arguments.epochs > 0, "Epoch count must be positive")
         require(arguments.learning_rate > 0, "Learning rate must be positive")
         require(arguments.weight_decay >= 0, "Weight decay cannot be negative")
-    load_environment_file(arguments.env_file)
-    uri = os.environ.get("NEO4J_URI", "bolt://127.0.0.1:7687")
-    user = os.environ.get("NEO4J_USER", "neo4j")
-    password = os.environ.get("NEO4J_PASSWORD")
-    if not password:
-        auth_user, separator, auth_password = os.environ.get("NEO4J_AUTH", "").partition("/")
-        require(separator == "/" and bool(auth_password), "NEO4J_AUTH is invalid")
-        require(auth_user == user, "NEO4J_AUTH user does not match NEO4J_USER")
-        password = auth_password
-    require(bool(password), "NEO4J_PASSWORD is missing")
+    connection = neo4j_configuration(arguments.env_file)
 
     source = source_graph()
     device = None if arguments.verify_existing else resolve_device(arguments.device)
-    driver = connect_with_retry(uri, user, password, arguments.connection_timeout)
+    driver = connect_with_retry(
+        connection.uri,
+        connection.user,
+        connection.password,
+        arguments.connection_timeout,
+    )
     try:
         with driver.session(database=arguments.database) as session:
-            component = session.run(
-                """
-                CALL dbms.components() YIELD name, versions, edition
-                RETURN name, versions[0] AS version, edition
-                LIMIT 1
-                """
-            ).single(strict=True)
-            server_version = str(component["version"])
-            edition = str(component["edition"]).lower()
-            require(edition == "community", f"Expected Community Edition, found {edition}")
-            require(
-                server_version == arguments.expected_server_version,
-                f"Expected Neo4j {arguments.expected_server_version}, found {server_version}",
+            server_version, edition = verify_neo4j_community(
+                session, arguments.expected_server_version
             )
 
             if arguments.verify_existing:

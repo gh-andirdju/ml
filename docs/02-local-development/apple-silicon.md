@@ -6,7 +6,7 @@
 | --- | --- |
 | Python | Host-native 3.14.7 `.venv` |
 | Compute | PyTorch 2.14.0; MPS and CPU profiles verified |
-| GNN | PyG 2.8.0.post1; one `GCNConv(34, 4)` |
+| GNN | PyG 2.8.0.post1; minimal Karate and two-layer WikiCS GCNs |
 | Neo4j | Community 2026.07.1 in Apple Container 1.3.1 |
 | Memory | Neo4j limited to 2 GB on the 16 GB laptop |
 | Status | End-to-end proof passed on 2026-09-05 |
@@ -32,8 +32,9 @@ Metal/MPS does not provide the CUDA API. Apple Container has no GPU role, so GNN
 compute remains on the macOS host. The proof keeps model parameters, graph
 tensors, and output on MPS with CPU fallback disabled.
 
-Run `./poc/run_macos_mps.py` for accelerated local work or
-`./poc/run_cpu.py` for the CPU control profile. Both call the same shared runner.
+Run `./poc/run_macos_mps.py` or `./poc/run_cpu.py` for the minimal proof. Use
+`./poc/run_wikics_macos_mps.py` or `./poc/run_wikics_cpu.py` for the larger
+proof. Each MPS/CPU pair calls one device-neutral runner.
 
 ## Local Neo4j state
 

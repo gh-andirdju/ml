@@ -11,7 +11,11 @@
     "poc:cpu": ".venv/bin/python ./poc/run_cpu.py",
     "poc:nvidia": ".venv/bin/python ./poc/run_linux_cuda.py",
     "poc:unit": ".venv/bin/python -m unittest discover -s tests -v",
-    "poc:verify": ".venv/bin/python ./poc/karate_gnn_neo4j.py --verify-existing"
+    "poc:verify": ".venv/bin/python ./poc/karate_gnn_neo4j.py --verify-existing",
+    "poc:wikics:macos": ".venv/bin/python ./poc/run_wikics_macos_mps.py",
+    "poc:wikics:cpu": ".venv/bin/python ./poc/run_wikics_cpu.py",
+    "poc:wikics:nvidia": ".venv/bin/python ./poc/run_wikics_linux_cuda.py",
+    "poc:wikics:verify": ".venv/bin/python ./poc/wikics_gnn_neo4j.py --verify-existing"
   },
   "dependencies": {},
   "devDependencies": {

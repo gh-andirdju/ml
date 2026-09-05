@@ -1,7 +1,7 @@
 # Implementation phases
 
-The local proof is complete. Data-center implementation remains pending explicit
-approval.
+Both local proofs are complete. Data-center implementation remains pending
+explicit approval.
 
 ```mermaid
 flowchart LR
@@ -19,6 +19,8 @@ flowchart LR
 - Idempotent rerun and named-volume persistence checks.
 - Automated unit coverage for graph payload, environment, device, and connection
   behavior.
+- Pinned WikiCS graph with 11,701 nodes, two-layer GCN, official splits, early
+  stopping, and batched Neo4j round-trip persistence.
 
 ## Next: project foundation
 

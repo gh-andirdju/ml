@@ -40,6 +40,14 @@ flowchart LR
 - A device adapter selects CUDA, MPS, or CPU.
 - CUDA-only kernels, NCCL, and H200 optimizations remain optional.
 
+## Validation ladder
+
+- Karate Club is the fast 34-node integration smoke test.
+- WikiCS is the larger 11,701-node full-batch GCN proof with data splits, model
+  selection, checksum verification, and batched database I/O.
+- Both keep compute selection outside their model definitions and use isolated
+  Neo4j labels and POC identifiers.
+
 ## Open decisions
 
 - Production Python and framework versions.

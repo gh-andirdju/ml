@@ -12,6 +12,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "poc"))
 
 import karate_gnn_neo4j as poc  # noqa: E402
+import poc_runtime as runtime  # noqa: E402
 
 
 class EnvironmentFileTests(unittest.TestCase):
@@ -25,7 +26,7 @@ class EnvironmentFileTests(unittest.TestCase):
             with patch.dict(
                 os.environ, {"TEST_EXISTING": "process-value"}, clear=True
             ):
-                poc.load_environment_file(path)
+                runtime.load_environment_file(path)
                 self.assertEqual(os.environ["TEST_NEW"], "new-value")
                 self.assertEqual(os.environ["TEST_EXISTING"], "process-value")
 
@@ -34,7 +35,7 @@ class EnvironmentFileTests(unittest.TestCase):
             path = Path(directory) / "test.env"
             path.write_text("NOT AN ENVIRONMENT ENTRY\n", encoding="utf8")
             with self.assertRaisesRegex(poc.ProofError, r"test\.env:1"):
-                poc.load_environment_file(path)
+                runtime.load_environment_file(path)
 
 
 class GraphTests(unittest.TestCase):
@@ -61,8 +62,10 @@ class GraphTests(unittest.TestCase):
 class ConnectionTests(unittest.TestCase):
     def test_connection_timeout_is_forwarded_to_driver(self) -> None:
         driver = Mock()
-        with patch.object(poc.GraphDatabase, "driver", return_value=driver) as create:
-            result = poc.connect_with_retry("bolt://example", "neo4j", "secret", 3)
+        with patch.object(
+            runtime.GraphDatabase, "driver", return_value=driver
+        ) as create:
+            result = runtime.connect_with_retry("bolt://example", "neo4j", "secret", 3)
 
         self.assertIs(result, driver)
         driver.verify_connectivity.assert_called_once_with()
@@ -74,11 +77,11 @@ class ConnectionTests(unittest.TestCase):
         driver = Mock()
         driver.verify_connectivity.side_effect = OSError("unreachable")
         with (
-            patch.object(poc.GraphDatabase, "driver", return_value=driver),
-            patch.object(poc.time, "monotonic", side_effect=[0, 0, 2, 2]),
+            patch.object(runtime.GraphDatabase, "driver", return_value=driver),
+            patch.object(runtime.time, "monotonic", side_effect=[0, 0, 2, 2]),
             self.assertRaisesRegex(poc.ProofError, "within 2s"),
         ):
-            poc.connect_with_retry("bolt://example", "neo4j", "secret", 2)
+            runtime.connect_with_retry("bolt://example", "neo4j", "secret", 2)
 
         driver.close.assert_called_once_with()
 
