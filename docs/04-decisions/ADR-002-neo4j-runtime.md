@@ -1,51 +1,29 @@
 # ADR-002: Local Neo4j runtime
 
-- Status: Proposed; proof-of-concept required
-- Date: 2026-09-04
+- Status: Accepted for the local proof-of-concept
+- Date: 2026-09-05
 
-## Options
+## Decision
 
-| Option | Strengths | Weaknesses |
-| --- | --- | --- |
-| Apple Container | OCI isolation, explicit Neo4j version, clean replacement, durable named volumes | Installed CLI is old, no assumed native Compose, young runtime, VM memory overhead |
-| Homebrew service | Simplest local operation, no container layer, already installed | Host-level Java/database state, upgrades less isolated, lower parity with server containers |
+Use a version-pinned Neo4j Community ARM64 image in Apple Container for local
+integration work. Keep Python and MPS training on the macOS host.
 
 ```mermaid
-flowchart TD
-    start[Choose local Neo4j runtime] --> cloud{Need managed cloud now?}
-    cloud -- Yes --> excluded[Outside confirmed architecture]
-    cloud -- No --> isolation{Prefer versioned isolation?}
-    isolation -- No --> brew[Use Homebrew service]
-    isolation -- Yes --> poc[Test Apple Container]
-    poc --> pass{Persistence, networking,<br/>memory, operations pass?}
-    pass -- Yes --> apple[Use Apple Container]
-    pass -- No --> brew
-
-    apple -. proposed .-> pending[Awaiting approval and proof-of-concept]
-    brew -. available fallback .-> pending
+flowchart LR
+    python[Host Python and MPS] <-->|Bolt on loopback| apple[Neo4j Community<br/>Apple Container]
+    apple --> volume[(Named data volume)]
 ```
 
-## Proposed decision
+## Verified POC criteria
 
-Prefer Apple Container for local Neo4j if a small proof-of-concept confirms
-reliable networking and volume persistence. Keep Python/PyTorch on the macOS host
-for MPS access. Fall back to the dormant Homebrew installation if Apple
-Container creates friction.
+- Neo4j Community 2026.07.1 runs as native Linux ARM64.
+- Only Bolt is host-published, on `127.0.0.1:7687`.
+- Data survived deletion and recreation of the container definition.
+- Authentication is stored in an ignored mode-0600 environment file.
+- The container is limited to 2 CPUs and 2 GB memory.
 
-This decision does not recommend putting PyTorch training in Apple Container,
-because the container runtime does not currently expose the Mac GPU.
+## Consequences
 
-## Acceptance criteria
-
-- Official Neo4j ARM64 image starts without emulation.
-- Browser on port 7474 and Bolt on 7687 are reachable only as intended.
-- Database survives container deletion and recreation through a named volume.
-- Authentication uses an untracked secret.
-- Resource limits coexist comfortably with a 16 GB development laptop.
-- Start, stop, backup, upgrade, and recovery steps are documented.
-
-No option will be configured until implementation is approved.
-
-This ADR governs only the Mac development runtime. Production Neo4j is a
-version-pinned, self-managed Linux deployment in the same data center as the
-H200 cluster, as recorded in ADR-003.
+Local Neo4j remains separate from host-native MPS compute. This ADR does not
+govern production, which uses self-managed Linux Neo4j in the data center.
+Backup and restore validation remains production-hardening work.

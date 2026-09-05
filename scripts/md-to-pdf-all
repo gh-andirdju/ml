@@ -1,0 +1,49 @@
+#!/usr/bin/env bun
+
+import { dirname, extname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const outputRoot = resolve(projectRoot, Bun.argv[2] ?? "pdf");
+const converter = resolve(projectRoot, "scripts/md-to-pdf");
+const glob = new Bun.Glob("**/*.md");
+const markdownFiles = [];
+
+for await (const file of glob.scan({ cwd: projectRoot, onlyFiles: true })) {
+  if (
+    file.startsWith("node_modules/") ||
+    file.startsWith(".git/") ||
+    file.startsWith("pdf/")
+  ) {
+    continue;
+  }
+  markdownFiles.push(file);
+}
+
+markdownFiles.sort();
+if (markdownFiles.length === 0) {
+  console.error("md-to-pdf-all: error: no Markdown files found");
+  process.exit(1);
+}
+
+let converted = 0;
+for (const file of markdownFiles) {
+  const extension = extname(file);
+  const output = join(outputRoot, file.slice(0, -extension.length) + ".pdf");
+  const child = Bun.spawn(
+    [process.execPath, converter, resolve(projectRoot, file), output, "--force"],
+    {
+      cwd: projectRoot,
+      stdout: "inherit",
+      stderr: "inherit",
+    }
+  );
+  const exitCode = await child.exited;
+  if (exitCode !== 0) {
+    console.error(`md-to-pdf-all: stopped after failure in ${file}`);
+    process.exit(exitCode);
+  }
+  converted += 1;
+}
+
+console.log(`Converted ${converted} Markdown files into ${outputRoot}`);

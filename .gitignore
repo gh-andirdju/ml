@@ -1,0 +1,7 @@
+node_modules/
+*.pdf
+.DS_Store
+.venv/
+.secrets/
+__pycache__/
+*.py[cod]

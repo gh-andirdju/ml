@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "md:pdf": "bun ./scripts/md-to-pdf",
+    "md:pdf:all": "bun ./scripts/md-to-pdf-all",
+    "poc:secret": "bun ./scripts/create-poc-secret",
+    "poc:test": ".venv/bin/python ./poc/karate_mps_neo4j.py",
+    "poc:verify": ".venv/bin/python ./poc/karate_mps_neo4j.py --verify-existing"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "marked": "^18.0.11",
+    "mermaid": "^11.17.2",
+    "playwright": "^1.62.1"
+  }
+}

@@ -1,0 +1,304 @@
+#!/usr/bin/env bun
+
+import { mkdtemp, mkdir, readFile, rename, rm, stat } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { basename, dirname, extname, join, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { marked } from "marked";
+
+const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+process.env.PLAYWRIGHT_BROWSERS_PATH ??= "0";
+const { chromium } = await import("playwright");
+
+const usage = `Usage: ./scripts/md-to-pdf [--force] INPUT.md [OUTPUT.pdf]
+
+Convert one Markdown file, including Mermaid diagrams, to an A4 PDF.
+
+Arguments:
+  INPUT.md     Markdown document to render
+  OUTPUT.pdf   Optional output path; defaults beside the input
+
+Options:
+  --force      Replace an existing output PDF
+  -h, --help   Show this help
+`;
+
+function fail(message) {
+  throw new Error(message);
+}
+
+function parseArguments(arguments_) {
+  let force = false;
+  const positional = [];
+
+  for (const argument of arguments_) {
+    if (argument === "--force") {
+      force = true;
+    } else if (argument === "--help" || argument === "-h") {
+      console.log(usage);
+      process.exit(0);
+    } else if (argument.startsWith("-")) {
+      fail(`Unknown option: ${argument}\n\n${usage}`);
+    } else {
+      positional.push(argument);
+    }
+  }
+
+  if (positional.length < 1 || positional.length > 2) fail(usage);
+  return { force, input: positional[0], output: positional[1] };
+}
+
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function documentHtml(markdown, inputPath) {
+  const renderer = new marked.Renderer();
+  renderer.html = ({ text }) => escapeHtml(text);
+  const body = marked.parse(markdown, { gfm: true, renderer });
+  const title = escapeHtml(
+    basename(inputPath, extname(inputPath)).replaceAll("-", " ")
+  );
+  const base = escapeHtml(`${pathToFileURL(dirname(inputPath)).href}/`);
+
+  return `<!doctype html>
+<html lang="en" data-render-status="pending" data-mermaid-total="0" data-mermaid-rendered="0">
+<head>
+  <meta charset="utf-8">
+  <base href="${base}">
+  <title>${title}</title>
+  <style>
+    @page { size: A4; margin: 16mm 14mm 18mm; }
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    html, body { background: #fff; }
+    body {
+      margin: 0;
+      color: #17202a;
+      font: 10.5pt/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+    article { max-width: 100%; }
+    h1, h2, h3, h4 { color: #102a43; line-height: 1.22; break-after: avoid; }
+    h1 { margin: 0 0 0.65em; padding-bottom: 0.28em; border-bottom: 1px solid #bcccdc; font-size: 23pt; }
+    h2 { margin: 1.25em 0 0.45em; font-size: 16pt; }
+    h3 { margin: 1em 0 0.35em; font-size: 13pt; }
+    p, ul, ol, blockquote, pre, table, figure { margin-top: 0.55em; margin-bottom: 0.8em; }
+    a { color: #075985; text-decoration: none; overflow-wrap: anywhere; }
+    code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.88em; }
+    pre {
+      padding: 0.75em;
+      border: 1px solid #d9e2ec;
+      border-radius: 5px;
+      background: #f5f7fa;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      break-inside: avoid;
+    }
+    blockquote { margin-left: 0; padding-left: 1em; border-left: 4px solid #9fb3c8; color: #486581; }
+    table { width: 100%; border-collapse: collapse; font-size: 8.6pt; }
+    thead { display: table-header-group; }
+    tr { break-inside: avoid; }
+    th, td {
+      padding: 0.45em 0.55em;
+      border: 1px solid #bcccdc;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+    }
+    th { background: #eaf1f8; color: #102a43; }
+    img { max-width: 100%; height: auto; }
+    figure.mermaid-diagram { margin: 1em 0; text-align: center; break-inside: avoid; }
+    figure.mermaid-diagram svg {
+      display: block;
+      max-width: 100% !important;
+      height: auto !important;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <article id="content">${body}</article>
+</body>
+</html>`;
+}
+
+async function ensureFile(path, description) {
+  let information;
+  try {
+    information = await stat(path);
+  } catch {
+    fail(`${description} not found: ${path}`);
+  }
+  if (!information.isFile()) fail(`${description} is not a file: ${path}`);
+  return information;
+}
+
+async function outputExists(path) {
+  try {
+    await stat(path);
+    return true;
+  } catch (error) {
+    if (error?.code === "ENOENT") return false;
+    throw error;
+  }
+}
+
+async function render(inputPath, outputPath) {
+  const markdown = await readFile(inputPath, "utf8");
+  const temporaryDirectory = await mkdtemp(join(tmpdir(), "md-to-pdf-"));
+  const temporaryPdf = join(temporaryDirectory, "output.pdf");
+  let browser;
+
+  try {
+    browser = await chromium.launch({
+      headless: true,
+      args: ["--allow-file-access-from-files"],
+    });
+    const context = await browser.newContext({ serviceWorkers: "block" });
+    const page = await context.newPage();
+    const browserErrors = [];
+    page.on("pageerror", (error) => browserErrors.push(String(error)));
+
+    await page.setContent(documentHtml(markdown, inputPath), {
+      waitUntil: "load",
+    });
+    await page.addScriptTag({
+      path: resolve(projectRoot, "node_modules/mermaid/dist/mermaid.min.js"),
+    });
+
+    const mermaidResult = await page.evaluate(async () => {
+      document.documentElement.dataset.renderStatus = "running";
+      globalThis.mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: "strict",
+        theme: "neutral",
+        flowchart: { htmlLabels: true, useMaxWidth: true },
+      });
+
+      const blocks = [
+        ...document.querySelectorAll("pre > code.language-mermaid"),
+      ];
+      document.documentElement.dataset.mermaidTotal = String(blocks.length);
+      let rendered = 0;
+
+      for (let index = 0; index < blocks.length; index += 1) {
+        const code = blocks[index];
+        const source = code.textContent;
+        await globalThis.mermaid.parse(source);
+        const result = await globalThis.mermaid.render(
+          `mermaid-pdf-${index + 1}`,
+          source
+        );
+        const figure = document.createElement("figure");
+        figure.className = "mermaid-diagram";
+        figure.innerHTML = result.svg;
+        const svg = figure.querySelector("svg");
+        const viewBox = svg?.viewBox?.baseVal;
+        if (svg && viewBox?.width > 0 && viewBox?.height > 0) {
+          // Keep a diagram inside one printable A4 content box. Without an
+          // explicit height cap, tall flowcharts can be split between pages.
+          const maximumWidth = 690;
+          const maximumHeight = 870;
+          const scale = Math.min(
+            1,
+            maximumWidth / viewBox.width,
+            maximumHeight / viewBox.height
+          );
+          svg.style.width = `${Math.floor(viewBox.width * scale)}px`;
+          svg.style.height = `${Math.floor(viewBox.height * scale)}px`;
+        }
+        code.parentElement.replaceWith(figure);
+        result.bindFunctions?.(figure);
+        rendered += 1;
+      }
+
+      document.documentElement.dataset.mermaidRendered = String(rendered);
+      await document.fonts?.ready;
+      document.documentElement.dataset.renderStatus = "complete";
+      return { total: blocks.length, rendered };
+    });
+
+    await page.waitForFunction(
+      () => document.documentElement.dataset.renderStatus === "complete"
+    );
+    await page.evaluate(async () => {
+      const images = [...document.images];
+      await Promise.all(
+        images.map((image) =>
+          image.complete
+            ? Promise.resolve()
+            : new Promise((done) => {
+                image.addEventListener("load", done, { once: true });
+                image.addEventListener("error", done, { once: true });
+              })
+        )
+      );
+    });
+
+    if (browserErrors.length) {
+      fail(`Browser rendering error: ${browserErrors.join("; ")}`);
+    }
+    if (mermaidResult.rendered !== mermaidResult.total) {
+      fail(
+        `Only ${mermaidResult.rendered} of ${mermaidResult.total} Mermaid diagrams rendered.`
+      );
+    }
+
+    await page.emulateMedia({ media: "print" });
+    await page.pdf({
+      path: temporaryPdf,
+      format: "A4",
+      preferCSSPageSize: true,
+      printBackground: true,
+      tagged: true,
+      outline: true,
+    });
+
+    const pdfInformation = await ensureFile(temporaryPdf, "Generated PDF");
+    if (pdfInformation.size < 1000) fail("Generated PDF is unexpectedly small.");
+    const header = await readFile(temporaryPdf);
+    if (!header.subarray(0, 5).equals(Buffer.from("%PDF-"))) {
+      fail("Generated file does not have a PDF header.");
+    }
+
+    await mkdir(dirname(outputPath), { recursive: true });
+    await rename(temporaryPdf, outputPath);
+    return { bytes: pdfInformation.size, ...mermaidResult };
+  } finally {
+    await browser?.close();
+    await rm(temporaryDirectory, { recursive: true, force: true });
+  }
+}
+
+try {
+  const arguments_ = parseArguments(Bun.argv.slice(2));
+  const inputPath = resolve(arguments_.input);
+  const extension = extname(inputPath).toLowerCase();
+  await ensureFile(inputPath, "Markdown input");
+  if (extension !== ".md" && extension !== ".markdown") {
+    fail(`Input does not look like Markdown: ${inputPath}`);
+  }
+
+  const outputPath = arguments_.output
+    ? resolve(arguments_.output)
+    : inputPath.slice(0, -extension.length) + ".pdf";
+  if (outputPath === inputPath) fail("Input and output paths must differ.");
+  if ((await outputExists(outputPath)) && !arguments_.force) {
+    fail(`Output already exists: ${outputPath} (use --force)`);
+  }
+
+  const result = await render(inputPath, outputPath);
+  console.log(
+    `Created ${outputPath} (${result.bytes} bytes; Mermaid ${result.rendered}/${result.total})`
+  );
+} catch (error) {
+  console.error(`md-to-pdf: error: ${error?.message ?? String(error)}`);
+  process.exit(1);
+}

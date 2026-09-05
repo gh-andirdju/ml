@@ -1,79 +1,42 @@
-# ADR-001: Portable tensors and model code, not CUDA APIs
+# ADR-001: Portable compute interface
 
-- Status: Proposed
-- Date: 2026-09-04
-
-## Context
-
-Development happens on an Apple M2 Pro, while later training will use an NVIDIA
-H200. The two GPUs use different software stacks: Metal/MPS on macOS and CUDA on
-Linux.
-
-```mermaid
-flowchart LR
-    shared[Shared PyTorch/PyG code]
-    tensors[CPU tensors and state_dict]
-
-    subgraph mac[Apple Silicon]
-        mps[MPS backend]
-        metal[Metal]
-        mps --> metal
-    end
-
-    subgraph nvidia[H200 server]
-        cuda[CUDA backend]
-        h200[H200 GPU]
-        cuda --> h200
-    end
-
-    shared --> mps
-    shared --> cuda
-    tensors <--> mps
-    tensors <--> cuda
-    metal -.-> noapi{No CUDA API bridge}
-    cuda -.-> noapi
-```
+- Status: Accepted for local development; CUDA validation pending
+- Date: 2026-09-05
 
 ## Decision
 
-Treat PyTorch tensors, modules, PyTorch Geometric data objects, and
-device-neutral checkpoints as the portability layer. Select the device at
-runtime. Do not make direct CUDA APIs part of the core application interface.
+Use PyTorch tensors, modules, PyTorch Geometric data objects, and device-neutral
+`state_dict` checkpoints as the portability layer. Select CUDA, MPS, or CPU at
+runtime. Direct CUDA APIs are outside the portable core.
 
 ```mermaid
-flowchart TD
-    feature[Graph features and edges] --> cpu[Construct CPU tensors]
-    cpu --> device{Selected device}
-    device --> mps[MPS]
-    device --> cuda[CUDA]
-    device --> fallback[CPU]
+flowchart LR
+    data[CPU tensors] --> select{Runtime device}
+    select --> mps[MPS on Mac]
+    select --> cuda[CUDA on NVIDIA]
+    select --> cpu[CPU fallback]
     mps --> model[Shared GNN model]
     cuda --> model
-    fallback --> model
-    model --> state[Save device-neutral state_dict]
+    cpu --> model
+    model --> checkpoint[Device-neutral checkpoint]
 ```
 
-## Direct answer
+## Compatibility summary
 
-Metal does **not** support the CUDA API. Code that directly calls CUDA libraries,
-CUDA kernels, NCCL, or CUDA-only extensions will not run through Metal.
+| Portable | Platform-specific |
+| --- | --- |
+| CPU tensors and normal PyTorch operations | Custom CUDA or Triton kernels |
+| PyG models using supported operators | NCCL and CUDA graphs |
+| `state_dict` checkpoints | H200-specific FP8 optimization |
+| Tolerance-based correctness tests | Unsupported MPS sparse operations |
 
-Tensors are more portable, with limits:
-
-- CPU tensors and normal PyTorch operations move cleanly with `.to(device)`.
-- Model weights are portable when stored as a `state_dict` and loaded with a CPU
-  map before transfer to the target device.
-- Most common GNN layers are portable when their underlying operators exist on
-  both MPS and CUDA.
-- Some MPS operators may be missing or slower and need a CPU fallback.
-- Custom CUDA/Triton kernels, CUDA graphs, NCCL, and some sparse extensions are
-  server-specific.
-- Floating-point results can differ slightly across CPU, MPS, and CUDA, so tests
-  should use tolerances rather than bit-for-bit equality.
+Metal does not implement the CUDA API. Final performance, distributed behavior,
+mixed precision, and CUDA-specific paths require NVIDIA validation.
 
 ## Consequences
 
-Core correctness can be developed locally. Final performance, mixed precision,
-large-scale neighbor sampling, and all CUDA-specific behavior must be tested on
-the H200. The architecture allows optional CUDA acceleration without creating a
-second application codebase.
+- One core codebase supports Mac development and H200 deployment.
+- The verified one-layer GCN runs forward, backward, and optimization on MPS
+  with CPU fallback disabled.
+- Other MPS operator gaps may still require CPU fallback.
+- Numerical tests use tolerances rather than bit-for-bit equality.
