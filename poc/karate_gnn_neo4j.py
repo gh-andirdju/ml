@@ -7,6 +7,7 @@ import argparse
 import json
 import math
 import os
+import re
 import sys
 import time
 from collections.abc import Sequence
@@ -57,11 +58,19 @@ def require(condition: bool, message: str) -> None:
 def load_environment_file(path: Path) -> None:
     if not path.is_file():
         raise ProofError(f"Secret environment file not found: {path}")
-    for raw_line in path.read_text(encoding="utf8").splitlines():
+    for line_number, raw_line in enumerate(
+        path.read_text(encoding="utf8").splitlines(), start=1
+    ):
         line = raw_line.strip()
-        if not line or line.startswith("#") or "=" not in line:
+        if not line or line.startswith("#"):
             continue
+        require("=" in line, f"Invalid environment entry at {path}:{line_number}")
         key, value = line.split("=", 1)
+        key = key.strip()
+        require(
+            re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key) is not None,
+            f"Invalid environment key at {path}:{line_number}",
+        )
         os.environ.setdefault(key, value)
 
 
@@ -318,17 +327,26 @@ def count_predictions(session) -> int:
 
 
 def connect_with_retry(uri: str, user: str, password: str, timeout: float):
-    driver = GraphDatabase.driver(uri, auth=(user, password), telemetry_disabled=True)
     deadline = time.monotonic() + timeout
     last_error: Exception | None = None
-    while time.monotonic() < deadline:
+    while (remaining := deadline - time.monotonic()) > 0:
+        driver = None
         try:
+            driver = GraphDatabase.driver(
+                uri,
+                auth=(user, password),
+                telemetry_disabled=True,
+                connection_timeout=remaining,
+            )
             driver.verify_connectivity()
             return driver
         except Exception as error:  # Connection errors vary across driver versions.
             last_error = error
-            time.sleep(1)
-    driver.close()
+            if driver is not None:
+                driver.close()
+            remaining = deadline - time.monotonic()
+            if remaining > 0:
+                time.sleep(min(1, remaining))
     raise ProofError(f"Neo4j did not become ready within {timeout:g}s: {last_error}")
 
 
@@ -357,9 +375,16 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 def main(argv: Sequence[str] | None = None) -> int:
     arguments = parse_arguments(argv)
-    require(arguments.epochs > 0, "Epoch count must be positive")
-    require(arguments.learning_rate > 0, "Learning rate must be positive")
-    require(arguments.weight_decay >= 0, "Weight decay cannot be negative")
+    require(arguments.connection_timeout > 0, "Connection timeout must be positive")
+    require(bool(arguments.database.strip()), "Database name cannot be empty")
+    require(
+        bool(arguments.expected_server_version.strip()),
+        "Expected server version cannot be empty",
+    )
+    if not arguments.verify_existing:
+        require(arguments.epochs > 0, "Epoch count must be positive")
+        require(arguments.learning_rate > 0, "Learning rate must be positive")
+        require(arguments.weight_decay >= 0, "Weight decay cannot be negative")
     load_environment_file(arguments.env_file)
     uri = os.environ.get("NEO4J_URI", "bolt://127.0.0.1:7687")
     user = os.environ.get("NEO4J_USER", "neo4j")

@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 
 import { mkdtemp, mkdir, readFile, rename, rm, stat } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { marked } from "marked";
@@ -152,7 +151,10 @@ async function outputExists(path) {
 
 async function render(inputPath, outputPath) {
   const markdown = await readFile(inputPath, "utf8");
-  const temporaryDirectory = await mkdtemp(join(tmpdir(), "md-to-pdf-"));
+  await mkdir(dirname(outputPath), { recursive: true });
+  const temporaryDirectory = await mkdtemp(
+    join(dirname(outputPath), ".md-to-pdf-")
+  );
   const temporaryPdf = join(temporaryDirectory, "output.pdf");
   let browser;
 
@@ -268,7 +270,6 @@ async function render(inputPath, outputPath) {
       fail("Generated file does not have a PDF header.");
     }
 
-    await mkdir(dirname(outputPath), { recursive: true });
     await rename(temporaryPdf, outputPath);
     return { bytes: pdfInformation.size, ...mermaidResult };
   } finally {

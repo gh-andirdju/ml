@@ -119,13 +119,13 @@ same runner. Optional trailing flags override profile defaults. For example,
 `./poc/run_cpu.py --epochs 20 --learning-rate 0.05` is verified. Run
 `bun run poc:verify` for a non-mutating persistence check. The scripts never
 print the database password. Direct execution automatically selects the project
-`.venv` when it exists.
+`.venv` when it exists. Run `bun run poc:unit` for fast tests that do not require
+Neo4j.
 
 The shared implementation is
 [poc/karate_gnn_neo4j.py](../../poc/karate_gnn_neo4j.py), with environment
 profiles in `poc/run_macos_mps.py`, `poc/run_cpu.py`, and
-`poc/run_linux_cuda.py`,
-with exact direct dependencies in
+`poc/run_linux_cuda.py`. Exact direct dependencies are in
 [requirements-poc.txt](../../requirements-poc.txt). The ignored secret file is
 created with `bun run poc:secret`.
 

@@ -17,12 +17,14 @@ flowchart LR
 - One shared parameterized GCN runner with ready MPS, CPU, and CUDA profiles.
 - Forward, backward, and optimization verified on MPS and CPU.
 - Idempotent rerun and named-volume persistence checks.
+- Automated unit coverage for graph payload, environment, device, and connection
+  behavior.
 
 ## Next: project foundation
 
 - Decide the long-term Python and dependency-locking policy.
 - Extract reusable schema, query, and tensor adapters from the POC.
-- Add automated tests and experiment reproducibility only when needed.
+- Add experiment reproducibility controls as workloads grow.
 
 ## H200 packaging
 

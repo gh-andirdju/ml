@@ -1,4 +1,7 @@
 {
+  "name": "gnn-neo4j-poc",
+  "private": true,
+  "packageManager": "bun@1.4.1",
   "scripts": {
     "md:pdf": "bun ./scripts/md-to-pdf",
     "md:pdf:all": "bun ./scripts/md-to-pdf-all",
@@ -7,6 +10,7 @@
     "poc:macos": ".venv/bin/python ./poc/run_macos_mps.py",
     "poc:cpu": ".venv/bin/python ./poc/run_cpu.py",
     "poc:nvidia": ".venv/bin/python ./poc/run_linux_cuda.py",
+    "poc:unit": ".venv/bin/python -m unittest discover -s tests -v",
     "poc:verify": ".venv/bin/python ./poc/karate_gnn_neo4j.py --verify-existing"
   },
   "dependencies": {},
