@@ -71,9 +71,13 @@ are allowed.
   reports `+cpu`, while T4 reports `+cu128` for the same release.
 - Small Karate and WikiCS artifacts prove portability but contain no
   training-only timing, so they cannot establish a GPU speed benefit.
-- Flickr GraphSAGE provides the useful scale comparison: 186.15 seconds on four
-  AMD EPYC 7B12 CPU cores versus 6.31 seconds on Tesla T4, a 29.485x speedup,
-  with 98.7395% class agreement.
+- The latest Flickr GraphSAGE proof used a four-core Intel Xeon CPU: 246.06
+  training seconds versus 6.31 seconds on Tesla T4, a 38.974x speedup, with
+  98.7395% class agreement. Kaggle CPU hardware varies; an earlier AMD EPYC run
+  took 186.15 seconds, so comparisons must record the assigned CPU model.
+- Linux `wait4` measured 2.94 GB peak resident memory and 160.267% average
+  process CPU across the complete CPU runner. The percentage is an average
+  equivalent to about 1.60 busy cores, not peak utilization.
 - Flickr peaked at 2.38 GB of PyTorch-allocated T4 memory, leaving room for a
   larger POC. This is not total GPU use: future memory benchmarks must also
   record peak reserved memory and device capacity, and should use neighbor
@@ -101,6 +105,9 @@ are allowed.
 - Kaggle failures must be diagnosed from the downloaded kernel log, fixed in a
   new commit, repinned, and rerun. Never treat a submitted or running kernel as
   a successful proof.
+- Committed CPU/GPU comparisons must show `proof_status=PASS`, checksum and
+  schema validation, CPU `cuda_available=false`, T4 CUDA identity, matching
+  dataset/model metadata, and version-specific Kaggle `COMPLETE` status.
 
 ## Documentation rules
 

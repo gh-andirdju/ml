@@ -6,7 +6,7 @@ Eight proofs use three datasets across laptop and Kaggle compute. The laptop run
 Karate and WikiCS on MPS or CPU with local Neo4j. Private Kaggle jobs run the
 same models on CPU and a free NVIDIA GPU, export checksummed predictions, and
 leave Neo4j on the laptop. A larger Flickr GraphSAGE CPU/T4 benchmark is the
-timed comparison and shows a 29.485x T4 speedup. All eight POCs pass. Production
+timed comparison and shows a 38.974x T4 speedup. All eight POCs pass. Production
 remains a design for a self-managed Linux H200 cluster and separate Neo4j tier.
 
 ```mermaid

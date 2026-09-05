@@ -17,4 +17,14 @@ on 2026-09-05. They contain no credentials or generated model artifacts.
 
 Full Kaggle prediction artifacts and detached checksums are downloaded under
 ignored `.artifacts/` storage. Only compact execution/import evidence is kept in
-source control.
+source control. Each CPU/GPU comparison contains a machine-readable `proof`
+object and `proof_status=PASS`, including CPU-only evidence, T4 CUDA evidence,
+matching workload identity, checksums, and immutable Kaggle version status.
+
+Reproduce the live proof checks after downloading the ignored artifacts:
+
+```bash
+./poc/compare_kaggle_results.py .artifacts/karate-cpu/karate-cpu-result.json .artifacts/karate/karate-cuda-result.json --verify-kaggle-status
+./poc/compare_kaggle_results.py .artifacts/wikics-cpu/wikics-cpu-result.json .artifacts/wikics/wikics-cuda-result.json --verify-kaggle-status
+./poc/compare_kaggle_results.py .artifacts/flickr-cpu/flickr-cpu-result.json .artifacts/flickr-cuda/flickr-cuda-result.json --verify-kaggle-status --cpu-resource-usage .artifacts/flickr-cpu/flickr-cpu-resource-usage.json
+```

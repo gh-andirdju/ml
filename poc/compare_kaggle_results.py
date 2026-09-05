@@ -96,11 +96,15 @@ def load_cpu_resource_evidence(path: Path) -> dict[str, Any]:
     maximum_rss_kib = evidence.get("maximum_resident_set_kib")
     maximum_rss_bytes = evidence.get("maximum_resident_set_bytes")
     require(
-        isinstance(cpu_percent, (int, float)) and float(cpu_percent) > 0,
+        isinstance(cpu_percent, (int, float))
+        and not isinstance(cpu_percent, bool)
+        and float(cpu_percent) > 0,
         "CPU utilization evidence is invalid",
     )
     require(
-        isinstance(maximum_rss_kib, int) and maximum_rss_kib > 0,
+        isinstance(maximum_rss_kib, int)
+        and not isinstance(maximum_rss_kib, bool)
+        and maximum_rss_kib > 0,
         "Maximum RSS evidence is invalid",
     )
     require(
@@ -110,7 +114,9 @@ def load_cpu_resource_evidence(path: Path) -> dict[str, Any]:
     for field in ("user_cpu_seconds", "system_cpu_seconds", "wall_clock_seconds"):
         value = evidence.get(field)
         require(
-            isinstance(value, (int, float)) and float(value) >= 0,
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            and float(value) >= 0,
             f"CPU resource field is invalid: {field}",
         )
     return evidence
@@ -337,7 +343,13 @@ def main(argv: Sequence[str] | None = None) -> int:
 def cli(argv: Sequence[str] | None = None) -> int:
     try:
         return main(argv)
-    except (ProofError, OSError, RuntimeError, ValueError) as error:
+    except (
+        ProofError,
+        OSError,
+        RuntimeError,
+        ValueError,
+        subprocess.SubprocessError,
+    ) as error:
         print(f"KAGGLE COMPARISON FAILED: {error}", file=sys.stderr)
         return 1
 

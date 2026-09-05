@@ -33,11 +33,15 @@ flowchart LR
   metrics are recorded; bit-identical floating-point scores are not required.
 - Full artifacts stay in ignored `.artifacts/` storage. Compact results are
   committed under `results/`.
+- Every compact comparison records the immutable private kernel versions and
+  verifies them as `COMPLETE` through Kaggle. `proof_status=PASS` requires CPU
+  `enable_gpu=false` and `cuda_available=false`, GPU `enable_gpu=true` and a T4
+  CUDA device, matching dataset/model metadata, and valid artifact checksums.
 
 The CPU environment currently provides four CPU cores and 30 GB RAM. Kaggle
-CPU and GPU sessions have a 12-hour limit. A larger pair will record training
-time because the existing artifacts were designed for portability and did not
-time training.
+CPU and GPU sessions have a 12-hour limit. The initial Karate and WikiCS
+artifacts were not timed; the completed Flickr pair supplies the training-time
+comparison and CPU resource measurement.
 
 ## Verified evidence
 

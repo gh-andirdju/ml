@@ -128,7 +128,7 @@ KAGGLE_RUNS_BY_POC_ID = {
         "andird/ml-poc-6-wikics-cpu", 1, "kaggle/wikics-cpu", False
     ),
     FLICKR_KAGGLE_CPU_SPEC.poc_id: KaggleRunSpec(
-        "andird/ml-poc-7-flickr-graphsage-cpu", 2, "kaggle/flickr-cpu", False
+        "andird/ml-poc-7-flickr-graphsage-cpu", 4, "kaggle/flickr-cpu", False
     ),
     FLICKR_KAGGLE_CUDA_SPEC.poc_id: KaggleRunSpec(
         "andird/ml-poc-8-flickr-graphsage-cuda", 2, "kaggle/flickr-cuda", True

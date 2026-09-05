@@ -6,6 +6,7 @@
     "artifact_sha256": "ff0ddc02c47c5ec3d09d27fefc15aa37efcdea11ffab53b6638dcf0fa503781d",
     "cpu_count": 4,
     "cpu_model": "x86_64",
+    "cuda_available": false,
     "device": "cpu",
     "metrics": {
       "accuracy": 0.764706,
@@ -16,6 +17,12 @@
     "source_revision": "1af9d656bd7d59e4a8bb6bc3d82271eb5fb4aa2f"
   },
   "dataset": "KarateClub",
+  "dataset_identity": {
+    "classes": 4,
+    "name": "KarateClub",
+    "nodes": 34,
+    "source": "torch_geometric.datasets.KarateClub"
+  },
   "framework_releases_match": {
     "python": true,
     "torch": true,
@@ -35,7 +42,7 @@
       "torch_geometric": "2.8.0.post1"
     }
   },
-  "generated_at": "2026-09-05T13:12:41Z",
+  "generated_at": "2026-09-05T13:24:58Z",
   "gpu": {
     "artifact_sha256": "5f85dce9373e0bac87be77829176483870ac63e27a19dbff0e3566b2e16b7453",
     "cuda_capability": [
@@ -53,12 +60,53 @@
     "poc_id": "kaggle-karate-cuda-v1",
     "source_revision": "c9fe91f0de80ad82d5c76ce4908ee3e8473b6165"
   },
+  "kaggle_runs": {
+    "cpu": {
+      "enable_gpu": false,
+      "enable_tpu": false,
+      "is_private": true,
+      "kernel_id": "andird/ml-poc-5-karate-cpu",
+      "kernel_version": 1,
+      "machine_shape": null,
+      "status": "COMPLETE",
+      "status_checked_at": "2026-09-05T13:24:58Z",
+      "url": "https://www.kaggle.com/code/andird/ml-poc-5-karate-cpu",
+      "version_reference": "andird/ml-poc-5-karate-cpu/1"
+    },
+    "gpu": {
+      "enable_gpu": true,
+      "enable_tpu": false,
+      "is_private": true,
+      "kernel_id": "andird/ml-poc-3-karate-cuda",
+      "kernel_version": 3,
+      "machine_shape": "NvidiaTeslaT4",
+      "status": "COMPLETE",
+      "status_checked_at": "2026-09-05T13:25:00Z",
+      "url": "https://www.kaggle.com/code/andird/ml-poc-3-karate-cuda",
+      "version_reference": "andird/ml-poc-3-karate-cuda/3"
+    }
+  },
   "maximum_absolute_score_difference": 1.79e-07,
   "mean_absolute_score_difference": 4e-08,
   "minimum_agreement": 0.95,
+  "model": {
+    "learning_rate": 0.1,
+    "type": "one-layer GCN",
+    "weight_decay": 0.0005
+  },
   "model_parameters_match": true,
   "nodes": 34,
   "predictions_compared": 34,
+  "proof": {
+    "artifact_checksums_and_schema_valid": true,
+    "cpu_only": true,
+    "dataset_identity_match": true,
+    "gpu_cuda": true,
+    "immutable_kaggle_versions_complete": true,
+    "model_configuration_match": true,
+    "source_revisions_valid": true
+  },
+  "proof_status": "PASS",
   "status": "PASS",
   "timing": null
 }
