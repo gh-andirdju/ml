@@ -1,0 +1,174 @@
+{
+  "artifacts": {
+    "kaggle_cpu_sha256": "344ee9455865f374bb5257c7052d11a32d4aafadb7d3134075ad064f44d8c5bf",
+    "kaggle_gpu_sha256": "bd63c85ecc038a97c09ab87c45f3e0f2e03c7cee0fbdbcef247cde256abc9308",
+    "mps_sha256": "c04486d964c061b651881205d49561f3600d168c261a9f6c63f3c067e8bc16c5"
+  },
+  "dataset": {
+    "classes": 10,
+    "dataset_commit": "f5207315d649377f936edb66d7d93f5342f01d81",
+    "dataset_sha256": "9bf8cb3ef8eeae81b25e6ccbe0ea195600c205d7edf63ce04f2ec8d9c7dcb3d8",
+    "name": "WikiCS",
+    "nodes": 11701,
+    "split": 0
+  },
+  "environments": {
+    "kaggle_cpu": {
+      "cpu_count": 4,
+      "cpu_model": "x86_64",
+      "cuda_available": false,
+      "device": "cpu",
+      "metrics": {
+        "accuracy": 0.790149,
+        "best_epoch": 84,
+        "best_stopping_loss": 0.70724,
+        "epochs_completed": 100,
+        "final_training_loss": 0.397165,
+        "initial_training_loss": 2.30157,
+        "test_accuracy": 0.790149,
+        "validation_accuracy": 0.820237
+      },
+      "poc_id": "kaggle-wikics-cpu-v1",
+      "source_revision": "1af9d656bd7d59e4a8bb6bc3d82271eb5fb4aa2f"
+    },
+    "kaggle_gpu": {
+      "cuda_capability": [
+        7,
+        5
+      ],
+      "cuda_device_name": "Tesla T4",
+      "cuda_device_total_memory_bytes": null,
+      "cuda_peak_allocated_fraction": null,
+      "cuda_peak_memory_bytes": null,
+      "cuda_peak_reserved_fraction": null,
+      "cuda_peak_reserved_memory_bytes": null,
+      "device": "cuda:0",
+      "metrics": {
+        "accuracy": 0.793227,
+        "best_epoch": 81,
+        "best_stopping_loss": 0.705936,
+        "epochs_completed": 100,
+        "final_training_loss": 0.415897,
+        "initial_training_loss": 2.30157,
+        "test_accuracy": 0.793227,
+        "validation_accuracy": 0.813454
+      },
+      "poc_id": "kaggle-wikics-cuda-v1",
+      "source_revision": "c9fe91f0de80ad82d5c76ce4908ee3e8473b6165"
+    },
+    "mps": {
+      "device": "mps:0",
+      "hardware": "arm64",
+      "maximum_process_rss_bytes": 673710080,
+      "metrics": {
+        "accuracy": 0.791859,
+        "best_epoch": 89,
+        "epochs_completed": 100,
+        "test_accuracy": 0.791859,
+        "training_seconds": 34.875657,
+        "validation_accuracy": 0.819107
+      },
+      "mps_available": true,
+      "mps_fallback_enabled": false,
+      "poc_id": "macos-wikics-mps-v1",
+      "source_revision": "19bf46394aa2a036cdfecc42f9cfb56459b0f10d"
+    }
+  },
+  "frameworks": {
+    "kaggle_cpu": {
+      "python": "3.12.13",
+      "torch": "2.10.0+cpu",
+      "torch_cuda": null,
+      "torch_geometric": "2.8.0.post1"
+    },
+    "kaggle_gpu": {
+      "python": "3.12.13",
+      "torch": "2.10.0+cu128",
+      "torch_cuda": "12.8",
+      "torch_geometric": "2.8.0.post1"
+    },
+    "mps": {
+      "python": "3.14.7",
+      "torch": "2.14.0",
+      "torch_cuda": null,
+      "torch_geometric": "2.8.0.post1"
+    }
+  },
+  "generated_at": "2026-09-05T15:24:35Z",
+  "kaggle_runs": {
+    "cpu": {
+      "enable_gpu": false,
+      "enable_tpu": false,
+      "is_private": true,
+      "kernel_id": "andird/ml-poc-6-wikics-cpu",
+      "kernel_version": 1,
+      "machine_shape": null,
+      "status": "COMPLETE",
+      "status_checked_at": "2026-09-05T15:24:35Z",
+      "url": "https://www.kaggle.com/code/andird/ml-poc-6-wikics-cpu",
+      "version_reference": "andird/ml-poc-6-wikics-cpu/1"
+    },
+    "gpu": {
+      "enable_gpu": true,
+      "enable_tpu": false,
+      "is_private": true,
+      "kernel_id": "andird/ml-poc-4-wikics-cuda",
+      "kernel_version": 1,
+      "machine_shape": "NvidiaTeslaT4",
+      "status": "COMPLETE",
+      "status_checked_at": "2026-09-05T15:24:36Z",
+      "url": "https://www.kaggle.com/code/andird/ml-poc-4-wikics-cuda",
+      "version_reference": "andird/ml-poc-4-wikics-cuda/1"
+    }
+  },
+  "model": {
+    "dropout": 0.25,
+    "epochs_requested": 100,
+    "hidden_channels": 64,
+    "learning_rate": 0.02,
+    "patience": 20,
+    "seed": 42,
+    "type": "two-layer GCN",
+    "weight_decay": 0.0005
+  },
+  "pairwise": {
+    "kaggle_cpu_vs_gpu": {
+      "class_agreement": 0.977523,
+      "class_matches": 11438,
+      "maximum_absolute_score_difference": 0.399772495,
+      "mean_absolute_score_difference": 0.004768312,
+      "minimum_agreement": 0.95,
+      "predictions_compared": 11701
+    },
+    "mps_vs_kaggle_cpu": {
+      "class_agreement": 0.978463,
+      "class_matches": 11449,
+      "maximum_absolute_score_difference": 0.470459506,
+      "mean_absolute_score_difference": 0.004773283,
+      "minimum_agreement": 0.95,
+      "predictions_compared": 11701
+    },
+    "mps_vs_kaggle_gpu": {
+      "class_agreement": 0.98154,
+      "class_matches": 11485,
+      "maximum_absolute_score_difference": 0.425129294,
+      "mean_absolute_score_difference": 0.004338529,
+      "minimum_agreement": 0.95,
+      "predictions_compared": 11701
+    }
+  },
+  "proof": {
+    "all_artifact_checksums_and_schemas_valid": true,
+    "all_pairwise_agreements_pass": true,
+    "dataset_and_model_match": true,
+    "exact_workload_triplet": true,
+    "immutable_kaggle_versions_complete": true,
+    "kaggle_cpu_only": true,
+    "kaggle_single_t4": true,
+    "mps_without_cpu_fallback": true
+  },
+  "proof_status": "PASS",
+  "status": "PASS",
+  "timing": null,
+  "workload": "wikics"
+}

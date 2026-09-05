@@ -150,6 +150,8 @@ def build_comparison(
             "poc_id": mps["poc_id"],
             "device": mps["execution"]["device"],
             "hardware": mps["execution"]["hardware"],
+            "mps_available": mps["execution"]["mps_available"],
+            "mps_fallback_enabled": mps["execution"]["mps_fallback_enabled"],
             "source_revision": mps["execution"]["source_revision"],
             "maximum_process_rss_bytes": mps["execution"].get(
                 "maximum_process_rss_bytes"

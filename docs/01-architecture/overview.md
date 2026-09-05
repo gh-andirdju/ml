@@ -58,6 +58,10 @@ flowchart LR
 All ten keep compute selection outside model definitions. Kaggle receives no
 database credential and runs no Neo4j process.
 
+Every logical workload has checksummed MPS, Kaggle CPU, and Kaggle T4 evidence.
+All twelve environment cells pass, and every pairwise class-agreement result is
+above the 95% gate.
+
 ## Open decisions
 
 - Production Python and framework versions.

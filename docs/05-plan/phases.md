@@ -2,7 +2,8 @@
 
 Both laptop proofs and the four small/medium Kaggle CPU and CUDA proofs are
 complete. Both timed Flickr comparisons pass, including the wider model that
-exercises higher GPU memory pressure. Data-center implementation remains pending.
+exercises higher GPU memory pressure. All four workloads have MPS, Kaggle CPU,
+and Kaggle T4 comparison records. Data-center implementation remains pending.
 
 ```mermaid
 flowchart LR

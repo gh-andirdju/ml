@@ -36,6 +36,11 @@ Run `./poc/run_macos_mps.py` or `./poc/run_cpu.py` for the minimal proof. Use
 `./poc/run_wikics_macos_mps.py` or `./poc/run_wikics_cpu.py` for the larger
 proof. Each MPS/CPU pair calls one device-neutral runner.
 
+The comparison-only MPS exporters cover Karate, WikiCS, Flickr-256, and
+Flickr-1,024. Flickr processing additionally requires the pinned SciPy package.
+All four run host-native with MPS fallback disabled and write checksummed
+artifacts beneath ignored `.artifacts/` storage.
+
 ## Local Neo4j state
 
 - Native Linux ARM64 image with an explicit version.

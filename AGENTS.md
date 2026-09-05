@@ -6,7 +6,8 @@ These instructions apply to this repository. All ten POCs pass. Karate and
 WikiCS are verified on the laptop and private Kaggle CPU/T4 jobs. Both Flickr
 CPU/T4 comparisons pass. Kaggle GPU predictions for Karate and WikiCS pass
 checksum-checked local Neo4j import. H200 and production Neo4j remain
-design-only.
+design-only. Every logical workload has a committed three-environment comparison
+covering host-native MPS, Kaggle CPU only, and a single Kaggle Tesla T4.
 
 ```mermaid
 flowchart LR
@@ -30,6 +31,9 @@ are allowed.
   and detached SHA-256 files back to the local Neo4j importer.
 - Keep Kaggle CPU and GPU comparisons model-identical and require at least 95%
   node-class agreement; do not import CPU comparison artifacts into Neo4j.
+- Keep MPS, Kaggle CPU, and Kaggle T4 artifacts model-identical for each logical
+  workload. Require at least 95% agreement for all three environment pairs and
+  keep the consolidated result under `results/`.
 - Use POCs 7 and 8 only for a model-identical, training-timed Flickr GraphSAGE
   comparison; these artifacts are comparison-only and never enter Neo4j.
 - Use POCs 9 and 10 for the wider 1,024-channel Flickr comparison. Require the
@@ -56,7 +60,8 @@ are allowed.
 
 - Apple M2 Pro MacBook Pro with 16 GB memory.
 - Homebrew Python 3.14.7 and a project `.venv` are active for the POC.
-- The local POCs pin PyTorch 2.14.0, PyG 2.8.0.post1, and Neo4j Driver 6.3.0.
+- The local POCs pin PyTorch 2.14.0, PyG 2.8.0.post1, Neo4j Driver 6.3.0, and
+  SciPy 1.18.1 for Flickr dataset processing.
 - MPS and CPU profiles pass locally; all eight Kaggle CPU/T4 jobs pass.
 - Temurin 21 and 25 are installed; interactive shells select Temurin 25.
 - No Homebrew OpenJDK formula or `uv` is installed.
@@ -91,6 +96,10 @@ are allowed.
   from 15.64 GB capacity. Its four-core AMD EPYC CPU run measured 8.01 GB peak
   RSS, 660.25 seconds complete-runner wall time, and 169.281% average process
   CPU. CUDA allocator memory and CPU RSS are not directly equivalent.
+- All four workload triplets pass checksum and schema validation. Pairwise class
+  agreement ranges from 97.7523% to 100% across MPS, Kaggle CPU, and T4.
+- Flickr-256 trained in 38.10 seconds on MPS, 246.06 seconds on Kaggle CPU, and
+  6.31 seconds on T4. Flickr-1,024 took 158.84, 599.42, and 17.17 seconds.
 - Standard free Kaggle notebooks document 4 CPU cores and 30 GB RAM. GPU choices
   document one P100 or two T4s with 4 CPU cores and 29 GB host RAM; accelerator
   availability and quota are variable.

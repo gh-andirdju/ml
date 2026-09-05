@@ -32,6 +32,24 @@ import run_kaggle_flickr_wide_cuda
 """
         subprocess.run([sys.executable, "-c", script], check=True)
 
+    def test_mps_comparison_exporters_do_not_import_neo4j(self) -> None:
+        script = f"""
+import builtins
+import sys
+sys.path.insert(0, {str(PROJECT_ROOT / 'poc')!r})
+original_import = builtins.__import__
+def guarded_import(name, *args, **kwargs):
+    if name == 'neo4j' or name.startswith('neo4j.'):
+        raise AssertionError('MPS comparison exporter imported Neo4j')
+    return original_import(name, *args, **kwargs)
+builtins.__import__ = guarded_import
+import run_mps_karate_artifact
+import run_mps_wikics_artifact
+import run_mps_flickr
+import run_mps_flickr_wide
+"""
+        subprocess.run([sys.executable, "-c", script], check=True)
+
 
 if __name__ == "__main__":
     unittest.main()

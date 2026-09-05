@@ -15,12 +15,18 @@ on 2026-09-05. They contain no credentials or generated model artifacts.
 | 6 - Larger WikiCS | Kaggle CPU versus T4 | [`kaggle-wikics-cpu-vs-cuda.json`](kaggle-wikics-cpu-vs-cuda.json) |
 | 7 and 8 - Flickr GraphSAGE | Kaggle CPU versus T4 | [`kaggle-flickr-cpu-vs-cuda.json`](kaggle-flickr-cpu-vs-cuda.json) |
 | 9 and 10 - Wide Flickr GraphSAGE | Kaggle CPU versus T4 | [`kaggle-flickr-wide-cpu-vs-cuda.json`](kaggle-flickr-wide-cpu-vs-cuda.json) |
+| Karate GCN | MPS versus Kaggle CPU versus T4 | [`karate-mps-cpu-cuda.json`](karate-mps-cpu-cuda.json) |
+| WikiCS GCN | MPS versus Kaggle CPU versus T4 | [`wikics-mps-cpu-cuda.json`](wikics-mps-cpu-cuda.json) |
+| Flickr GraphSAGE 256 | MPS versus Kaggle CPU versus T4 | [`flickr-mps-cpu-cuda.json`](flickr-mps-cpu-cuda.json) |
+| Flickr GraphSAGE 1,024 | MPS versus Kaggle CPU versus T4 | [`flickr-wide-mps-cpu-cuda.json`](flickr-wide-mps-cpu-cuda.json) |
 
 Full Kaggle prediction artifacts and detached checksums are downloaded under
 ignored `.artifacts/` storage. Only compact execution/import evidence is kept in
 source control. Each CPU/GPU comparison contains a machine-readable `proof`
 object and `proof_status=PASS`, including CPU-only evidence, T4 CUDA evidence,
 matching workload identity, checksums, and immutable Kaggle version status.
+The four three-environment records additionally validate MPS execution without
+CPU fallback and all three pairwise agreement gates.
 
 Reproduce the live proof checks after downloading the ignored artifacts:
 

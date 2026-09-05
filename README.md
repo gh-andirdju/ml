@@ -2,11 +2,11 @@
 
 ## Current summary
 
-Ten verified proofs use three datasets across laptop and Kaggle compute. The
-laptop runs
-Karate and WikiCS on MPS or CPU with local Neo4j. Private Kaggle jobs run the
-same models on CPU and a free NVIDIA GPU, export checksummed predictions, and
-leave Neo4j on the laptop. A larger Flickr GraphSAGE CPU/T4 benchmark is the
+Ten verified execution proofs form four GNN workloads across laptop and Kaggle
+compute. Every workload now has a recorded three-way comparison using Apple
+MPS, Kaggle CPU only, and Kaggle Tesla T4. Karate and WikiCS retain their local
+Neo4j proofs; Kaggle and Flickr comparison jobs remain database-free. A larger
+Flickr GraphSAGE CPU/T4 benchmark is the
 timed comparison and shows a 38.974x T4 speedup. POCs 9 and 10 widen that model
 to 1,024 channels: the T4 is 34.915x faster and peaks at 6.88 GB allocated and
 9.76 GB reserved memory. Production remains a design for a self-managed Linux
@@ -47,6 +47,12 @@ the model code:
 ./poc/run_kaggle_flickr_cuda.py
 ./poc/run_kaggle_flickr_wide_cpu.py
 ./poc/run_kaggle_flickr_wide_cuda.py
+
+# Host-native MPS comparison artifacts
+./poc/run_mps_karate_artifact.py
+./poc/run_mps_wikics_artifact.py
+./poc/run_mps_flickr.py
+./poc/run_mps_flickr_wide.py
 ```
 
 MPS and CPU are verified for both laptop POCs. Both Kaggle CUDA proofs pass on
@@ -77,4 +83,5 @@ local RTX Blackwell `sm_120` targets.
 |  | [Kaggle CPU comparison](docs/06-validation/kaggle-cpu-comparison.md) |
 |  | [Flickr CPU and GPU benchmark](docs/06-validation/flickr-kaggle-benchmark.md) |
 |  | [Flickr wide CPU and GPU benchmark](docs/06-validation/flickr-wide-kaggle-benchmark.md) |
+|  | [Three-environment comparison](docs/06-validation/three-environment-comparison.md) |
 |  | [CUDA portability validator](docs/06-validation/cuda-portability-validator.md) |

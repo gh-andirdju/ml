@@ -1,0 +1,202 @@
+{
+  "artifacts": {
+    "kaggle_cpu_sha256": "4764eb53a83369281d32a8126163cfeecf44ecaa691188d2a00db09b4f37fcd1",
+    "kaggle_gpu_sha256": "1639b70faae7dd1a714029cd9e0a93b62750c56099ac339c1411d3aad7b25be3",
+    "mps_sha256": "47b746b556f73b91c73643b0c52cefd980513bac6261732d45e6fe16839ee9a0"
+  },
+  "dataset": {
+    "classes": 7,
+    "edges": 899756,
+    "features": 500,
+    "name": "Flickr",
+    "nodes": 89250,
+    "source": "torch_geometric.datasets.Flickr",
+    "test_nodes": 22313,
+    "training_nodes": 44625,
+    "validation_nodes": 22312
+  },
+  "environments": {
+    "kaggle_cpu": {
+      "cpu_count": 4,
+      "cpu_model": "AMD EPYC 7B12",
+      "cuda_available": false,
+      "device": "cpu",
+      "metrics": {
+        "accuracy": 0.423341,
+        "best_epoch": 14,
+        "best_validation_loss": 1.596937,
+        "epochs_completed": 20,
+        "final_training_loss": 1.600646,
+        "initial_training_loss": 1.990084,
+        "model_parameters": 3137543,
+        "test_accuracy": 0.423341,
+        "training_seconds": 599.417596,
+        "validation_accuracy": 0.423673
+      },
+      "poc_id": "kaggle-flickr-wide-cpu-v1",
+      "resource_usage": {
+        "average_process_cpu_percent": 169.281,
+        "exit_status": 0,
+        "maximum_resident_set_bytes": 8007262208,
+        "maximum_resident_set_kib": 7819592,
+        "measurement": "Linux wait4 resource usage for the complete Python runner",
+        "system_cpu_seconds": 394.356753,
+        "user_cpu_seconds": 723.31491,
+        "wall_clock_seconds": 660.247599
+      },
+      "source_revision": "d4115e3e408f992354a7ceced768d3e19977b54b"
+    },
+    "kaggle_gpu": {
+      "cuda_capability": [
+        7,
+        5
+      ],
+      "cuda_device_name": "Tesla T4",
+      "cuda_device_total_memory_bytes": 15636037632,
+      "cuda_peak_allocated_fraction": 0.439966,
+      "cuda_peak_memory_bytes": 6879320064,
+      "cuda_peak_reserved_fraction": 0.624074,
+      "cuda_peak_reserved_memory_bytes": 9758048256,
+      "device": "cuda:0",
+      "metrics": {
+        "accuracy": 0.423341,
+        "best_epoch": 12,
+        "best_validation_loss": 1.598924,
+        "epochs_completed": 18,
+        "final_training_loss": 1.602358,
+        "initial_training_loss": 1.990084,
+        "model_parameters": 3137543,
+        "test_accuracy": 0.423341,
+        "training_seconds": 17.168095,
+        "validation_accuracy": 0.423808
+      },
+      "poc_id": "kaggle-flickr-wide-cuda-v1",
+      "source_revision": "d4115e3e408f992354a7ceced768d3e19977b54b"
+    },
+    "mps": {
+      "device": "mps:0",
+      "hardware": "arm64",
+      "maximum_process_rss_bytes": 724500480,
+      "metrics": {
+        "accuracy": 0.422982,
+        "best_epoch": 13,
+        "epochs_completed": 19,
+        "model_parameters": 3137543,
+        "test_accuracy": 0.422982,
+        "training_seconds": 158.843995,
+        "validation_accuracy": 0.424659
+      },
+      "mps_available": true,
+      "mps_fallback_enabled": false,
+      "poc_id": "macos-flickr-wide-mps-v1",
+      "source_revision": "6aaff3b7a819bcd79ac40deeeb2408e5dabf7c04"
+    }
+  },
+  "frameworks": {
+    "kaggle_cpu": {
+      "python": "3.12.13",
+      "torch": "2.10.0+cpu",
+      "torch_cuda": null,
+      "torch_geometric": "2.8.0.post1"
+    },
+    "kaggle_gpu": {
+      "python": "3.12.13",
+      "torch": "2.10.0+cu128",
+      "torch_cuda": "12.8",
+      "torch_geometric": "2.8.0.post1"
+    },
+    "mps": {
+      "python": "3.14.7",
+      "torch": "2.14.0",
+      "torch_cuda": null,
+      "torch_geometric": "2.8.0.post1"
+    }
+  },
+  "generated_at": "2026-09-05T15:24:37Z",
+  "kaggle_runs": {
+    "cpu": {
+      "enable_gpu": false,
+      "enable_tpu": false,
+      "is_private": true,
+      "kernel_id": "andird/ml-poc-9-flickr-wide-graphsage-cpu",
+      "kernel_version": 1,
+      "machine_shape": null,
+      "status": "COMPLETE",
+      "status_checked_at": "2026-09-05T15:24:38Z",
+      "url": "https://www.kaggle.com/code/andird/ml-poc-9-flickr-wide-graphsage-cpu",
+      "version_reference": "andird/ml-poc-9-flickr-wide-graphsage-cpu/1"
+    },
+    "gpu": {
+      "enable_gpu": true,
+      "enable_tpu": false,
+      "is_private": true,
+      "kernel_id": "andird/ml-poc-10-flickr-wide-graphsage-cuda",
+      "kernel_version": 1,
+      "machine_shape": "NvidiaTeslaT4",
+      "status": "COMPLETE",
+      "status_checked_at": "2026-09-05T15:24:40Z",
+      "url": "https://www.kaggle.com/code/andird/ml-poc-10-flickr-wide-graphsage-cuda",
+      "version_reference": "andird/ml-poc-10-flickr-wide-graphsage-cuda/1"
+    }
+  },
+  "model": {
+    "benchmark_variant": "wide",
+    "dropout": 0.5,
+    "epochs_requested": 20,
+    "hidden_channels": 1024,
+    "learning_rate": 0.01,
+    "patience": 6,
+    "seed": 42,
+    "type": "three-layer GraphSAGE",
+    "weight_decay": 0.0005
+  },
+  "pairwise": {
+    "kaggle_cpu_vs_gpu": {
+      "class_agreement": 0.999003,
+      "class_matches": 89161,
+      "maximum_absolute_score_difference": 0.637648255,
+      "mean_absolute_score_difference": 0.017616465,
+      "minimum_agreement": 0.95,
+      "predictions_compared": 89250
+    },
+    "mps_vs_kaggle_cpu": {
+      "class_agreement": 0.993232,
+      "class_matches": 88646,
+      "maximum_absolute_score_difference": 0.592027068,
+      "mean_absolute_score_difference": 0.009734066,
+      "minimum_agreement": 0.95,
+      "predictions_compared": 89250
+    },
+    "mps_vs_kaggle_gpu": {
+      "class_agreement": 0.99358,
+      "class_matches": 88677,
+      "maximum_absolute_score_difference": 0.333844543,
+      "mean_absolute_score_difference": 0.009612153,
+      "minimum_agreement": 0.95,
+      "predictions_compared": 89250
+    }
+  },
+  "proof": {
+    "all_artifact_checksums_and_schemas_valid": true,
+    "all_pairwise_agreements_pass": true,
+    "dataset_and_model_match": true,
+    "exact_workload_triplet": true,
+    "immutable_kaggle_versions_complete": true,
+    "kaggle_cpu_only": true,
+    "kaggle_single_t4": true,
+    "mps_without_cpu_fallback": true,
+    "wide_cpu_resource_evidence_present": true,
+    "wide_gpu_memory_target_met": true
+  },
+  "proof_status": "PASS",
+  "status": "PASS",
+  "timing": {
+    "cpu_over_gpu_speedup": 34.915,
+    "cpu_over_mps_speedup": 3.774,
+    "kaggle_cpu": 599.417596,
+    "kaggle_gpu": 17.168095,
+    "mps": 158.843995,
+    "mps_over_gpu_speedup": 9.252
+  },
+  "workload": "flickr-wide"
+}
