@@ -10,7 +10,7 @@ import zipfile
 from pathlib import Path
 
 
-SOURCE_REVISION = "PIN_AFTER_EXECUTABLE_COMMIT"
+SOURCE_REVISION = "d4115e3e408f992354a7ceced768d3e19977b54b"
 SOURCE_ARCHIVE = f"https://github.com/gh-andirdju/ml/archive/{SOURCE_REVISION}.zip"
 temporary = Path("/kaggle/temp/ml-poc-10")
 temporary.mkdir(parents=True, exist_ok=True)
