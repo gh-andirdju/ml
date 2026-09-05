@@ -24,7 +24,14 @@ subprocess.run(
     check=True,
 )
 subprocess.run(
-    [sys.executable, str(project / "poc" / "run_kaggle_flickr_cpu.py")],
+    [
+        "/usr/bin/time",
+        "--verbose",
+        "--output",
+        "/kaggle/working/flickr-cpu-resource-usage.txt",
+        sys.executable,
+        str(project / "poc" / "run_kaggle_flickr_cpu.py"),
+    ],
     cwd=project,
     env={**os.environ, "ML_SOURCE_REVISION": SOURCE_REVISION},
     check=True,

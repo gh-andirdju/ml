@@ -32,6 +32,9 @@ are allowed.
   node-class agreement; do not import CPU comparison artifacts into Neo4j.
 - Use POCs 7 and 8 only for a model-identical, training-timed Flickr GraphSAGE
   comparison; these artifacts are comparison-only and never enter Neo4j.
+- Use a single Tesla T4 as the fixed Kaggle GPU baseline. Keep T4x2 open for a
+  future explicitly multi-GPU POC; do not use P100 or another accelerator
+  without explicit approval.
 - Keep Mac Python host-native so PyTorch can use MPS.
 - Use Apple Container for the verified local Neo4j proof.
 - Pin Neo4j and workload images to explicit versions.
@@ -79,7 +82,7 @@ are allowed.
   document one P100 or two T4s with 4 CPU cores and 29 GB host RAM; accelerator
   availability and quota are variable.
 - The current default Kaggle PyTorch `cu128` image cannot execute on P100
-  `sm_60`. Prefer T4 unless intentionally installing a Pascal-compatible build.
+  `sm_60`. Stay with T4; do not spend quota testing a Pascal-compatible build.
 - For a newly created Kaggle kernel, the title-derived slug must match the
   metadata `id`; use the canonical ID returned by the first push.
 - In the current Kaggle T4 image, passing a `torch.device` to CUDA peak-memory

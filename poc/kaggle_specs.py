@@ -1,4 +1,6 @@
-"""Fixed artifact identities shared by Kaggle exporters and the local importer."""
+"""Fixed artifact and Kaggle-run identities used by the proof tooling."""
+
+from dataclasses import dataclass
 
 from result_artifact import ArtifactSpec
 from karate_core import EXPECTED_CLASSES as KARATE_CLASSES
@@ -11,6 +13,14 @@ from wikics_core import EXPECTED_NODES as WIKICS_NODES
 KAGGLE_SOURCE_REVISION = "c9fe91f0de80ad82d5c76ce4908ee3e8473b6165"
 CPU_KAGGLE_SOURCE_REVISION = "1af9d656bd7d59e4a8bb6bc3d82271eb5fb4aa2f"
 FLICKR_KAGGLE_SOURCE_REVISION = "95ccbccd57dc4ec9f0c7c9f143dc941e615dc520"
+
+
+@dataclass(frozen=True)
+class KaggleRunSpec:
+    kernel_id: str
+    version: int
+    metadata_directory: str
+    enable_gpu: bool
 
 
 KARATE_KAGGLE_SPEC = ArtifactSpec(
@@ -102,4 +112,25 @@ COMPARISON_SPECS_BY_POC_ID = {
     WIKICS_KAGGLE_CPU_SPEC.poc_id: WIKICS_KAGGLE_CPU_SPEC,
     FLICKR_KAGGLE_CPU_SPEC.poc_id: FLICKR_KAGGLE_CPU_SPEC,
     FLICKR_KAGGLE_CUDA_SPEC.poc_id: FLICKR_KAGGLE_CUDA_SPEC,
+}
+
+KAGGLE_RUNS_BY_POC_ID = {
+    KARATE_KAGGLE_SPEC.poc_id: KaggleRunSpec(
+        "andird/ml-poc-3-karate-cuda", 3, "kaggle/karate-cuda", True
+    ),
+    WIKICS_KAGGLE_SPEC.poc_id: KaggleRunSpec(
+        "andird/ml-poc-4-wikics-cuda", 1, "kaggle/wikics-cuda", True
+    ),
+    KARATE_KAGGLE_CPU_SPEC.poc_id: KaggleRunSpec(
+        "andird/ml-poc-5-karate-cpu", 1, "kaggle/karate-cpu", False
+    ),
+    WIKICS_KAGGLE_CPU_SPEC.poc_id: KaggleRunSpec(
+        "andird/ml-poc-6-wikics-cpu", 1, "kaggle/wikics-cpu", False
+    ),
+    FLICKR_KAGGLE_CPU_SPEC.poc_id: KaggleRunSpec(
+        "andird/ml-poc-7-flickr-graphsage-cpu", 2, "kaggle/flickr-cpu", False
+    ),
+    FLICKR_KAGGLE_CUDA_SPEC.poc_id: KaggleRunSpec(
+        "andird/ml-poc-8-flickr-graphsage-cuda", 2, "kaggle/flickr-cuda", True
+    ),
 }

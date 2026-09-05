@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from copy import deepcopy
 from pathlib import Path
@@ -9,7 +10,12 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "poc"))
 
-from compare_kaggle_results import compare  # noqa: E402
+from compare_kaggle_results import (  # noqa: E402
+    compare,
+    kaggle_run_evidence,
+    load_gnu_time_evidence,
+)
+from kaggle_specs import KARATE_KAGGLE_CPU_SPEC, KARATE_KAGGLE_SPEC  # noqa: E402
 from poc_runtime import ProofError  # noqa: E402
 
 
@@ -77,6 +83,33 @@ class KaggleComparisonTests(unittest.TestCase):
         cpu["execution"]["training_seconds"] = 20.0
         with self.assertRaisesRegex(ProofError, "GPU training time is invalid"):
             compare(cpu, artifact("cuda:0"), 0.95)
+
+    def test_registered_metadata_proves_cpu_and_t4_configuration(self) -> None:
+        cpu = kaggle_run_evidence(
+            KARATE_KAGGLE_CPU_SPEC.poc_id, verify_remote_status=False
+        )
+        gpu = kaggle_run_evidence(
+            KARATE_KAGGLE_SPEC.poc_id, verify_remote_status=False
+        )
+        self.assertFalse(cpu["enable_gpu"])
+        self.assertIsNone(cpu["machine_shape"])
+        self.assertTrue(gpu["enable_gpu"])
+        self.assertEqual(gpu["machine_shape"], "NvidiaTeslaT4")
+
+    def test_gnu_time_resource_evidence_is_parsed(self) -> None:
+        content = """\
+Percent of CPU this job got: 376%
+Elapsed (wall clock) time (h:mm:ss or m:ss): 3:12.00
+Maximum resident set size (kbytes): 8123456
+Exit status: 0
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "resource.txt"
+            path.write_text(content, encoding="utf8")
+            evidence = load_gnu_time_evidence(path)
+        self.assertEqual(evidence["average_process_cpu_percent"], 376)
+        self.assertEqual(evidence["maximum_resident_set_kib"], 8_123_456)
+        self.assertEqual(evidence["maximum_resident_set_bytes"], 8_318_418_944)
 
 
 if __name__ == "__main__":

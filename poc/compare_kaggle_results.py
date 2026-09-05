@@ -6,12 +6,13 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import subprocess
 import sys
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from kaggle_specs import COMPARISON_SPECS_BY_POC_ID
+from kaggle_specs import COMPARISON_SPECS_BY_POC_ID, KAGGLE_RUNS_BY_POC_ID
 from proof_common import ProofError, require
 from result_artifact import MAX_ARTIFACT_BYTES, load_and_validate_artifact, utc_now
 
@@ -30,6 +31,80 @@ def load_known_artifact(path: Path) -> tuple[dict[str, Any], str]:
     spec = COMPARISON_SPECS_BY_POC_ID.get(preview.get("poc_id"))
     require(spec is not None, "Artifact POC ID is not supported for comparison")
     return load_and_validate_artifact(path, spec)
+
+
+def kaggle_run_evidence(
+    poc_id: str, *, verify_remote_status: bool
+) -> dict[str, Any]:
+    run = KAGGLE_RUNS_BY_POC_ID.get(poc_id)
+    require(run is not None, "Kaggle run identity is not registered")
+    project_root = Path(__file__).resolve().parents[1]
+    metadata_path = project_root / run.metadata_directory / "kernel-metadata.json"
+    require(metadata_path.is_file(), f"Kaggle metadata not found: {metadata_path}")
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf8"))
+    except json.JSONDecodeError as error:
+        raise ProofError(f"Kaggle metadata is not valid JSON: {error}") from error
+    require(metadata.get("id") == run.kernel_id, "Kaggle kernel ID differs")
+    require(metadata.get("is_private") == "true", "Kaggle proof must be private")
+    require(metadata.get("enable_tpu") == "false", "Kaggle proof must not use TPU")
+    expected_gpu = "true" if run.enable_gpu else "false"
+    require(metadata.get("enable_gpu") == expected_gpu, "Kaggle GPU setting differs")
+    expected_shape = "NvidiaTeslaT4" if run.enable_gpu else ""
+    require(metadata.get("machine_shape") == expected_shape, "Kaggle machine shape differs")
+
+    reference = f"{run.kernel_id}/{run.version}"
+    status = "NOT_CHECKED"
+    checked_at = None
+    if verify_remote_status:
+        completed = subprocess.run(
+            ["kaggle", "kernels", "status", reference],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        require(
+            f'{reference} has status "KernelWorkerStatus.COMPLETE"'
+            in completed.stdout,
+            "Kaggle kernel version is not COMPLETE",
+        )
+        status = "COMPLETE"
+        checked_at = utc_now()
+    return {
+        "kernel_id": run.kernel_id,
+        "kernel_version": run.version,
+        "version_reference": reference,
+        "url": f"https://www.kaggle.com/code/{run.kernel_id}",
+        "is_private": True,
+        "enable_gpu": run.enable_gpu,
+        "enable_tpu": False,
+        "machine_shape": expected_shape or None,
+        "status": status,
+        "status_checked_at": checked_at,
+    }
+
+
+def load_gnu_time_evidence(path: Path) -> dict[str, Any]:
+    require(path.is_file(), f"GNU time evidence not found: {path}")
+    fields: dict[str, str] = {}
+    for line in path.read_text(encoding="utf8").splitlines():
+        key, separator, value = line.strip().partition(": ")
+        if separator:
+            fields[key] = value.strip()
+    cpu_percent = fields.get("Percent of CPU this job got", "").removesuffix("%")
+    maximum_rss_kib = fields.get("Maximum resident set size (kbytes)", "")
+    require(cpu_percent.isdigit(), "GNU time CPU percentage is invalid")
+    require(maximum_rss_kib.isdigit(), "GNU time maximum RSS is invalid")
+    require(int(maximum_rss_kib) > 0, "GNU time maximum RSS is zero")
+    require(fields.get("Exit status") == "0", "GNU time command did not pass")
+    return {
+        "measurement": "GNU time --verbose around the complete Python runner",
+        "average_process_cpu_percent": int(cpu_percent),
+        "maximum_resident_set_kib": int(maximum_rss_kib),
+        "maximum_resident_set_bytes": int(maximum_rss_kib) * 1024,
+        "wall_clock": fields.get("Elapsed (wall clock) time (h:mm:ss or m:ss)"),
+        "exit_status": 0,
+    }
 
 
 def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) -> dict[str, Any]:
@@ -103,6 +178,8 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
         "status": "PASS",
         "generated_at": utc_now(),
         "dataset": cpu["dataset"]["name"],
+        "dataset_identity": cpu["dataset"],
+        "model": cpu["model"],
         "nodes": cpu["dataset"]["nodes"],
         "classes": cpu["dataset"]["classes"],
         "predictions_compared": prediction_count,
@@ -137,6 +214,7 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
             "device": cpu_execution["device"],
             "cpu_model": cpu_execution["cpu_model"],
             "cpu_count": cpu_execution.get("cpu_count"),
+            "cuda_available": cpu_execution.get("cuda_available"),
             "source_revision": cpu_execution["source_revision"],
             "metrics": {
                 key: cpu_execution[key]
@@ -167,6 +245,16 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--minimum-agreement", type=float, default=0.95)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--force", action="store_true")
+    parser.add_argument(
+        "--verify-kaggle-status",
+        action="store_true",
+        help="Require the registered immutable Kaggle kernel versions to be COMPLETE",
+    )
+    parser.add_argument(
+        "--cpu-resource-usage",
+        type=Path,
+        help="Optional GNU time --verbose output from the CPU-only runner",
+    )
     return parser.parse_args(argv)
 
 
@@ -177,6 +265,57 @@ def main(argv: Sequence[str] | None = None) -> int:
     result = compare(cpu, gpu, arguments.minimum_agreement)
     result["cpu"]["artifact_sha256"] = cpu_digest
     result["gpu"]["artifact_sha256"] = gpu_digest
+    result["kaggle_runs"] = {
+        "cpu": kaggle_run_evidence(
+            cpu["poc_id"], verify_remote_status=arguments.verify_kaggle_status
+        ),
+        "gpu": kaggle_run_evidence(
+            gpu["poc_id"], verify_remote_status=arguments.verify_kaggle_status
+        ),
+    }
+    cpu_run = result["kaggle_runs"]["cpu"]
+    gpu_run = result["kaggle_runs"]["gpu"]
+    result["proof"] = {
+        "artifact_checksums_and_schema_valid": True,
+        "source_revisions_valid": True,
+        "dataset_identity_match": True,
+        "model_configuration_match": True,
+        "cpu_only": (
+            result["cpu"]["device"] == "cpu"
+            and result["cpu"]["cuda_available"] is False
+            and cpu_run["enable_gpu"] is False
+            and cpu_run["machine_shape"] is None
+        ),
+        "gpu_cuda": (
+            str(result["gpu"]["device"]).startswith("cuda:")
+            and bool(result["gpu"]["cuda_device_name"])
+            and gpu_run["enable_gpu"] is True
+            and gpu_run["machine_shape"] == "NvidiaTeslaT4"
+        ),
+        "immutable_kaggle_versions_complete": (
+            cpu_run["status"] == "COMPLETE" and gpu_run["status"] == "COMPLETE"
+        ),
+    }
+    if arguments.cpu_resource_usage is not None:
+        result["cpu"]["resource_usage"] = load_gnu_time_evidence(
+            arguments.cpu_resource_usage
+        )
+    local_proof_fields = {
+        key: value
+        for key, value in result["proof"].items()
+        if key != "immutable_kaggle_versions_complete"
+    }
+    require(all(local_proof_fields.values()), "Kaggle CPU/GPU proof is incomplete")
+    if arguments.verify_kaggle_status:
+        require(
+            result["proof"]["immutable_kaggle_versions_complete"],
+            "Kaggle version status proof is incomplete",
+        )
+    result["proof_status"] = (
+        "PASS"
+        if all(result["proof"].values())
+        else "REMOTE_STATUS_NOT_CHECKED"
+    )
     payload = json.dumps(result, indent=2, sort_keys=True, allow_nan=False) + "\n"
     if arguments.output is not None:
         require(arguments.force or not arguments.output.exists(), f"Output already exists: {arguments.output}")
