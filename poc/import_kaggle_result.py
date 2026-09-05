@@ -123,6 +123,24 @@ def count_imported(session, spec: ArtifactSpec, digest: str) -> int:
     ).single(strict=True)["count"])
 
 
+def count_local_predictions(session, spec: ArtifactSpec) -> int:
+    if spec == KARATE_KAGGLE_SPEC:
+        query = """
+            MATCH (node:KarateMember {poc_id: $poc_id})
+            WHERE node.predicted_community IS NOT NULL AND size(node.scores) = $classes
+            RETURN count(node) AS count
+        """
+    else:
+        query = """
+            MATCH (node:WikiPage {poc_id: $poc_id})
+            WHERE node.predicted_category IS NOT NULL AND size(node.scores) = $classes
+            RETURN count(node) AS count
+        """
+    return int(session.run(
+        query, poc_id=spec.target_poc_id, classes=spec.classes
+    ).single(strict=True)["count"])
+
+
 def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("artifact", type=Path)
@@ -164,11 +182,17 @@ def main(argv: Sequence[str] | None = None) -> int:
                 session, arguments.expected_server_version
             )
             verify_target_graph(session, spec)
+            local_predictions = count_local_predictions(session, spec)
+            require(local_predictions == spec.nodes, "Laptop predictions are incomplete")
             writer = write_karate_batch if spec == KARATE_KAGGLE_SPEC else write_wikics_batch
             for update_batch in batches(artifact["predictions"], arguments.batch_size):
                 session.execute_write(writer, update_batch, metadata)
             imported = count_imported(session, spec, digest)
             require(imported == spec.nodes, "CUDA prediction import is incomplete")
+            require(
+                count_local_predictions(session, spec) == local_predictions,
+                "Laptop predictions were not preserved",
+            )
     finally:
         driver.close()
     print(json.dumps({
@@ -180,6 +204,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "cuda_device_name": execution["cuda_device_name"],
         "accuracy": execution["accuracy"],
         "predictions_imported": imported,
+        "laptop_predictions_preserved": local_predictions,
         "neo4j_server": server_version,
         "neo4j_edition": edition,
     }, indent=2, sort_keys=True))

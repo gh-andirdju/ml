@@ -39,8 +39,9 @@ the model code:
 ./poc/run_kaggle_wikics_cuda.py
 ```
 
-MPS and CPU are verified for both POCs on this laptop. CUDA entry points are
-ready for later NVIDIA validation. Each executable automatically uses the
+MPS and CPU are verified for both laptop POCs. Both Kaggle CUDA proofs pass on
+Tesla T4 and their predictions are imported locally. The Linux CUDA profiles
+remain ready for later H200 validation. Each executable automatically uses the
 project `.venv` when present. `bun run poc:verify` and
 `bun run poc:wikics:verify` perform read-only database checks.
 The latest committed execution summaries are indexed in

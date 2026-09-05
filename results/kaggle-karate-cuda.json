@@ -1,0 +1,29 @@
+{
+  "accuracy": 0.764706,
+  "artifact_sha256": "5f85dce9373e0bac87be77829176483870ac63e27a19dbff0e3566b2e16b7453",
+  "best_kernel_version": 3,
+  "cuda_capability": [
+    7,
+    5
+  ],
+  "cuda_device_name": "Tesla T4",
+  "device": "cuda:0",
+  "final_loss": 0.050713,
+  "generated_at": "2026-09-05T07:28:35Z",
+  "initial_loss": 1.430153,
+  "kaggle_kernel": "andird/ml-poc-3-karate-cuda",
+  "laptop_predictions_preserved": 34,
+  "neo4j_edition": "community",
+  "neo4j_server": "2026.07.1",
+  "nodes": 34,
+  "poc_id": "kaggle-karate-cuda-v1",
+  "predictions_exported": 34,
+  "predictions_imported": 34,
+  "python": "3.12.13",
+  "source_revision": "c9fe91f0de80ad82d5c76ce4908ee3e8473b6165",
+  "status": "PASS",
+  "target_poc_id": "karate-gnn-neo4j-v1",
+  "torch": "2.10.0+cu128",
+  "torch_cuda": "12.8",
+  "torch_geometric": "2.8.0.post1"
+}

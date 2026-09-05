@@ -91,6 +91,15 @@ class ArtifactTests(unittest.TestCase):
             with self.assertRaisesRegex(ProofError, "not the score argmax"):
                 load_and_validate_artifact(path, SPEC)
 
+    def test_invalid_generation_time_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "result.json"
+            artifact = valid_artifact()
+            artifact["generated_at"] = "not-a-time"
+            write_artifact(path, artifact)
+            with self.assertRaisesRegex(ProofError, "generation time"):
+                load_and_validate_artifact(path, SPEC)
+
     def test_non_finite_values_cannot_be_written(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "result.json"

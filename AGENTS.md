@@ -3,8 +3,9 @@
 ## Scope and mode
 
 These instructions apply to this repository. Karate and WikiCS are verified on
-the laptop. Private Kaggle CUDA variants export predictions for checksum-checked
-local Neo4j import. The H200 and production Neo4j environments remain design-only.
+the laptop and on private Kaggle T4 CUDA jobs. Kaggle predictions pass
+checksum-checked local Neo4j import. The H200 and production Neo4j environments
+remain design-only.
 
 ```mermaid
 flowchart LR
@@ -42,7 +43,7 @@ are allowed.
 - Apple M2 Pro MacBook Pro with 16 GB memory.
 - Homebrew Python 3.14.7 and a project `.venv` are active for the POC.
 - The local POCs pin PyTorch 2.14.0, PyG 2.8.0.post1, and Neo4j Driver 6.3.0.
-- MPS and CPU profiles pass for both POCs; Linux CUDA awaits NVIDIA validation.
+- MPS and CPU profiles pass locally; both CUDA artifact proofs pass on Kaggle T4.
 - Temurin 21 and 25 are installed; interactive shells select Temurin 25.
 - No Homebrew OpenJDK formula or `uv` is installed.
 - Homebrew Apple Container 1.3.1 runs Neo4j Community 2026.07.1 as Linux ARM64.

@@ -43,6 +43,8 @@ proof. Each MPS/CPU pair calls one device-neutral runner.
 - `/data` uses the 4 GB `neo4j-poc-data-4g` named volume.
 - Transaction-log retention is `256M size` to keep repeatable full reloads from
   exhausting the small proof volume.
+- The unmounted original `neo4j-poc-data` volume is retained as a recovery
+  snapshot until its removal is explicitly approved.
 - The graph survived container deletion and recreation.
 - Authentication and telemetry opt-outs use an ignored mode-0600 environment
   file.

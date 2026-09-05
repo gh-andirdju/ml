@@ -117,6 +117,15 @@ def load_and_validate_artifact(
     require(artifact.get("artifact_type") == ARTIFACT_TYPE, "Unexpected artifact type")
     require(artifact.get("poc_id") == spec.poc_id, "Unexpected artifact POC ID")
     require(artifact.get("target_poc_id") == spec.target_poc_id, "Unexpected target POC ID")
+    generated_at = artifact.get("generated_at")
+    require(
+        isinstance(generated_at, str) and generated_at.endswith("Z"),
+        "Artifact generation time is invalid",
+    )
+    try:
+        datetime.fromisoformat(generated_at.removesuffix("Z") + "+00:00")
+    except ValueError as error:
+        raise ProofError(f"Artifact generation time is invalid: {error}") from error
 
     dataset = artifact.get("dataset")
     require(isinstance(dataset, dict), "Dataset metadata is missing")

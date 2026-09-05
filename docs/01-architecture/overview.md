@@ -46,8 +46,8 @@ flowchart LR
 | --- | --- | --- |
 | 1 | Laptop MPS or CPU | Karate round trip through local Neo4j |
 | 2 | Laptop MPS or CPU | Pinned WikiCS round trip through local Neo4j |
-| 3 | Kaggle NVIDIA CUDA | Karate predictions exported; local Neo4j import |
-| 4 | Kaggle NVIDIA CUDA | WikiCS predictions exported; local Neo4j import |
+| 3 | Kaggle Tesla T4 CUDA | Karate export and local Neo4j import verified |
+| 4 | Kaggle Tesla T4 CUDA | WikiCS export and local Neo4j import verified |
 
 All four keep compute selection outside model definitions. Kaggle receives no
 database credential and runs no Neo4j process.

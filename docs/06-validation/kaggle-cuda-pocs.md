@@ -2,7 +2,7 @@
 
 - POC 3: Karate Club on one Kaggle NVIDIA GPU
 - POC 4: pinned WikiCS on one Kaggle NVIDIA GPU
-- Status: implemented; remote execution pending
+- Status: Verified PASS on 2026-09-05
 
 These jobs prove ordinary single-device CUDA portability before access to the
 self-managed H200 cluster. They use Kaggle's free notebook GPU allocation and
@@ -52,6 +52,22 @@ quotas that vary with demand. Both kernels request `NvidiaTeslaT4`, because the
 current default Kaggle PyTorch image does not support the older P100's compute
 capability. The artifacts still record the actual assigned GPU. These proofs do
 not validate H200-specific precision, scaling, interconnect, or performance.
+
+## Verified evidence
+
+| Check | POC 3 Karate | POC 4 WikiCS |
+| --- | ---: | ---: |
+| Kaggle kernel | `andird/ml-poc-3-karate-cuda` v3 | `andird/ml-poc-4-wikics-cuda` v1 |
+| GPU | Tesla T4, capability 7.5 | Tesla T4, capability 7.5 |
+| Framework | PyTorch 2.10.0 with CUDA 12.8 | PyTorch 2.10.0 with CUDA 12.8 |
+| Accuracy | 76.47% across all nodes | 81.35% validation; 79.32% test |
+| Predictions exported and imported | 34 | 11,701 |
+| Neo4j target | Community 2026.07.1 | Community 2026.07.1 |
+
+Both artifacts came from source revision
+`c9fe91f0de80ad82d5c76ce4908ee3e8473b6165`. Full predictions remain in
+ignored local artifact storage and Kaggle output. Compact evidence is committed
+under `results/`.
 
 ## Sources
 
