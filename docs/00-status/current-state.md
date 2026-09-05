@@ -9,15 +9,16 @@ Observed and verified on 2026-09-05.
 | Storage | Approximately 512 GiB free when observed |
 | Homebrew | 6.0.21 |
 | Python | 3.14.7 project `.venv`; dependency check passes |
-| GNN | Minimal Karate and larger WikiCS runners; MPS and CPU verified |
+| GNN | Karate and WikiCS laptop runners verified; two Kaggle CUDA jobs ready |
 | Java | Temurin 21 and 25; interactive `JAVA_HOME` selects Temurin 25 |
 | Apple Container | Homebrew CLI and service 1.3.1; active |
 | Neo4j | Community 2026.07.1, Linux ARM64, running as `neo4j-poc` |
-| Database resources | 2 CPUs, 2 GB memory, persistent 2 GB named volume |
+| Database resources | 2 CPUs, 2 GB memory, persistent 4 GB named volume |
+| Transaction logs | Retention capped at 256 MB; 3.2 GB volume headroom after regression |
 | Network | Bolt only at `127.0.0.1:7687` |
 | Minimal POC | PASS: 34 nodes, 78 relationships, 34 predictions |
 | Larger POC | PASS: 11,701 nodes, 216,123 relationships, 11,701 predictions |
-| CUDA profile | Ready for later Linux NVIDIA validation |
+| CUDA proofs | GPU-only Karate and WikiCS artifact exporters ready for Kaggle validation |
 | PDF tooling | Bun 1.4.1 with local Playwright, Chromium, Marked, and Mermaid |
 | Constraints | 16 GB limit; MPS needs host Python; container needs Local Network access |
 
@@ -30,6 +31,6 @@ flowchart TB
     host --> apple[Apple Container 1.3.1]
     host --> pdf[Bun PDF tooling<br/>active]
     python --> mps[MPS GCN proofs<br/>verified]
-    apple --> neo[Neo4j Community 2026.07.1<br/>running]
+    apple --> neo[Neo4j Community 2026.07.1<br/>4 GB volume]
     python <-->|Bolt on loopback| neo
 ```

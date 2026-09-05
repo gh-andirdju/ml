@@ -8,7 +8,7 @@
 | Compute | PyTorch 2.14.0; MPS and CPU profiles verified |
 | GNN | PyG 2.8.0.post1; minimal Karate and two-layer WikiCS GCNs |
 | Neo4j | Community 2026.07.1 in Apple Container 1.3.1 |
-| Memory | Neo4j limited to 2 GB on the 16 GB laptop |
+| Memory | Neo4j limited to 2 GB RAM with a 4 GB persistent volume |
 | Status | End-to-end proof passed on 2026-09-05 |
 
 ```mermaid
@@ -40,7 +40,9 @@ proof. Each MPS/CPU pair calls one device-neutral runner.
 
 - Native Linux ARM64 image with an explicit version.
 - Bolt is the only published port and binds to `127.0.0.1:7687`.
-- `/data` uses the 2 GB `neo4j-poc-data` named volume.
+- `/data` uses the 4 GB `neo4j-poc-data-4g` named volume.
+- Transaction-log retention is `256M size` to keep repeatable full reloads from
+  exhausting the small proof volume.
 - The graph survived container deletion and recreation.
 - Authentication and telemetry opt-outs use an ignored mode-0600 environment
   file.

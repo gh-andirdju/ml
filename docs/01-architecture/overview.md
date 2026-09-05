@@ -42,11 +42,15 @@ flowchart LR
 
 ## Validation ladder
 
-- Karate Club is the fast 34-node integration smoke test.
-- WikiCS is the larger 11,701-node full-batch GCN proof with data splits, model
-  selection, checksum verification, and batched database I/O.
-- Both keep compute selection outside their model definitions and use isolated
-  Neo4j labels and POC identifiers.
+| POC | Compute | Data and database boundary |
+| --- | --- | --- |
+| 1 | Laptop MPS or CPU | Karate round trip through local Neo4j |
+| 2 | Laptop MPS or CPU | Pinned WikiCS round trip through local Neo4j |
+| 3 | Kaggle NVIDIA CUDA | Karate predictions exported; local Neo4j import |
+| 4 | Kaggle NVIDIA CUDA | WikiCS predictions exported; local Neo4j import |
+
+All four keep compute selection outside model definitions. Kaggle receives no
+database credential and runs no Neo4j process.
 
 ## Open decisions
 

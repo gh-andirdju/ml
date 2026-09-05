@@ -92,9 +92,10 @@ Execute the file matching the environment:
 ./poc/run_wikics_linux_cuda.py
 ```
 
-The CUDA entry point contains no CUDA-specific model code and awaits later
-NVIDIA validation. Run `bun run poc:wikics:verify` for a non-mutating database
-check. Optional trailing CLI flags override profile defaults.
+The CUDA entry point contains no CUDA-specific model code. POC 4 executes that
+shared training core on Kaggle without Neo4j and exports predictions for local
+import. Run `bun run poc:wikics:verify` for a non-mutating database check.
+Optional trailing CLI flags override profile defaults.
 
 ## Sources
 

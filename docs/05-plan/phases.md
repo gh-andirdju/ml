@@ -1,11 +1,12 @@
 # Implementation phases
 
-Both local proofs are complete. Data-center implementation remains pending
-explicit approval.
+Both local proofs are complete. Two Kaggle CUDA proofs are implemented and await
+their first remote executions. Data-center implementation remains pending.
 
 ```mermaid
 flowchart LR
-    local[Local MPS and Neo4j<br/>verified] --> foundation[Project foundation]
+    local[Two laptop POCs<br/>verified] --> kaggle[Two Kaggle CUDA POCs]
+    kaggle --> foundation[Project foundation]
     foundation --> cluster[H200 packaging]
     cluster --> operations[Operations]
 ```
@@ -23,6 +24,8 @@ flowchart LR
   stopping, and batched Neo4j round-trip persistence.
 
 ## Next: project foundation
+
+- Run both private Kaggle CUDA kernels and import their validated artifacts.
 
 - Decide the long-term Python and dependency-locking policy.
 - Extract reusable schema, query, and tensor adapters from the POC.

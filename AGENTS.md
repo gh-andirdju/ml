@@ -2,9 +2,9 @@
 
 ## Scope and mode
 
-These instructions apply to this repository. The minimal Karate and larger
-WikiCS Python, MPS GNN, and Neo4j proofs are implemented and verified. The H200
-and production Neo4j environments remain design-only.
+These instructions apply to this repository. Karate and WikiCS are verified on
+the laptop. Private Kaggle CUDA variants export predictions for checksum-checked
+local Neo4j import. The H200 and production Neo4j environments remain design-only.
 
 ```mermaid
 flowchart LR
@@ -24,6 +24,8 @@ are allowed.
 - Share device-neutral PyTorch, PyTorch Geometric, tensor, and checkpoint logic.
 - Select CUDA, MPS, or CPU at runtime; Metal does not implement the CUDA API.
 - Keep each POC device-neutral and use ready environment profile files.
+- Keep Kaggle GPU jobs database-free; move only versioned prediction artifacts
+  and detached SHA-256 files back to the local Neo4j importer.
 - Keep Mac Python host-native so PyTorch can use MPS.
 - Use Apple Container for the verified local Neo4j proof.
 - Pin Neo4j and workload images to explicit versions.
@@ -39,12 +41,13 @@ are allowed.
 
 - Apple M2 Pro MacBook Pro with 16 GB memory.
 - Homebrew Python 3.14.7 and a project `.venv` are active for the POC.
-- The POC pins PyTorch 2.14.0, PyG 2.8.0.post1, and Neo4j Driver 6.3.0.
+- The local POCs pin PyTorch 2.14.0, PyG 2.8.0.post1, and Neo4j Driver 6.3.0.
 - MPS and CPU profiles pass for both POCs; Linux CUDA awaits NVIDIA validation.
 - Temurin 21 and 25 are installed; interactive shells select Temurin 25.
 - No Homebrew OpenJDK formula or `uv` is installed.
 - Homebrew Apple Container 1.3.1 runs Neo4j Community 2026.07.1 as Linux ARM64.
-- The `neo4j-poc` container uses 2 CPUs, 2 GB memory, and a 2 GB named volume.
+- The `neo4j-poc` container uses 2 CPUs, 2 GB memory, and a 4 GB named volume.
+- Local transaction-log retention is capped at 256 MB for repeated POC reloads.
 - Bolt is published only on `127.0.0.1:7687`; authentication stays untracked.
 - Bun-based PDF tooling and project-local Playwright Chromium are available.
 

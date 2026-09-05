@@ -92,7 +92,7 @@ Two consecutive full runs produced the same result:
 | Status | PASS |
 | MPS execution | Model, features, and output on `mps`; fallback disabled |
 | CPU execution | Same runner passed on `cpu` |
-| CUDA entry point | Ready; execution awaits NVIDIA validation |
+| CUDA entry point | Local Linux profile ready; Kaggle export is POC 3 |
 | Neo4j identity | Community 2026.07.1 |
 | Graph | 34 nodes, 78 stored relationships, 156 reconstructed edge entries |
 | Tensor shapes | Features `[34, 34]`; output `[34, 4]` |
@@ -134,7 +134,7 @@ created with `bun run poc:secret`.
 - Neo4j Browser, APOC, Graph Data Science, Enterprise Edition, and clustering.
 - Jupyter, large datasets, batching, sampling, mixed precision, and tuning.
 - Apple Container GPU access; MPS remains host-native.
-- Actual CUDA and H200 execution, performance, and parity testing.
+- H200 execution, performance, and parity testing; CUDA is covered separately.
 
 ## Sources
 

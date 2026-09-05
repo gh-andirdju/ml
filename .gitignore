@@ -1,5 +1,6 @@
 # Python
 .data/
+.artifacts/
 .venv/
 venv/
 __pycache__/

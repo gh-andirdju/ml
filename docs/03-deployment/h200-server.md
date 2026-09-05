@@ -40,6 +40,8 @@ flowchart TB
   execution still requires validation on the NVIDIA environment.
 - `poc/run_wikics_linux_cuda.py` provides the equivalent larger-workload CUDA
   validation entry point.
+- Kaggle POCs validate single-GPU CUDA portability before H200 access, but do
+  not validate H200 performance, BF16 or FP8, NCCL, or multi-GPU behavior.
 - Checkpoints load through CPU and then move to the selected device.
 - BF16, FP8, NCCL, and CUDA/Triton kernels are optional H200 accelerators.
 - Final CUDA and PyTorch versions follow the deployed driver compatibility

@@ -5,21 +5,28 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
-import os
 import sys
 from collections.abc import Sequence
 from pathlib import Path
 
 import neo4j
 import torch
-import torch.nn.functional as functional
 import torch_geometric
 from neo4j.exceptions import Neo4jError
 from torch import Tensor
 from torch_geometric.data import Data
-from torch_geometric.datasets import KarateClub
-from torch_geometric.nn import GCNConv
+
+from karate_core import (
+    EXPECTED_CLASSES,
+    EXPECTED_DIRECTED_EDGES,
+    EXPECTED_FEATURES,
+    EXPECTED_NODES,
+    EXPECTED_RELATIONSHIPS,
+    EXPECTED_TRAINING_NODES,
+    SmallestGCN,
+    source_graph,
+    train_on_device,
+)
 
 from poc_runtime import (
     ProofError,
@@ -33,33 +40,6 @@ from poc_runtime import (
 
 POC_ID = "karate-gnn-neo4j-v1"
 LEGACY_POC_IDS = ["karate-mps-neo4j-v1"]
-EXPECTED_NODES = 34
-EXPECTED_DIRECTED_EDGES = 156
-EXPECTED_RELATIONSHIPS = 78
-EXPECTED_FEATURES = 34
-EXPECTED_CLASSES = 4
-EXPECTED_TRAINING_NODES = 4
-
-
-class SmallestGCN(torch.nn.Module):
-    """A single graph-convolution layer for four-class node prediction."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.convolution = GCNConv(EXPECTED_FEATURES, EXPECTED_CLASSES)
-
-    def forward(self, graph: Data) -> Tensor:
-        return self.convolution(graph.x, graph.edge_index)
-
-
-def source_graph() -> Data:
-    graph = KarateClub()[0]
-    require(graph.num_nodes == EXPECTED_NODES, "Unexpected source node count")
-    require(graph.num_edges == EXPECTED_DIRECTED_EDGES, "Unexpected source edge count")
-    require(tuple(graph.x.shape) == (EXPECTED_NODES, EXPECTED_FEATURES), "Unexpected features")
-    require(int(graph.y.unique().numel()) == EXPECTED_CLASSES, "Unexpected class count")
-    require(int(graph.train_mask.sum()) == EXPECTED_TRAINING_NODES, "Unexpected training mask")
-    return graph
 
 
 def graph_payload(graph: Data) -> tuple[list[dict[str, object]], list[dict[str, int]]]:
@@ -181,96 +161,6 @@ def verify_round_trip(source: Data, rebuilt: Data) -> None:
         == set(map(tuple, rebuilt.edge_index.t().tolist())),
         "Edges changed during Neo4j round trip",
     )
-
-
-def resolve_device(requested: str) -> torch.device:
-    """Resolve auto, CPU, MPS, or CUDA without leaking backend logic downstream."""
-    normalized = requested.strip().lower()
-    if normalized == "auto":
-        accelerator = torch.accelerator.current_accelerator(check_available=True)
-        return accelerator if accelerator is not None else torch.device("cpu")
-
-    try:
-        device = torch.device(normalized)
-    except (RuntimeError, ValueError) as error:
-        raise ProofError(f"Invalid device {requested!r}: {error}") from error
-
-    require(
-        device.type in {"cpu", "cuda", "mps"},
-        f"Unsupported device type {device.type!r}; use auto, cpu, cuda, cuda:N, or mps",
-    )
-    if device.type != "cpu":
-        try:
-            torch.empty(1, device=device)
-        except Exception as error:
-            raise ProofError(f"Requested device {requested!r} is unavailable: {error}") from error
-    return device
-
-
-def train_on_device(
-    graph: Data,
-    epochs: int,
-    device: torch.device,
-    seed: int,
-    learning_rate: float,
-    weight_decay: float,
-) -> tuple[Tensor, float, float, float, str]:
-    if device.type == "mps":
-        require(
-            os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK", "0") != "1",
-            "CPU fallback is enabled; this would not prove MPS execution",
-        )
-
-    torch.manual_seed(seed)
-    device_graph = graph.to(device)
-    model = SmallestGCN().to(device)
-    optimizer = torch.optim.Adam(
-        model.parameters(), lr=learning_rate, weight_decay=weight_decay
-    )
-
-    model.train()
-    with torch.no_grad():
-        initial_logits = model(device_graph)
-        initial_loss = functional.cross_entropy(
-            initial_logits[device_graph.train_mask],
-            device_graph.y[device_graph.train_mask],
-        ).item()
-
-    for _ in range(epochs):
-        optimizer.zero_grad(set_to_none=True)
-        logits = model(device_graph)
-        loss = functional.cross_entropy(
-            logits[device_graph.train_mask],
-            device_graph.y[device_graph.train_mask],
-        )
-        loss.backward()
-        optimizer.step()
-
-    model.eval()
-    with torch.no_grad():
-        final_logits = model(device_graph)
-        final_loss = functional.cross_entropy(
-            final_logits[device_graph.train_mask],
-            device_graph.y[device_graph.train_mask],
-        ).item()
-        predictions = final_logits.argmax(dim=1)
-        accuracy = float((predictions == device_graph.y).float().mean().item())
-
-    if device.type != "cpu":
-        torch.accelerator.synchronize(device)
-    actual_device = final_logits.device
-    require(next(model.parameters()).device == actual_device, "Model device mismatch")
-    require(device_graph.x.device == actual_device, "Feature device mismatch")
-    require(actual_device.type == device.type, "Requested device type was not used")
-    if device.index is not None:
-        require(actual_device.index == device.index, "Requested device index was not used")
-    require(
-        tuple(final_logits.shape) == (EXPECTED_NODES, EXPECTED_CLASSES),
-        "Output shape mismatch",
-    )
-    require(math.isfinite(initial_loss) and math.isfinite(final_loss), "Loss is not finite")
-    require(final_loss < initial_loss, "Training loss did not decrease")
-    return final_logits.cpu(), initial_loss, final_loss, accuracy, str(actual_device)
 
 
 def write_predictions(session, logits: Tensor) -> int:

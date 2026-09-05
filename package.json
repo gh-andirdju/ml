@@ -15,7 +15,10 @@
     "poc:wikics:macos": ".venv/bin/python ./poc/run_wikics_macos_mps.py",
     "poc:wikics:cpu": ".venv/bin/python ./poc/run_wikics_cpu.py",
     "poc:wikics:nvidia": ".venv/bin/python ./poc/run_wikics_linux_cuda.py",
-    "poc:wikics:verify": ".venv/bin/python ./poc/wikics_gnn_neo4j.py --verify-existing"
+    "poc:wikics:verify": ".venv/bin/python ./poc/wikics_gnn_neo4j.py --verify-existing",
+    "poc:kaggle:karate": ".venv/bin/python ./poc/run_kaggle_karate_cuda.py",
+    "poc:kaggle:wikics": ".venv/bin/python ./poc/run_kaggle_wikics_cuda.py",
+    "poc:kaggle:import": ".venv/bin/python ./poc/import_kaggle_result.py"
   },
   "dependencies": {},
   "devDependencies": {
