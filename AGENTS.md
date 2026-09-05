@@ -2,12 +2,13 @@
 
 ## Scope and mode
 
-These instructions apply to this repository. All twelve POCs pass. Karate and
+These instructions apply to this repository. All fourteen POCs pass. Karate and
 WikiCS are verified on the laptop and private Kaggle CPU/T4 jobs. Both Flickr
-256, 1,024, and 2,048 comparisons pass. Kaggle GPU predictions for Karate and
-WikiCS pass checksum-checked local Neo4j import. H200 and production Neo4j
-remain design-only. Every logical workload has a committed three-environment
-comparison covering host-native MPS, Kaggle CPU only, and one Kaggle Tesla T4.
+256, 1,024, 2,048, and 4,096 comparisons pass. Kaggle GPU predictions for
+Karate and WikiCS pass checksum-checked local Neo4j import. H200 and production
+Neo4j remain design-only. Every logical workload has a committed
+three-environment comparison covering host-native MPS, Kaggle CPU only, and one
+Kaggle Tesla T4.
 
 ```mermaid
 flowchart LR
@@ -43,6 +44,10 @@ are allowed.
   262,144-edge mean-aggregation chunks and the pure-PyTorch bounded-backward
   rule model-identical on MPS, CPU, and T4. Require at least 8 GiB T4 peak
   allocation; keep all artifacts comparison-only.
+- Use POCs 13 and 14 for the 4,096-channel Flickr comparison. Keep exact mean
+  aggregation and pure-PyTorch activation checkpointing everywhere. Record
+  backend workspace size as execution metadata: 32,768 edges on MPS and
+  131,072 on Kaggle CPU/T4. Require at least 10 GiB T4 peak allocation.
 - Use a single Tesla T4 as the fixed Kaggle GPU baseline. Keep T4x2 open for a
   future explicitly multi-GPU POC; do not use P100 or another accelerator
   without explicit approval.
@@ -66,7 +71,7 @@ are allowed.
 - Homebrew Python 3.14.7 and a project `.venv` are active for the POC.
 - The local POCs pin PyTorch 2.14.0, PyG 2.8.0.post1, Neo4j Driver 6.3.0, and
   SciPy 1.18.1 for Flickr dataset processing.
-- MPS and CPU profiles pass locally; all ten Kaggle CPU/T4 jobs pass.
+- MPS and CPU profiles pass locally; all twelve Kaggle CPU/T4 jobs pass.
 - Temurin 21 and 25 are installed; interactive shells select Temurin 25.
 - No Homebrew OpenJDK formula or `uv` is installed.
 - Homebrew Apple Container 1.3.1 runs Neo4j Community 2026.07.1 as Linux ARM64.
@@ -100,7 +105,7 @@ are allowed.
   from 15.64 GB capacity. Its four-core AMD EPYC CPU run measured 8.01 GB peak
   RSS, 660.25 seconds complete-runner wall time, and 169.281% average process
   CPU. CUDA allocator memory and CPU RSS are not directly equivalent.
-- All five workload triplets pass checksum and schema validation. Pairwise class
+- All six workload triplets pass checksum and schema validation. Pairwise class
   agreement ranges from 97.7523% to 100% across MPS, Kaggle CPU, and T4.
 - Flickr-256 trained in 38.10 seconds on MPS, 246.06 seconds on Kaggle CPU, and
   6.31 seconds on T4. Flickr-1,024 took 158.84, 599.42, and 17.17 seconds.
@@ -110,6 +115,13 @@ are allowed.
 - Flickr-2,048 measured 12.13 GB CPU peak RSS and 10.35 GB T4 peak allocation;
   T4 peak reservation was 13.90 GB of 15.64 GB total memory. The pure-PyTorch
   custom autograd rule is portable tensor code, not a compiled CUDA extension.
+- Flickr-4,096 uses 37,715,975 parameters, exact chunked aggregation, and
+  activation checkpointing. It trained in 448.47 seconds on MPS, 6,828.02
+  seconds on Kaggle CPU, and 177.87 seconds on T4. All pairs agreed on at least
+  99.2807% of predicted classes.
+- Flickr-4,096 measured 11.72 GB CPU peak RSS and 11.10 GB T4 peak allocation;
+  T4 peak reservation was 15.25 GB of 15.64 GB total memory. Treat 97.51%
+  reservation as close to the practical one-T4 allocator limit.
 - Standard free Kaggle notebooks document 4 CPU cores and 30 GB RAM. GPU choices
   document one P100 or two T4s with 4 CPU cores and 29 GB host RAM; accelerator
   availability and quota are variable.

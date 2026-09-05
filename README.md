@@ -2,7 +2,7 @@
 
 ## Current summary
 
-Twelve verified execution proofs form five GNN workloads across laptop and Kaggle
+Fourteen verified execution proofs form six GNN workloads across laptop and Kaggle
 compute. Every workload now has a recorded three-way comparison using Apple
 MPS, Kaggle CPU only, and Kaggle Tesla T4. Karate and WikiCS retain their local
 Neo4j proofs; Kaggle and Flickr comparison jobs remain database-free. A larger
@@ -13,6 +13,9 @@ to 1,024 channels: the T4 is 34.915x faster and peaks at 6.88 GB allocated and
 H200 cluster and separate Neo4j tier. POCs 11 and 12 increase the width to
 2,048 with exact bounded-memory aggregation: T4 is 26.888x faster than CPU,
 uses 10.35 GB peak allocation, and agrees with both CPU and MPS above 99.87%.
+POCs 13 and 14 increase the width to 4,096 with activation checkpointing: T4 is
+38.388x faster than CPU, allocates 11.10 GB, and reserves 15.25 GB of its 15.64
+GB capacity.
 
 ```mermaid
 flowchart LR
@@ -51,6 +54,8 @@ the model code:
 ./poc/run_kaggle_flickr_wide_cuda.py
 ./poc/run_kaggle_flickr_2048_cpu.py
 ./poc/run_kaggle_flickr_2048_cuda.py
+./poc/run_kaggle_flickr_4096_cpu.py
+./poc/run_kaggle_flickr_4096_cuda.py
 
 # Host-native MPS comparison artifacts
 ./poc/run_mps_karate_artifact.py
@@ -58,6 +63,7 @@ the model code:
 ./poc/run_mps_flickr.py
 ./poc/run_mps_flickr_wide.py
 ./poc/run_mps_flickr_2048.py
+./poc/run_mps_flickr_4096.py
 ```
 
 MPS and CPU are verified for both laptop POCs. Both Kaggle CUDA proofs pass on
