@@ -75,16 +75,18 @@ class FlickrModelTests(unittest.TestCase):
                 checkpointed_parameter.grad, standard_parameter.grad
             )
 
-    def test_root_projection_chunking_preserves_training_gradients(self) -> None:
-        features = torch.randn((3, 2), generator=torch.Generator().manual_seed(7))
-        features.requires_grad_()
-        edge_index = torch.tensor([[0, 1, 2, 1], [1, 0, 1, 2]])
-        standard = poc.ChunkedSAGEConv(2, 1_024, edge_chunk_size=2)
-        chunked = poc.ChunkedSAGEConv(
+    def test_destination_chunking_preserves_training_gradients(self) -> None:
+        features = torch.tensor(
+            [[1.0, 2.0], [3.0, 5.0], [7.0, 11.0]], requires_grad=True
+        )
+        edge_index = torch.tensor([[1, 0, 2, 1], [0, 1, 1, 2]])
+        standard = poc.SAGEConv(2, 5)
+        chunked = poc.DestinationChunkedSAGEConv(
             2,
-            1_024,
-            edge_chunk_size=2,
-            root_node_chunk_size=1,
+            5,
+            destination_node_chunk_size=2,
+            edge_boundaries=(0, 3, 4),
+            destination_degree=torch.tensor([1.0, 2.0, 1.0]),
         )
         chunked.load_state_dict(standard.state_dict())
         expected = standard(features, edge_index)

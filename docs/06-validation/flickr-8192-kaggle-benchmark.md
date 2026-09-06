@@ -23,12 +23,12 @@ flowchart LR
     cuda --> proof
 ```
 
-All environments use exact chunked mean aggregation, hidden- and output-layer
-checkpointing, row-chunked root projections, and CPU-retained best-model state.
-Kaggle uses 8,192-edge and 1,024-node workspaces. MPS uses 2,048-edge and
-256-node workspaces to fit 16 GB unified memory. Workspace sizes are execution
-metadata, not model parameters; the graph, layer formula, FP32 weights, loss,
-optimizer, and trainable parameter count remain identical.
+All environments use exact destination-node-chunked mean aggregation, hidden-
+and output-layer checkpointing, and CPU-retained best-model state. Kaggle uses
+1,024-destination-node workspaces. MPS uses 256-node workspaces to fit 16 GB
+unified memory. Workspace sizes are execution metadata, not model parameters;
+the graph, layer formula, FP32 weights, loss, optimizer, and trainable parameter
+count remain identical.
 
 ## Acceptance checks
 

@@ -91,16 +91,10 @@ class ChunkedSAGEConv(SAGEConv):
         out_channels: int,
         *,
         edge_chunk_size: int,
-        root_node_chunk_size: int | None = None,
     ) -> None:
         require(edge_chunk_size > 0, "Edge chunk size must be positive")
-        require(
-            root_node_chunk_size is None or root_node_chunk_size > 0,
-            "Root node chunk size must be positive",
-        )
         super().__init__(in_channels, out_channels)
         self.edge_chunk_size = edge_chunk_size
-        self.root_node_chunk_size = root_node_chunk_size
 
     def forward(
         self,
@@ -123,13 +117,180 @@ class ChunkedSAGEConv(SAGEConv):
             self.edge_chunk_size,
         )
         output = self.lin_l(aggregated)
-        if self.root_node_chunk_size is None or output.size(1) < 1_024:
-            output.add_(self.lin_r(x))
-            return output
-        for start in range(0, x.size(0), self.root_node_chunk_size):
-            stop = min(start + self.root_node_chunk_size, x.size(0))
-            output[start:stop].add_(self.lin_r(x[start:stop]))
+        output.add_(self.lin_r(x))
         return output
+
+
+class _DestinationChunkedSAGE(torch.autograd.Function):
+    """Differentiate an exact GraphSAGE layer with bounded destination chunks."""
+
+    @staticmethod
+    def forward(
+        context,
+        features: Tensor,
+        edge_index: Tensor,
+        left_weight: Tensor,
+        left_bias: Tensor,
+        right_weight: Tensor,
+        destination_degree: Tensor,
+        destination_node_chunk_size: int,
+        edge_boundaries: tuple[int, ...],
+    ) -> Tensor:
+        source, destination = edge_index
+        output = features.new_empty((features.size(0), left_weight.size(0)))
+        node_starts = range(0, features.size(0), destination_node_chunk_size)
+        expected_chunks = math.ceil(features.size(0) / destination_node_chunk_size)
+        require(
+            len(edge_boundaries) == expected_chunks + 1
+            and edge_boundaries[0] == 0
+            and edge_boundaries[-1] == edge_index.size(1),
+            "Destination edge boundaries do not cover the graph",
+        )
+        for chunk_index, node_start in enumerate(node_starts):
+            node_stop = min(
+                node_start + destination_node_chunk_size, features.size(0)
+            )
+            edge_start = edge_boundaries[chunk_index]
+            edge_stop = edge_boundaries[chunk_index + 1]
+            local_destination = destination[edge_start:edge_stop] - node_start
+            local_source = source[edge_start:edge_stop]
+            aggregated = features.new_zeros(
+                (node_stop - node_start, features.size(1))
+            )
+            aggregated.index_add_(
+                0,
+                local_destination,
+                features.index_select(0, local_source),
+            )
+            degree = destination_degree[node_start:node_stop]
+            aggregated.div_(degree.unsqueeze(1))
+            chunk = functional.linear(aggregated, left_weight, left_bias)
+            chunk.add_(
+                functional.linear(
+                    features[node_start:node_stop], right_weight, None
+                )
+            )
+            output[node_start:node_stop].copy_(chunk)
+        context.save_for_backward(
+            features,
+            edge_index,
+            left_weight,
+            right_weight,
+            destination_degree,
+        )
+        context.destination_node_chunk_size = destination_node_chunk_size
+        context.edge_boundaries = edge_boundaries
+        return output
+
+    @staticmethod
+    def backward(context, gradient: Tensor):
+        (
+            features,
+            edge_index,
+            left_weight,
+            right_weight,
+            destination_degree,
+        ) = context.saved_tensors
+        source, destination = edge_index
+        feature_gradient = torch.zeros_like(features)
+        left_weight_gradient = torch.zeros_like(left_weight)
+        left_bias_gradient = gradient.sum(dim=0)
+        right_weight_gradient = torch.zeros_like(right_weight)
+        node_starts = range(
+            0, features.size(0), context.destination_node_chunk_size
+        )
+        for chunk_index, node_start in enumerate(node_starts):
+            node_stop = min(
+                node_start + context.destination_node_chunk_size,
+                features.size(0),
+            )
+            edge_start = context.edge_boundaries[chunk_index]
+            edge_stop = context.edge_boundaries[chunk_index + 1]
+            local_destination = destination[edge_start:edge_stop] - node_start
+            local_source = source[edge_start:edge_stop]
+            degree = destination_degree[node_start:node_stop]
+            aggregated = features.new_zeros(
+                (node_stop - node_start, features.size(1))
+            )
+            aggregated.index_add_(
+                0,
+                local_destination,
+                features.index_select(0, local_source),
+            )
+            aggregated.div_(degree.unsqueeze(1))
+            chunk_gradient = gradient[node_start:node_stop]
+            left_weight_gradient.add_(chunk_gradient.t().matmul(aggregated))
+            right_weight_gradient.add_(
+                chunk_gradient.t().matmul(features[node_start:node_stop])
+            )
+            feature_gradient[node_start:node_stop].add_(
+                chunk_gradient.matmul(right_weight)
+            )
+            aggregate_gradient = chunk_gradient.matmul(left_weight)
+            neighbor_contribution = aggregate_gradient.index_select(
+                0, local_destination
+            )
+            neighbor_contribution.div_(
+                degree.index_select(0, local_destination).unsqueeze(1)
+            )
+            feature_gradient.index_add_(
+                0,
+                local_source,
+                neighbor_contribution,
+            )
+        return (
+            feature_gradient,
+            None,
+            left_weight_gradient,
+            left_bias_gradient,
+            right_weight_gradient,
+            None,
+            None,
+            None,
+        )
+
+
+class DestinationChunkedSAGEConv(SAGEConv):
+    """Exact GraphSAGE with bounded destination-node forward and backward."""
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        *,
+        destination_node_chunk_size: int,
+        edge_boundaries: tuple[int, ...],
+        destination_degree: Tensor,
+    ) -> None:
+        require(
+            destination_node_chunk_size > 0,
+            "Destination node chunk size must be positive",
+        )
+        require(len(edge_boundaries) >= 2, "Edge boundaries are incomplete")
+        super().__init__(in_channels, out_channels)
+        self.destination_node_chunk_size = destination_node_chunk_size
+        self.edge_boundaries = edge_boundaries
+        self.register_buffer(
+            "destination_degree", destination_degree, persistent=False
+        )
+
+    def forward(
+        self,
+        x: Tensor,
+        edge_index: Tensor,
+        size: tuple[int, int] | None = None,
+    ) -> Tensor:
+        require(size is None, "Destination chunks support homogeneous graphs only")
+        return _DestinationChunkedSAGE.apply(
+            x,
+            edge_index,
+            self.lin_l.weight,
+            self.lin_l.bias,
+            self.lin_r.weight,
+            self.destination_degree,
+            self.destination_node_chunk_size,
+            self.edge_boundaries,
+        )
 
 
 class FlickrGraphSAGE(torch.nn.Module):
@@ -141,23 +302,39 @@ class FlickrGraphSAGE(torch.nn.Module):
         dropout: float,
         edge_chunk_size: int | None = None,
         activation_checkpointing: bool = False,
-        root_node_chunk_size: int | None = None,
         output_checkpointing: bool = False,
+        destination_node_chunk_size: int | None = None,
+        destination_edge_boundaries: tuple[int, ...] | None = None,
+        destination_degree: Tensor | None = None,
     ) -> None:
         super().__init__()
         self.dropout = dropout
         self.activation_checkpointing = activation_checkpointing
         self.output_checkpointing = output_checkpointing
-        convolution = (
-            SAGEConv
-            if edge_chunk_size is None
-            else lambda inputs, outputs: ChunkedSAGEConv(
+        if destination_node_chunk_size is not None:
+            require(
+                destination_edge_boundaries is not None,
+                "Destination edge boundaries are required",
+            )
+            require(
+                destination_degree is not None,
+                "Destination degree is required",
+            )
+            convolution = lambda inputs, outputs: DestinationChunkedSAGEConv(
+                inputs,
+                outputs,
+                destination_node_chunk_size=destination_node_chunk_size,
+                edge_boundaries=destination_edge_boundaries,
+                destination_degree=destination_degree,
+            )
+        elif edge_chunk_size is not None:
+            convolution = lambda inputs, outputs: ChunkedSAGEConv(
                 inputs,
                 outputs,
                 edge_chunk_size=edge_chunk_size,
-                root_node_chunk_size=root_node_chunk_size,
             )
-        )
+        else:
+            convolution = SAGEConv
         self.convolutions = torch.nn.ModuleList(
             [
                 convolution(EXPECTED_FEATURES, hidden_channels),
@@ -182,6 +359,7 @@ class FlickrGraphSAGE(torch.nn.Module):
                 features = checkpoint(hidden_block, features, use_reentrant=False)
             else:
                 features = hidden_block(features)
+
         def output_block(inputs: Tensor) -> Tensor:
             return self.convolutions[-1](inputs, graph.edge_index)
 
@@ -226,9 +404,9 @@ def train_on_device(
     weight_decay: float,
     edge_chunk_size: int | None = None,
     activation_checkpointing: bool = False,
-    root_node_chunk_size: int | None = None,
     output_checkpointing: bool = False,
     best_state_on_cpu: bool = False,
+    destination_node_chunk_size: int | None = None,
 ) -> tuple[Tensor, dict[str, float | int | str]]:
     require(
         device.type in {"cpu", "cuda", "mps"},
@@ -240,14 +418,39 @@ def train_on_device(
             "CPU fallback is enabled; this would not prove MPS execution",
         )
     torch.manual_seed(seed)
+    destination_edge_boundaries = None
+    destination_degree = None
+    if destination_node_chunk_size is not None:
+        require(
+            destination_node_chunk_size > 0,
+            "Destination node chunk size must be positive",
+        )
+        graph = graph.clone()
+        order = torch.argsort(graph.edge_index[1], stable=True)
+        graph.edge_index = graph.edge_index[:, order]
+        destination_counts = torch.bincount(
+            graph.edge_index[1], minlength=graph.num_nodes
+        )
+        destination_degree = destination_counts.to(
+            dtype=graph.x.dtype
+        ).clamp_min_(1)
+        destination_pointer = torch.cat(
+            (torch.zeros(1, dtype=torch.long), destination_counts.cumsum(dim=0))
+        )
+        destination_edge_boundaries = tuple(
+            int(destination_pointer[node].item())
+            for node in range(0, graph.num_nodes, destination_node_chunk_size)
+        ) + (graph.num_edges,)
     device_graph = graph.to(device)
     model = FlickrGraphSAGE(
         hidden_channels,
         dropout,
         edge_chunk_size,
         activation_checkpointing,
-        root_node_chunk_size,
         output_checkpointing,
+        destination_node_chunk_size,
+        destination_edge_boundaries,
+        destination_degree,
     ).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(), lr=learning_rate, weight_decay=weight_decay

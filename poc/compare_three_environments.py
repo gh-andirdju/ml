@@ -183,9 +183,9 @@ def build_comparison(
                     "aggregation",
                     "edge_chunk_size",
                     "activation_checkpointing",
-                    "root_node_chunk_size",
                     "output_checkpointing",
                     "best_state_on_cpu",
+                    "destination_node_chunk_size",
                 )
                 if key in mps["execution"]
             },

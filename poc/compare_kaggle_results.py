@@ -296,9 +296,9 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
                     "aggregation",
                     "edge_chunk_size",
                     "activation_checkpointing",
-                    "root_node_chunk_size",
                     "output_checkpointing",
                     "best_state_on_cpu",
+                    "destination_node_chunk_size",
                 )
                 if key in cpu_execution
             },
@@ -333,9 +333,9 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
                     "aggregation",
                     "edge_chunk_size",
                     "activation_checkpointing",
-                    "root_node_chunk_size",
                     "output_checkpointing",
                     "best_state_on_cpu",
+                    "destination_node_chunk_size",
                 )
                 if key in gpu_execution
             },

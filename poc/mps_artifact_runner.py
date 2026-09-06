@@ -24,10 +24,10 @@ from kaggle_flickr_runner import (
     BEST_STATE_ON_CPU_VARIANTS,
     OUTPUT_CHECKPOINTED_VARIANTS,
     VARIANT_EDGE_CHUNK_SIZES,
+    VARIANT_DESTINATION_NODE_CHUNK_SIZES,
     VARIANT_EPOCHS,
     VARIANT_HIDDEN_CHANNELS,
     VARIANT_PATIENCE,
-    VARIANT_ROOT_NODE_CHUNK_SIZES,
 )
 from kaggle_specs import (
     FLICKR_2048_MPS_SPEC,
@@ -67,10 +67,9 @@ WORKLOADS = {
 MPS_VARIANT_EDGE_CHUNK_SIZES = {
     **VARIANT_EDGE_CHUNK_SIZES,
     "4096": 32_768,
-    "8192": 2_048,
 }
-MPS_VARIANT_ROOT_NODE_CHUNK_SIZES = {
-    **VARIANT_ROOT_NODE_CHUNK_SIZES,
+MPS_VARIANT_DESTINATION_NODE_CHUNK_SIZES = {
+    **VARIANT_DESTINATION_NODE_CHUNK_SIZES,
     "8192": 256,
 }
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -174,7 +173,9 @@ def _flickr(
     patience = VARIANT_PATIENCE[variant]
     hidden_channels = VARIANT_HIDDEN_CHANNELS[variant]
     edge_chunk_size = MPS_VARIANT_EDGE_CHUNK_SIZES.get(variant)
-    root_node_chunk_size = MPS_VARIANT_ROOT_NODE_CHUNK_SIZES.get(variant)
+    destination_node_chunk_size = MPS_VARIANT_DESTINATION_NODE_CHUNK_SIZES.get(
+        variant
+    )
     logits, metrics = train_flickr(
         flickr_graph(PROJECT_ROOT / ".artifacts/datasets/flickr"),
         epochs,
@@ -187,17 +188,21 @@ def _flickr(
         5e-4,
         edge_chunk_size,
         variant in CHECKPOINTED_VARIANTS,
-        root_node_chunk_size,
         variant in OUTPUT_CHECKPOINTED_VARIANTS,
         variant in BEST_STATE_ON_CPU_VARIANTS,
+        destination_node_chunk_size,
     )
     metrics["accuracy"] = metrics["test_accuracy"]
     if edge_chunk_size is not None:
         metrics["aggregation"] = "exact chunked mean"
         metrics["edge_chunk_size"] = edge_chunk_size
         metrics["activation_checkpointing"] = variant in CHECKPOINTED_VARIANTS
-        if root_node_chunk_size is not None:
-            metrics["root_node_chunk_size"] = root_node_chunk_size
+        metrics["output_checkpointing"] = variant in OUTPUT_CHECKPOINTED_VARIANTS
+        metrics["best_state_on_cpu"] = variant in BEST_STATE_ON_CPU_VARIANTS
+    if destination_node_chunk_size is not None:
+        metrics["aggregation"] = "exact destination-chunked mean"
+        metrics["destination_node_chunk_size"] = destination_node_chunk_size
+        metrics["activation_checkpointing"] = variant in CHECKPOINTED_VARIANTS
         metrics["output_checkpointing"] = variant in OUTPUT_CHECKPOINTED_VARIANTS
         metrics["best_state_on_cpu"] = variant in BEST_STATE_ON_CPU_VARIANTS
     model = {

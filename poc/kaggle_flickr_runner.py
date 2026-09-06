@@ -62,9 +62,8 @@ VARIANT_PATIENCE = {
 VARIANT_EDGE_CHUNK_SIZES = {
     "2048": 262_144,
     "4096": 131_072,
-    "8192": 8_192,
 }
-VARIANT_ROOT_NODE_CHUNK_SIZES = {"8192": 1_024}
+VARIANT_DESTINATION_NODE_CHUNK_SIZES = {"8192": 1_024}
 CHECKPOINTED_VARIANTS = {"4096", "8192"}
 OUTPUT_CHECKPOINTED_VARIANTS = {"8192"}
 BEST_STATE_ON_CPU_VARIANTS = {"8192"}
@@ -151,9 +150,9 @@ def main(
         arguments.weight_decay,
         VARIANT_EDGE_CHUNK_SIZES.get(variant),
         variant in CHECKPOINTED_VARIANTS,
-        VARIANT_ROOT_NODE_CHUNK_SIZES.get(variant),
         variant in OUTPUT_CHECKPOINTED_VARIANTS,
         variant in BEST_STATE_ON_CPU_VARIANTS,
+        VARIANT_DESTINATION_NODE_CHUNK_SIZES.get(variant),
     )
     execution = {
         "status": "PASS",
@@ -171,9 +170,15 @@ def main(
         execution["aggregation"] = "exact chunked mean"
         execution["edge_chunk_size"] = edge_chunk_size
         execution["activation_checkpointing"] = variant in CHECKPOINTED_VARIANTS
-        root_node_chunk_size = VARIANT_ROOT_NODE_CHUNK_SIZES.get(variant)
-        if root_node_chunk_size is not None:
-            execution["root_node_chunk_size"] = root_node_chunk_size
+        execution["output_checkpointing"] = (
+            variant in OUTPUT_CHECKPOINTED_VARIANTS
+        )
+        execution["best_state_on_cpu"] = variant in BEST_STATE_ON_CPU_VARIANTS
+    destination_node_chunk_size = VARIANT_DESTINATION_NODE_CHUNK_SIZES.get(variant)
+    if destination_node_chunk_size is not None:
+        execution["aggregation"] = "exact destination-chunked mean"
+        execution["destination_node_chunk_size"] = destination_node_chunk_size
+        execution["activation_checkpointing"] = variant in CHECKPOINTED_VARIANTS
         execution["output_checkpointing"] = (
             variant in OUTPUT_CHECKPOINTED_VARIANTS
         )
