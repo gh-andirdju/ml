@@ -475,8 +475,8 @@ def train_on_device(
         "MPS BF16 activations require an MPS device",
     )
     require(
-        not saved_tensors_on_cpu or device.type == "mps",
-        "Saved-tensor CPU offload requires an MPS device",
+        not saved_tensors_on_cpu or device.type in {"mps", "cuda"},
+        "Saved-tensor CPU offload requires an MPS or CUDA device",
     )
     require(
         gradient_clip_norm is None or gradient_clip_norm > 0,
@@ -555,7 +555,7 @@ def train_on_device(
         model.train()
         optimizer.zero_grad(set_to_none=True)
         saved_tensor_context = (
-            torch.autograd.graph.save_on_cpu(device_type="mps")
+            torch.autograd.graph.save_on_cpu(device_type=device.type)
             if saved_tensors_on_cpu
             else nullcontext()
         )

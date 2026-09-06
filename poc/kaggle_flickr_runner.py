@@ -71,6 +71,7 @@ L2_NORMALIZED_VARIANTS = {"8192"}
 CHECKPOINTED_VARIANTS = {"4096", "8192"}
 OUTPUT_CHECKPOINTED_VARIANTS = {"8192"}
 BEST_STATE_ON_CPU_VARIANTS = {"8192"}
+CUDA_SAVED_TENSOR_OFFLOAD_VARIANTS = {"8192"}
 
 
 def parse_arguments(
@@ -181,6 +182,10 @@ def main(
         gradient_clip_norm=arguments.gradient_clip_norm,
         hidden_l2_normalization=variant in L2_NORMALIZED_VARIANTS,
         optimizer_name=arguments.optimizer,
+        saved_tensors_on_cpu=(
+            device.type == "cuda"
+            and variant in CUDA_SAVED_TENSOR_OFFLOAD_VARIANTS
+        ),
     )
     execution = {
         "status": "PASS",
@@ -212,6 +217,10 @@ def main(
         )
         execution["best_state_on_cpu"] = variant in BEST_STATE_ON_CPU_VARIANTS
         execution["precision"] = "fp32"
+        execution["saved_tensors_on_cpu"] = (
+            device.type == "cuda"
+            and variant in CUDA_SAVED_TENSOR_OFFLOAD_VARIANTS
+        )
     if device.type == "cpu":
         execution.update(
             {

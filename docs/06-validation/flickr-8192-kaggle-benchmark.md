@@ -11,8 +11,10 @@ GraphSAGE layers to 8,192 channels. All environments use FP32 master weights,
 the same data split, seed, state-free SGD optimizer, eight requested epochs,
 and early-stopping patience three. All environments use learning rate 0.1 and
 maximum gradient norm 1.0. MPS uses BF16 activations;
-checkpoint tensors are offloaded to pageable CPU memory. Kaggle CPU and T4 use
-FP32 activations. The model has 142,540,807 trainable parameters.
+checkpoint tensors are offloaded to pageable CPU memory on MPS and T4. Kaggle
+CPU and T4 use FP32 activations. T4 also uses expandable CUDA allocator
+segments to avoid fragmentation. The model has 142,540,807 trainable
+parameters.
 
 ```mermaid
 flowchart LR

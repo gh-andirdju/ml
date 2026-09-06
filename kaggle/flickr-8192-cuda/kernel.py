@@ -35,6 +35,10 @@ subprocess.run(
 subprocess.run(
     [sys.executable, str(project / "poc" / "run_kaggle_flickr_8192_cuda.py")],
     cwd=project,
-    env={**os.environ, "ML_SOURCE_REVISION": SOURCE_REVISION},
+    env={
+        **os.environ,
+        "ML_SOURCE_REVISION": SOURCE_REVISION,
+        "PYTORCH_ALLOC_CONF": "expandable_segments:True",
+    },
     check=True,
 )
