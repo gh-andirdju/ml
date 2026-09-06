@@ -1,0 +1,76 @@
+{
+  "artifacts": {
+    "kaggle_gpu_sha256": "6c89ed0334ce960669edb7bcedadfe7ddb2889f0a3416c8926c97b02f6a10d42",
+    "mps_sha256": "4e8cafa14c9443002ee6c23227bd0402f44604493d0340a1affc353b03055c82"
+  },
+  "generated_at": "2026-09-06T14:36:52Z",
+  "kaggle_cpu": {
+    "kernel_id": "andird/ml-poc-15-flickr-8192-graphsage-cpu",
+    "kernel_version": 1,
+    "status": "RUNNING"
+  },
+  "kaggle_gpu": {
+    "kernel_id": "andird/ml-poc-16-flickr-8192-graphsage-cuda",
+    "kernel_version": 2,
+    "status": "COMPLETE"
+  },
+  "model": {
+    "aggregation": "exact chunked mean",
+    "dropout": 0.5,
+    "epochs_requested": 8,
+    "gradient_clip_norm": 1.0,
+    "hidden_channels": 8192,
+    "hidden_normalization": "l2",
+    "learning_rate": 0.1,
+    "optimizer": "sgd",
+    "parameters": 142540807,
+    "patience": 3,
+    "seed": 42,
+    "type": "three-layer GraphSAGE",
+    "weight_decay": 0.0005
+  },
+  "pairwise": {
+    "mps_vs_kaggle_gpu": {
+      "class_agreement": 1.0,
+      "class_matches": 89250,
+      "maximum_absolute_score_difference": 0.003041908,
+      "mean_absolute_score_difference": 0.000599876,
+      "minimum_agreement": 0.95,
+      "predictions_compared": 89250
+    }
+  },
+  "results": {
+    "kaggle_gpu": {
+      "cuda_capability": [
+        7,
+        5
+      ],
+      "cuda_device_name": "Tesla T4",
+      "cuda_peak_memory_bytes": 13618750976,
+      "device": "cuda:0",
+      "epochs_completed": 8,
+      "source_revision": "7948fe518ffdd9f5115a79edae0f1ef3cc69e603",
+      "test_accuracy": 0.42343,
+      "training_seconds": 521.976551
+    },
+    "mps": {
+      "device": "mps:0",
+      "epochs_completed": 8,
+      "mps_fallback_enabled": false,
+      "source_revision": "3b967fcbe7a735c4bf5ce7f54780d4d2e7e0519b",
+      "test_accuracy": 0.42343,
+      "training_seconds": 4822.455781
+    }
+  },
+  "status": "PARTIAL",
+  "timing": {
+    "absolute_difference_seconds": 4300.47923,
+    "kaggle_gpu": 521.976551,
+    "mps": 4822.455781,
+    "mps_over_gpu_speedup": 9.239
+  },
+  "waiting_for": [
+    "kaggle_cpu"
+  ],
+  "workload": "flickr-8192"
+}

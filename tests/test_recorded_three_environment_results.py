@@ -45,6 +45,23 @@ class RecordedThreeEnvironmentResultsTests(unittest.TestCase):
                     environments["kaggle_gpu"]["device"].startswith("cuda:")
                 )
 
+    def test_8192_partial_result_records_completed_mps_and_t4(self) -> None:
+        path = PROJECT_ROOT / "results" / "flickr-8192-mps-vs-t4.json"
+        result = json.loads(path.read_text(encoding="utf8"))
+        self.assertEqual(result["workload"], "flickr-8192")
+        self.assertEqual(result["status"], "PARTIAL")
+        self.assertEqual(result["waiting_for"], ["kaggle_cpu"])
+        self.assertEqual(result["kaggle_cpu"]["status"], "RUNNING")
+        self.assertEqual(result["kaggle_gpu"]["status"], "COMPLETE")
+        self.assertFalse(result["results"]["mps"]["mps_fallback_enabled"])
+        self.assertTrue(
+            result["results"]["kaggle_gpu"]["device"].startswith("cuda:")
+        )
+        comparison = result["pairwise"]["mps_vs_kaggle_gpu"]
+        self.assertGreaterEqual(
+            comparison["class_agreement"], comparison["minimum_agreement"]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

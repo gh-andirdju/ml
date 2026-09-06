@@ -24,6 +24,7 @@ artifacts.
 | Flickr GraphSAGE 1,024 | MPS versus Kaggle CPU versus T4 | [`flickr-wide-mps-cpu-cuda.json`](flickr-wide-mps-cpu-cuda.json) |
 | Flickr GraphSAGE 2,048 | MPS versus Kaggle CPU versus T4 | [`flickr-2048-mps-cpu-cuda.json`](flickr-2048-mps-cpu-cuda.json) |
 | Flickr GraphSAGE 4,096 | MPS versus Kaggle CPU versus T4 | [`flickr-4096-mps-cpu-cuda.json`](flickr-4096-mps-cpu-cuda.json) |
+| Flickr GraphSAGE 8,192 | MPS versus T4; Kaggle CPU running | [`flickr-8192-mps-vs-t4.json`](flickr-8192-mps-vs-t4.json) |
 
 Full Kaggle prediction artifacts and detached checksums are downloaded under
 ignored `.artifacts/` storage. Only compact execution/import evidence is kept in
@@ -32,6 +33,9 @@ object and `proof_status=PASS`, including CPU-only evidence, T4 CUDA evidence,
 matching workload identity, checksums, and immutable Kaggle version status.
 The six three-environment records additionally validate MPS execution without
 CPU fallback and all three pairwise agreement gates.
+The 8,192-width record is explicitly partial until its CPU-only Kaggle kernel
+completes; it already validates the completed MPS/T4 artifacts and their
+pairwise prediction agreement.
 
 Reproduce the live proof checks after downloading the ignored artifacts:
 
