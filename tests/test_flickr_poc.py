@@ -104,6 +104,38 @@ class FlickrModelTests(unittest.TestCase):
                 chunked_parameter.grad, standard_parameter.grad
             )
 
+    def test_destination_chunking_fuses_l2_normalization_exactly(self) -> None:
+        features = torch.tensor(
+            [[1.0, 2.0], [3.0, 5.0], [7.0, 11.0]], requires_grad=True
+        )
+        edge_index = torch.tensor([[1, 0, 2, 1], [0, 1, 1, 2]])
+        standard = poc.SAGEConv(2, 5)
+        chunked = poc.DestinationChunkedSAGEConv(
+            2,
+            5,
+            destination_node_chunk_size=2,
+            edge_boundaries=(0, 3, 4),
+            destination_degree=torch.tensor([1.0, 2.0, 1.0]),
+            normalize_output=True,
+        )
+        chunked.load_state_dict(standard.state_dict())
+        expected = torch.nn.functional.normalize(
+            standard(features, edge_index), p=2, dim=1
+        )
+        actual = chunked(features, edge_index)
+        torch.testing.assert_close(actual, expected)
+        expected.square().sum().backward(retain_graph=True)
+        expected_gradient = features.grad.detach().clone()
+        features.grad = None
+        actual.square().sum().backward()
+        torch.testing.assert_close(features.grad, expected_gradient)
+        for standard_parameter, chunked_parameter in zip(
+            standard.parameters(), chunked.parameters(), strict=True
+        ):
+            torch.testing.assert_close(
+                chunked_parameter.grad, standard_parameter.grad
+            )
+
 
 class FlickrArgumentTests(unittest.TestCase):
     def test_ready_profiles_have_identical_model_defaults(self) -> None:
@@ -117,6 +149,7 @@ class FlickrArgumentTests(unittest.TestCase):
             "seed",
             "learning_rate",
             "weight_decay",
+            "gradient_clip_norm",
         ):
             self.assertEqual(getattr(cpu, name), getattr(cuda, name))
 
@@ -139,6 +172,7 @@ class FlickrArgumentTests(unittest.TestCase):
             "seed",
             "learning_rate",
             "weight_decay",
+            "gradient_clip_norm",
         ):
             self.assertEqual(getattr(cpu, name), getattr(cuda, name))
         self.assertIn("flickr-wide-cpu", str(cpu.output))
@@ -158,6 +192,7 @@ class FlickrArgumentTests(unittest.TestCase):
             "seed",
             "learning_rate",
             "weight_decay",
+            "gradient_clip_norm",
         ):
             self.assertEqual(getattr(cpu, name), getattr(cuda, name))
         self.assertIn("flickr-2048-cpu", str(cpu.output))
@@ -177,6 +212,7 @@ class FlickrArgumentTests(unittest.TestCase):
             "seed",
             "learning_rate",
             "weight_decay",
+            "gradient_clip_norm",
         ):
             self.assertEqual(getattr(cpu, name), getattr(cuda, name))
         self.assertIn("flickr-4096-cpu", str(cpu.output))
@@ -188,6 +224,8 @@ class FlickrArgumentTests(unittest.TestCase):
         self.assertEqual(cpu.hidden_channels, 8_192)
         self.assertEqual(cpu.epochs, 8)
         self.assertEqual(cpu.patience, 3)
+        self.assertEqual(cpu.learning_rate, 0.005)
+        self.assertEqual(cpu.gradient_clip_norm, 1.0)
         for name in (
             "epochs",
             "patience",
@@ -196,6 +234,7 @@ class FlickrArgumentTests(unittest.TestCase):
             "seed",
             "learning_rate",
             "weight_decay",
+            "gradient_clip_norm",
         ):
             self.assertEqual(getattr(cpu, name), getattr(cuda, name))
         self.assertIn("flickr-8192-cpu", str(cpu.output))

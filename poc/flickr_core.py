@@ -126,7 +126,7 @@ class _DestinationChunkedSAGE(torch.autograd.Function):
     """Differentiate an exact GraphSAGE layer with bounded destination chunks."""
 
     @staticmethod
-    @torch.amp.custom_fwd(device_type="mps", cast_inputs=torch.float16)
+    @torch.amp.custom_fwd(device_type="mps", cast_inputs=torch.bfloat16)
     def forward(
         context,
         features: Tensor,
@@ -137,6 +137,7 @@ class _DestinationChunkedSAGE(torch.autograd.Function):
         destination_degree: Tensor,
         destination_node_chunk_size: int,
         edge_boundaries: tuple[int, ...],
+        normalize_output: bool,
     ) -> Tensor:
         source, destination = edge_index
         output = features.new_empty((features.size(0), left_weight.size(0)))
@@ -172,16 +173,20 @@ class _DestinationChunkedSAGE(torch.autograd.Function):
                     features[node_start:node_stop], right_weight, None
                 )
             )
+            if normalize_output:
+                chunk = functional.normalize(chunk, p=2, dim=1)
             output[node_start:node_stop].copy_(chunk)
         context.save_for_backward(
             features,
             edge_index,
             left_weight,
+            left_bias,
             right_weight,
             destination_degree,
         )
         context.destination_node_chunk_size = destination_node_chunk_size
         context.edge_boundaries = edge_boundaries
+        context.normalize_output = normalize_output
         return output
 
     @staticmethod
@@ -191,13 +196,14 @@ class _DestinationChunkedSAGE(torch.autograd.Function):
             features,
             edge_index,
             left_weight,
+            left_bias,
             right_weight,
             destination_degree,
         ) = context.saved_tensors
         source, destination = edge_index
         feature_gradient = torch.zeros_like(features)
         left_weight_gradient = torch.zeros_like(left_weight)
-        left_bias_gradient = gradient.sum(dim=0)
+        left_bias_gradient = torch.zeros_like(left_bias)
         right_weight_gradient = torch.zeros_like(right_weight)
         node_starts = range(
             0, features.size(0), context.destination_node_chunk_size
@@ -222,7 +228,24 @@ class _DestinationChunkedSAGE(torch.autograd.Function):
             )
             aggregated.div_(degree.unsqueeze(1))
             chunk_gradient = gradient[node_start:node_stop]
+            if context.normalize_output:
+                chunk = functional.linear(aggregated, left_weight, left_bias)
+                chunk.add_(
+                    functional.linear(
+                        features[node_start:node_stop], right_weight, None
+                    )
+                )
+                norm = torch.linalg.vector_norm(chunk, dim=1, keepdim=True)
+                norm.clamp_min_(1e-12)
+                normalized_chunk = chunk / norm
+                projection = (chunk_gradient * normalized_chunk).sum(
+                    dim=1, keepdim=True
+                )
+                chunk_gradient = (
+                    chunk_gradient - normalized_chunk * projection
+                ) / norm
             left_weight_gradient.add_(chunk_gradient.t().matmul(aggregated))
+            left_bias_gradient.add_(chunk_gradient.sum(dim=0))
             right_weight_gradient.add_(
                 chunk_gradient.t().matmul(features[node_start:node_stop])
             )
@@ -250,6 +273,7 @@ class _DestinationChunkedSAGE(torch.autograd.Function):
             None,
             None,
             None,
+            None,
         )
 
 
@@ -264,6 +288,7 @@ class DestinationChunkedSAGEConv(SAGEConv):
         destination_node_chunk_size: int,
         edge_boundaries: tuple[int, ...],
         destination_degree: Tensor,
+        normalize_output: bool = False,
     ) -> None:
         require(
             destination_node_chunk_size > 0,
@@ -273,6 +298,7 @@ class DestinationChunkedSAGEConv(SAGEConv):
         super().__init__(in_channels, out_channels)
         self.destination_node_chunk_size = destination_node_chunk_size
         self.edge_boundaries = edge_boundaries
+        self.normalize_output = normalize_output
         self.register_buffer(
             "destination_degree", destination_degree, persistent=False
         )
@@ -293,6 +319,7 @@ class DestinationChunkedSAGEConv(SAGEConv):
             self.destination_degree,
             self.destination_node_chunk_size,
             self.edge_boundaries,
+            self.normalize_output,
         )
 
 
@@ -309,11 +336,13 @@ class FlickrGraphSAGE(torch.nn.Module):
         destination_node_chunk_size: int | None = None,
         destination_edge_boundaries: tuple[int, ...] | None = None,
         destination_degree: Tensor | None = None,
+        hidden_l2_normalization: bool = False,
     ) -> None:
         super().__init__()
         self.dropout = dropout
         self.activation_checkpointing = activation_checkpointing
         self.output_checkpointing = output_checkpointing
+        self.hidden_l2_normalization = hidden_l2_normalization
         if destination_node_chunk_size is not None:
             require(
                 destination_edge_boundaries is not None,
@@ -345,6 +374,9 @@ class FlickrGraphSAGE(torch.nn.Module):
                 convolution(hidden_channels, EXPECTED_CLASSES),
             ]
         )
+        if destination_node_chunk_size is not None and hidden_l2_normalization:
+            for convolution in self.convolutions[:-1]:
+                convolution.normalize_output = True
 
     def forward(self, graph: Data) -> Tensor:
         features = graph.x
@@ -353,7 +385,12 @@ class FlickrGraphSAGE(torch.nn.Module):
                 inputs: Tensor,
                 layer: torch.nn.Module = convolution,
             ) -> Tensor:
-                outputs = layer(inputs, graph.edge_index).relu()
+                outputs = layer(inputs, graph.edge_index)
+                if self.hidden_l2_normalization and not isinstance(
+                    layer, DestinationChunkedSAGEConv
+                ):
+                    outputs = functional.normalize(outputs, p=2, dim=1)
+                outputs = outputs.relu()
                 return functional.dropout(
                     outputs, p=self.dropout, training=self.training
                 )
@@ -418,8 +455,10 @@ def train_on_device(
     output_checkpointing: bool = False,
     best_state_on_cpu: bool = False,
     destination_node_chunk_size: int | None = None,
-    mps_mixed_precision: bool = False,
+    mps_bfloat16: bool = False,
     saved_tensors_on_cpu: bool = False,
+    gradient_clip_norm: float | None = None,
+    hidden_l2_normalization: bool = False,
 ) -> tuple[Tensor, dict[str, float | int | str]]:
     require(
         device.type in {"cpu", "cuda", "mps"},
@@ -431,12 +470,16 @@ def train_on_device(
             "CPU fallback is enabled; this would not prove MPS execution",
         )
     require(
-        not mps_mixed_precision or device.type == "mps",
-        "MPS mixed precision requires an MPS device",
+        not mps_bfloat16 or device.type == "mps",
+        "MPS BF16 activations require an MPS device",
     )
     require(
         not saved_tensors_on_cpu or device.type == "mps",
         "Saved-tensor CPU offload requires an MPS device",
+    )
+    require(
+        gradient_clip_norm is None or gradient_clip_norm > 0,
+        "Gradient clip norm must be positive",
     )
     torch.manual_seed(seed)
     destination_edge_boundaries = None
@@ -472,19 +515,16 @@ def train_on_device(
         destination_node_chunk_size,
         destination_edge_boundaries,
         destination_degree,
+        hidden_l2_normalization,
     ).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(), lr=learning_rate, weight_decay=weight_decay
     )
-    gradient_scaler = (
-        torch.amp.GradScaler("mps") if mps_mixed_precision else None
-    )
-
     def autocast():
         return torch.autocast(
             device_type="mps",
-            dtype=torch.float16,
-            enabled=mps_mixed_precision,
+            dtype=torch.bfloat16,
+            enabled=mps_bfloat16,
         )
 
     model.eval()
@@ -520,13 +560,13 @@ def train_on_device(
                     logits[device_graph.train_mask],
                     device_graph.y[device_graph.train_mask],
                 )
-        if gradient_scaler is None:
-            training_loss.backward()
-            optimizer.step()
-        else:
-            gradient_scaler.scale(training_loss).backward()
-            gradient_scaler.step(optimizer)
-            gradient_scaler.update()
+        gradient_norm = None
+        training_loss.backward()
+        if gradient_clip_norm is not None:
+            gradient_norm = torch.nn.utils.clip_grad_norm_(
+                model.parameters(), gradient_clip_norm
+            )
+        optimizer.step()
         del logits, training_loss
         release_device_cache(device)
 
@@ -540,6 +580,16 @@ def train_on_device(
                 ).item()
         del validation_logits
         release_device_cache(device)
+        gradient_norm_text = (
+            "none"
+            if gradient_norm is None
+            else f"{float(gradient_norm.item()):.6f}"
+        )
+        print(
+            f"epoch={epoch} validation_loss={validation_loss:.6f} "
+            f"gradient_norm={gradient_norm_text}",
+            flush=True,
+        )
         if validation_loss < best_validation_loss - 1e-6:
             best_validation_loss = validation_loss
             best_epoch = epoch
@@ -554,11 +604,6 @@ def train_on_device(
             epochs_without_improvement += 1
             if epochs_without_improvement >= patience:
                 break
-        print(
-            f"epoch={epoch} validation_loss={validation_loss:.6f} "
-            f"best_epoch={best_epoch}",
-            flush=True,
-        )
 
     synchronize(device)
     training_seconds = time.perf_counter() - started_at

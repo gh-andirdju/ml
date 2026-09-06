@@ -21,12 +21,15 @@ from flickr_core import source_graph as flickr_graph
 from flickr_core import train_on_device as train_flickr
 from kaggle_flickr_runner import (
     CHECKPOINTED_VARIANTS,
+    L2_NORMALIZED_VARIANTS,
     BEST_STATE_ON_CPU_VARIANTS,
     OUTPUT_CHECKPOINTED_VARIANTS,
     VARIANT_EDGE_CHUNK_SIZES,
     VARIANT_DESTINATION_NODE_CHUNK_SIZES,
     VARIANT_EPOCHS,
     VARIANT_HIDDEN_CHANNELS,
+    VARIANT_GRADIENT_CLIP_NORMS,
+    VARIANT_LEARNING_RATES,
     VARIANT_PATIENCE,
 )
 from kaggle_specs import (
@@ -72,7 +75,7 @@ MPS_VARIANT_DESTINATION_NODE_CHUNK_SIZES = {
     **VARIANT_DESTINATION_NODE_CHUNK_SIZES,
     "8192": 256,
 }
-MPS_MIXED_PRECISION_VARIANTS = {"8192"}
+MPS_BFLOAT16_VARIANTS = {"8192"}
 MPS_SAVED_TENSOR_OFFLOAD_VARIANTS = {"8192"}
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -174,6 +177,8 @@ def _flickr(
     epochs = VARIANT_EPOCHS[variant]
     patience = VARIANT_PATIENCE[variant]
     hidden_channels = VARIANT_HIDDEN_CHANNELS[variant]
+    learning_rate = VARIANT_LEARNING_RATES.get(variant, 0.01)
+    gradient_clip_norm = VARIANT_GRADIENT_CLIP_NORMS.get(variant)
     edge_chunk_size = MPS_VARIANT_EDGE_CHUNK_SIZES.get(variant)
     destination_node_chunk_size = MPS_VARIANT_DESTINATION_NODE_CHUNK_SIZES.get(
         variant
@@ -186,15 +191,17 @@ def _flickr(
         0.5,
         device,
         42,
-        0.01,
+        learning_rate,
         5e-4,
-        edge_chunk_size,
-        variant in CHECKPOINTED_VARIANTS,
-        variant in OUTPUT_CHECKPOINTED_VARIANTS,
-        variant in BEST_STATE_ON_CPU_VARIANTS,
-        destination_node_chunk_size,
-        variant in MPS_MIXED_PRECISION_VARIANTS,
-        variant in MPS_SAVED_TENSOR_OFFLOAD_VARIANTS,
+        edge_chunk_size=edge_chunk_size,
+        activation_checkpointing=variant in CHECKPOINTED_VARIANTS,
+        output_checkpointing=variant in OUTPUT_CHECKPOINTED_VARIANTS,
+        best_state_on_cpu=variant in BEST_STATE_ON_CPU_VARIANTS,
+        destination_node_chunk_size=destination_node_chunk_size,
+        mps_bfloat16=variant in MPS_BFLOAT16_VARIANTS,
+        saved_tensors_on_cpu=variant in MPS_SAVED_TENSOR_OFFLOAD_VARIANTS,
+        gradient_clip_norm=gradient_clip_norm,
+        hidden_l2_normalization=variant in L2_NORMALIZED_VARIANTS,
     )
     metrics["accuracy"] = metrics["test_accuracy"]
     if edge_chunk_size is not None:
@@ -204,8 +211,8 @@ def _flickr(
         metrics["output_checkpointing"] = variant in OUTPUT_CHECKPOINTED_VARIANTS
         metrics["best_state_on_cpu"] = variant in BEST_STATE_ON_CPU_VARIANTS
         metrics["precision"] = (
-            "fp16 activations with fp32 master weights"
-            if variant in MPS_MIXED_PRECISION_VARIANTS
+            "bf16 activations with fp32 master weights"
+            if variant in MPS_BFLOAT16_VARIANTS
             else "fp32"
         )
         metrics["saved_tensors_on_cpu"] = (
@@ -217,6 +224,14 @@ def _flickr(
         metrics["activation_checkpointing"] = variant in CHECKPOINTED_VARIANTS
         metrics["output_checkpointing"] = variant in OUTPUT_CHECKPOINTED_VARIANTS
         metrics["best_state_on_cpu"] = variant in BEST_STATE_ON_CPU_VARIANTS
+        metrics["precision"] = (
+            "bf16 activations with fp32 master weights"
+            if variant in MPS_BFLOAT16_VARIANTS
+            else "fp32"
+        )
+        metrics["saved_tensors_on_cpu"] = (
+            variant in MPS_SAVED_TENSOR_OFFLOAD_VARIANTS
+        )
     model = {
         "type": "three-layer GraphSAGE",
         "epochs_requested": epochs,
@@ -224,11 +239,15 @@ def _flickr(
         "hidden_channels": hidden_channels,
         "dropout": 0.5,
         "seed": 42,
-        "learning_rate": 0.01,
+        "learning_rate": learning_rate,
         "weight_decay": 5e-4,
     }
     if variant != "baseline":
         model["benchmark_variant"] = variant
+    if gradient_clip_norm is not None:
+        model["gradient_clip_norm"] = gradient_clip_norm
+    if variant in L2_NORMALIZED_VARIANTS:
+        model["hidden_normalization"] = "l2"
     if variant == "2048":
         model["edge_chunk_size"] = VARIANT_EDGE_CHUNK_SIZES[variant]
         model["aggregation"] = "exact chunked mean"

@@ -64,6 +64,9 @@ VARIANT_EDGE_CHUNK_SIZES = {
     "4096": 131_072,
 }
 VARIANT_DESTINATION_NODE_CHUNK_SIZES = {"8192": 1_024}
+VARIANT_LEARNING_RATES = {"8192": 0.005}
+VARIANT_GRADIENT_CLIP_NORMS = {"8192": 1.0}
+L2_NORMALIZED_VARIANTS = {"8192"}
 CHECKPOINTED_VARIANTS = {"4096", "8192"}
 OUTPUT_CHECKPOINTED_VARIANTS = {"8192"}
 BEST_STATE_ON_CPU_VARIANTS = {"8192"}
@@ -104,8 +107,17 @@ def parse_arguments(
     )
     parser.add_argument("--dropout", type=float, default=0.5)
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--learning-rate", type=float, default=0.01)
+    parser.add_argument(
+        "--learning-rate",
+        type=float,
+        default=VARIANT_LEARNING_RATES.get(variant, 0.01),
+    )
     parser.add_argument("--weight-decay", type=float, default=5e-4)
+    parser.add_argument(
+        "--gradient-clip-norm",
+        type=float,
+        default=VARIANT_GRADIENT_CLIP_NORMS.get(variant),
+    )
     parser.add_argument("--force", action="store_true")
     return parser.parse_args(argv)
 
@@ -117,6 +129,11 @@ def validate_arguments(arguments: argparse.Namespace) -> None:
     require(0 <= arguments.dropout < 1, "Dropout must be in [0, 1)")
     require(arguments.learning_rate > 0, "Learning rate must be positive")
     require(arguments.weight_decay >= 0, "Weight decay cannot be negative")
+    require(
+        arguments.gradient_clip_norm is None
+        or arguments.gradient_clip_norm > 0,
+        "Gradient clip norm must be positive",
+    )
 
 
 def selected_device(profile: DeviceProfile) -> torch.device:
@@ -148,11 +165,15 @@ def main(
         arguments.seed,
         arguments.learning_rate,
         arguments.weight_decay,
-        VARIANT_EDGE_CHUNK_SIZES.get(variant),
-        variant in CHECKPOINTED_VARIANTS,
-        variant in OUTPUT_CHECKPOINTED_VARIANTS,
-        variant in BEST_STATE_ON_CPU_VARIANTS,
-        VARIANT_DESTINATION_NODE_CHUNK_SIZES.get(variant),
+        edge_chunk_size=VARIANT_EDGE_CHUNK_SIZES.get(variant),
+        activation_checkpointing=variant in CHECKPOINTED_VARIANTS,
+        output_checkpointing=variant in OUTPUT_CHECKPOINTED_VARIANTS,
+        best_state_on_cpu=variant in BEST_STATE_ON_CPU_VARIANTS,
+        destination_node_chunk_size=VARIANT_DESTINATION_NODE_CHUNK_SIZES.get(
+            variant
+        ),
+        gradient_clip_norm=arguments.gradient_clip_norm,
+        hidden_l2_normalization=variant in L2_NORMALIZED_VARIANTS,
     )
     execution = {
         "status": "PASS",
@@ -250,6 +271,10 @@ def main(
     }
     if variant != "baseline":
         model["benchmark_variant"] = variant
+    if arguments.gradient_clip_norm is not None:
+        model["gradient_clip_norm"] = arguments.gradient_clip_norm
+    if variant in L2_NORMALIZED_VARIANTS:
+        model["hidden_normalization"] = "l2"
     if variant == "2048":
         model["edge_chunk_size"] = VARIANT_EDGE_CHUNK_SIZES[variant]
         model["aggregation"] = "exact chunked mean"
