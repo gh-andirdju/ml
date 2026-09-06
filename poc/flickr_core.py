@@ -395,6 +395,14 @@ def synchronize(device: torch.device) -> None:
         torch.mps.synchronize()
 
 
+def release_device_cache(device: torch.device) -> None:
+    synchronize(device)
+    if device.type == "cuda":
+        torch.cuda.empty_cache()
+    elif device.type == "mps":
+        torch.mps.empty_cache()
+
+
 def train_on_device(
     graph: Data,
     epochs: int,
@@ -487,6 +495,8 @@ def train_on_device(
                 initial_logits[device_graph.train_mask],
                 device_graph.y[device_graph.train_mask],
             ).item()
+    del initial_logits
+    release_device_cache(device)
 
     best_validation_loss = math.inf
     best_epoch = 0
@@ -517,6 +527,8 @@ def train_on_device(
             gradient_scaler.scale(training_loss).backward()
             gradient_scaler.step(optimizer)
             gradient_scaler.update()
+        del logits, training_loss
+        release_device_cache(device)
 
         model.eval()
         with torch.no_grad():
@@ -526,6 +538,8 @@ def train_on_device(
                     validation_logits[device_graph.val_mask],
                     device_graph.y[device_graph.val_mask],
                 ).item()
+        del validation_logits
+        release_device_cache(device)
         if validation_loss < best_validation_loss - 1e-6:
             best_validation_loss = validation_loss
             best_epoch = epoch
@@ -540,10 +554,16 @@ def train_on_device(
             epochs_without_improvement += 1
             if epochs_without_improvement >= patience:
                 break
+        print(
+            f"epoch={epoch} validation_loss={validation_loss:.6f} "
+            f"best_epoch={best_epoch}",
+            flush=True,
+        )
 
     synchronize(device)
     training_seconds = time.perf_counter() - started_at
     require(best_state is not None and best_epoch > 0, "Early stopping found no model")
+    release_device_cache(device)
     model.load_state_dict(best_state)
     model.eval()
     with torch.no_grad():
