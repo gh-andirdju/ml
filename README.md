@@ -17,6 +17,9 @@ POCs 13 and 14 increase the width to 4,096 with activation checkpointing: T4 is
 38.388x faster than CPU, allocates 11.10 GB, and reserves 15.25 GB of its 15.64
 GB capacity.
 
+POCs 15 and 16 are ready to test an 8,192-channel, 142,540,807-parameter FP32
+GraphSAGE model with additional portable bounded-memory execution controls.
+
 ```mermaid
 flowchart LR
     mac[Mac<br/>MPS or CPU] --> shared[Portable PyTorch and PyG]
@@ -56,6 +59,8 @@ the model code:
 ./poc/run_kaggle_flickr_2048_cuda.py
 ./poc/run_kaggle_flickr_4096_cpu.py
 ./poc/run_kaggle_flickr_4096_cuda.py
+./poc/run_kaggle_flickr_8192_cpu.py
+./poc/run_kaggle_flickr_8192_cuda.py
 
 # Host-native MPS comparison artifacts
 ./poc/run_mps_karate_artifact.py
@@ -64,6 +69,7 @@ the model code:
 ./poc/run_mps_flickr_wide.py
 ./poc/run_mps_flickr_2048.py
 ./poc/run_mps_flickr_4096.py
+./poc/run_mps_flickr_8192.py
 ```
 
 MPS and CPU are verified for both laptop POCs. Both Kaggle CUDA proofs pass on
@@ -96,5 +102,6 @@ local RTX Blackwell `sm_120` targets.
 |  | [Flickr wide CPU and GPU benchmark](docs/06-validation/flickr-wide-kaggle-benchmark.md) |
 |  | [Flickr 2,048-channel benchmark](docs/06-validation/flickr-2048-kaggle-benchmark.md) |
 |  | [Flickr 4,096-channel benchmark](docs/06-validation/flickr-4096-kaggle-benchmark.md) |
+|  | [Flickr 8,192-channel benchmark](docs/06-validation/flickr-8192-kaggle-benchmark.md) |
 |  | [Three-environment comparison](docs/06-validation/three-environment-comparison.md) |
 |  | [CUDA portability validator](docs/06-validation/cuda-portability-validator.md) |

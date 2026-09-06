@@ -61,7 +61,8 @@ class _ChunkedMeanAggregation(torch.autograd.Function):
         context.save_for_backward(edge_index, degree)
         context.edge_chunk_size = edge_chunk_size
         context.feature_count = features.size(1)
-        return aggregated / degree.unsqueeze(1)
+        aggregated.div_(degree.unsqueeze(1))
+        return aggregated
 
     @staticmethod
     def backward(context, gradient: Tensor) -> tuple[Tensor, None, None]:
@@ -85,11 +86,21 @@ class ChunkedSAGEConv(SAGEConv):
     """Exact GraphSAGE mean aggregation with a bounded edge workspace."""
 
     def __init__(
-        self, in_channels: int, out_channels: int, *, edge_chunk_size: int
+        self,
+        in_channels: int,
+        out_channels: int,
+        *,
+        edge_chunk_size: int,
+        root_node_chunk_size: int | None = None,
     ) -> None:
         require(edge_chunk_size > 0, "Edge chunk size must be positive")
+        require(
+            root_node_chunk_size is None or root_node_chunk_size > 0,
+            "Root node chunk size must be positive",
+        )
         super().__init__(in_channels, out_channels)
         self.edge_chunk_size = edge_chunk_size
+        self.root_node_chunk_size = root_node_chunk_size
 
     def forward(
         self,
@@ -111,7 +122,14 @@ class ChunkedSAGEConv(SAGEConv):
             edge_index,
             self.edge_chunk_size,
         )
-        return self.lin_l(aggregated) + self.lin_r(x)
+        output = self.lin_l(aggregated)
+        if self.root_node_chunk_size is None or output.size(1) < 1_024:
+            output.add_(self.lin_r(x))
+            return output
+        for start in range(0, x.size(0), self.root_node_chunk_size):
+            stop = min(start + self.root_node_chunk_size, x.size(0))
+            output[start:stop].add_(self.lin_r(x[start:stop]))
+        return output
 
 
 class FlickrGraphSAGE(torch.nn.Module):
@@ -123,15 +141,21 @@ class FlickrGraphSAGE(torch.nn.Module):
         dropout: float,
         edge_chunk_size: int | None = None,
         activation_checkpointing: bool = False,
+        root_node_chunk_size: int | None = None,
+        output_checkpointing: bool = False,
     ) -> None:
         super().__init__()
         self.dropout = dropout
         self.activation_checkpointing = activation_checkpointing
+        self.output_checkpointing = output_checkpointing
         convolution = (
             SAGEConv
             if edge_chunk_size is None
             else lambda inputs, outputs: ChunkedSAGEConv(
-                inputs, outputs, edge_chunk_size=edge_chunk_size
+                inputs,
+                outputs,
+                edge_chunk_size=edge_chunk_size,
+                root_node_chunk_size=root_node_chunk_size,
             )
         )
         self.convolutions = torch.nn.ModuleList(
@@ -158,7 +182,12 @@ class FlickrGraphSAGE(torch.nn.Module):
                 features = checkpoint(hidden_block, features, use_reentrant=False)
             else:
                 features = hidden_block(features)
-        return self.convolutions[-1](features, graph.edge_index)
+        def output_block(inputs: Tensor) -> Tensor:
+            return self.convolutions[-1](inputs, graph.edge_index)
+
+        if self.output_checkpointing and self.training:
+            return checkpoint(output_block, features, use_reentrant=False)
+        return output_block(features)
 
 
 def source_graph(data_root: Path) -> Data:
@@ -197,6 +226,9 @@ def train_on_device(
     weight_decay: float,
     edge_chunk_size: int | None = None,
     activation_checkpointing: bool = False,
+    root_node_chunk_size: int | None = None,
+    output_checkpointing: bool = False,
+    best_state_on_cpu: bool = False,
 ) -> tuple[Tensor, dict[str, float | int | str]]:
     require(
         device.type in {"cpu", "cuda", "mps"},
@@ -214,6 +246,8 @@ def train_on_device(
         dropout,
         edge_chunk_size,
         activation_checkpointing,
+        root_node_chunk_size,
+        output_checkpointing,
     ).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(), lr=learning_rate, weight_decay=weight_decay
@@ -255,7 +289,9 @@ def train_on_device(
             best_validation_loss = validation_loss
             best_epoch = epoch
             best_state = {
-                name: parameter.detach().clone()
+                name: parameter.detach().to("cpu", copy=True)
+                if best_state_on_cpu
+                else parameter.detach().clone()
                 for name, parameter in model.state_dict().items()
             }
             epochs_without_improvement = 0

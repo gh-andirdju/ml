@@ -21,14 +21,18 @@ from flickr_core import source_graph as flickr_graph
 from flickr_core import train_on_device as train_flickr
 from kaggle_flickr_runner import (
     CHECKPOINTED_VARIANTS,
+    BEST_STATE_ON_CPU_VARIANTS,
+    OUTPUT_CHECKPOINTED_VARIANTS,
     VARIANT_EDGE_CHUNK_SIZES,
     VARIANT_EPOCHS,
     VARIANT_HIDDEN_CHANNELS,
     VARIANT_PATIENCE,
+    VARIANT_ROOT_NODE_CHUNK_SIZES,
 )
 from kaggle_specs import (
     FLICKR_2048_MPS_SPEC,
     FLICKR_4096_MPS_SPEC,
+    FLICKR_8192_MPS_SPEC,
     FLICKR_MPS_SPEC,
     FLICKR_WIDE_MPS_SPEC,
     KARATE_MPS_SPEC,
@@ -43,7 +47,13 @@ from wikics_core import train_on_device as train_wikics
 
 
 Workload = Literal[
-    "karate", "wikics", "flickr", "flickr-wide", "flickr-2048", "flickr-4096"
+    "karate",
+    "wikics",
+    "flickr",
+    "flickr-wide",
+    "flickr-2048",
+    "flickr-4096",
+    "flickr-8192",
 ]
 WORKLOADS = {
     "karate",
@@ -52,8 +62,17 @@ WORKLOADS = {
     "flickr-wide",
     "flickr-2048",
     "flickr-4096",
+    "flickr-8192",
 }
-MPS_VARIANT_EDGE_CHUNK_SIZES = {**VARIANT_EDGE_CHUNK_SIZES, "4096": 32_768}
+MPS_VARIANT_EDGE_CHUNK_SIZES = {
+    **VARIANT_EDGE_CHUNK_SIZES,
+    "4096": 32_768,
+    "8192": 2_048,
+}
+MPS_VARIANT_ROOT_NODE_CHUNK_SIZES = {
+    **VARIANT_ROOT_NODE_CHUNK_SIZES,
+    "8192": 256,
+}
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -147,12 +166,15 @@ def _wikics(device: torch.device) -> tuple[torch.Tensor, dict, dict, ArtifactSpe
 
 
 def _flickr(
-    device: torch.device, *, variant: Literal["baseline", "wide", "2048", "4096"]
+    device: torch.device,
+    *,
+    variant: Literal["baseline", "wide", "2048", "4096", "8192"],
 ) -> tuple[torch.Tensor, dict, dict, ArtifactSpec]:
     epochs = VARIANT_EPOCHS[variant]
     patience = VARIANT_PATIENCE[variant]
     hidden_channels = VARIANT_HIDDEN_CHANNELS[variant]
     edge_chunk_size = MPS_VARIANT_EDGE_CHUNK_SIZES.get(variant)
+    root_node_chunk_size = MPS_VARIANT_ROOT_NODE_CHUNK_SIZES.get(variant)
     logits, metrics = train_flickr(
         flickr_graph(PROJECT_ROOT / ".artifacts/datasets/flickr"),
         epochs,
@@ -165,12 +187,19 @@ def _flickr(
         5e-4,
         edge_chunk_size,
         variant in CHECKPOINTED_VARIANTS,
+        root_node_chunk_size,
+        variant in OUTPUT_CHECKPOINTED_VARIANTS,
+        variant in BEST_STATE_ON_CPU_VARIANTS,
     )
     metrics["accuracy"] = metrics["test_accuracy"]
     if edge_chunk_size is not None:
         metrics["aggregation"] = "exact chunked mean"
         metrics["edge_chunk_size"] = edge_chunk_size
         metrics["activation_checkpointing"] = variant in CHECKPOINTED_VARIANTS
+        if root_node_chunk_size is not None:
+            metrics["root_node_chunk_size"] = root_node_chunk_size
+        metrics["output_checkpointing"] = variant in OUTPUT_CHECKPOINTED_VARIANTS
+        metrics["best_state_on_cpu"] = variant in BEST_STATE_ON_CPU_VARIANTS
     model = {
         "type": "three-layer GraphSAGE",
         "epochs_requested": epochs,
@@ -186,13 +215,14 @@ def _flickr(
     if variant == "2048":
         model["edge_chunk_size"] = VARIANT_EDGE_CHUNK_SIZES[variant]
         model["aggregation"] = "exact chunked mean"
-    if variant == "4096":
+    if variant in {"4096", "8192"}:
         model["aggregation"] = "exact chunked mean"
     specs = {
         "baseline": FLICKR_MPS_SPEC,
         "wide": FLICKR_WIDE_MPS_SPEC,
         "2048": FLICKR_2048_MPS_SPEC,
         "4096": FLICKR_4096_MPS_SPEC,
+        "8192": FLICKR_8192_MPS_SPEC,
     }
     return logits, metrics, model, specs[variant]
 
@@ -203,7 +233,7 @@ def run(workload: Workload) -> tuple[torch.Tensor, dict, dict, ArtifactSpec]:
         return _karate(device)
     if workload == "wikics":
         return _wikics(device)
-    variant: Literal["baseline", "wide", "2048", "4096"] = (
+    variant: Literal["baseline", "wide", "2048", "4096", "8192"] = (
         workload.removeprefix("flickr-") if workload != "flickr" else "baseline"
     )
     return _flickr(device, variant=variant)

@@ -26,6 +26,9 @@ from kaggle_specs import (
     FLICKR_4096_KAGGLE_CPU_SPEC,
     FLICKR_4096_KAGGLE_CUDA_SPEC,
     FLICKR_4096_MPS_SPEC,
+    FLICKR_8192_KAGGLE_CPU_SPEC,
+    FLICKR_8192_KAGGLE_CUDA_SPEC,
+    FLICKR_8192_MPS_SPEC,
     FLICKR_KAGGLE_CPU_SPEC,
     FLICKR_KAGGLE_CUDA_SPEC,
     FLICKR_MPS_SPEC,
@@ -73,6 +76,11 @@ TRIPLETS = {
         "flickr-4096",
         FLICKR_4096_KAGGLE_CPU_SPEC.poc_id,
         FLICKR_4096_KAGGLE_CUDA_SPEC.poc_id,
+    ),
+    FLICKR_8192_MPS_SPEC.poc_id: (
+        "flickr-8192",
+        FLICKR_8192_KAGGLE_CPU_SPEC.poc_id,
+        FLICKR_8192_KAGGLE_CUDA_SPEC.poc_id,
     ),
 }
 
@@ -175,6 +183,9 @@ def build_comparison(
                     "aggregation",
                     "edge_chunk_size",
                     "activation_checkpointing",
+                    "root_node_chunk_size",
+                    "output_checkpointing",
+                    "best_state_on_cpu",
                 )
                 if key in mps["execution"]
             },
@@ -271,6 +282,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         FLICKR_WIDE_MPS_SPEC.poc_id,
         FLICKR_2048_MPS_SPEC.poc_id,
         FLICKR_4096_MPS_SPEC.poc_id,
+        FLICKR_8192_MPS_SPEC.poc_id,
     }
     if memory_intensive:
         require(

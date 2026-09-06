@@ -19,6 +19,7 @@ from kaggle_specs import KARATE_KAGGLE_CPU_SPEC, KARATE_KAGGLE_SPEC  # noqa: E40
 from kaggle_specs import (  # noqa: E402
     FLICKR_2048_KAGGLE_CUDA_SPEC,
     FLICKR_4096_KAGGLE_CUDA_SPEC,
+    FLICKR_8192_KAGGLE_CUDA_SPEC,
     FLICKR_WIDE_KAGGLE_CUDA_SPEC,
 )
 from poc_runtime import ProofError  # noqa: E402
@@ -158,6 +159,21 @@ class KaggleComparisonTests(unittest.TestCase):
             {
                 "cuda_peak_memory_bytes": 9 * 1024**3,
                 "cuda_peak_reserved_memory_bytes": 10 * 1024**3,
+                "cuda_device_total_memory_bytes": 16 * 1024**3,
+            }
+        )
+        with self.assertRaisesRegex(ProofError, "allocation target"):
+            compare(cpu, gpu, 0.95)
+
+    def test_8192_gpu_memory_target_is_enforced(self) -> None:
+        cpu = artifact("cpu")
+        gpu = artifact("cuda:0")
+        cpu["poc_id"] = "kaggle-flickr-8192-cpu-v1"
+        gpu["poc_id"] = FLICKR_8192_KAGGLE_CUDA_SPEC.poc_id
+        gpu["execution"].update(
+            {
+                "cuda_peak_memory_bytes": 11 * 1024**3,
+                "cuda_peak_reserved_memory_bytes": 12 * 1024**3,
                 "cuda_device_total_memory_bytes": 16 * 1024**3,
             }
         )

@@ -18,6 +18,8 @@ from kaggle_specs import (
     FLICKR_2048_MINIMUM_CUDA_PEAK_BYTES,
     FLICKR_4096_KAGGLE_CUDA_SPEC,
     FLICKR_4096_MINIMUM_CUDA_PEAK_BYTES,
+    FLICKR_8192_KAGGLE_CUDA_SPEC,
+    FLICKR_8192_MINIMUM_CUDA_PEAK_BYTES,
     FLICKR_WIDE_KAGGLE_CUDA_SPEC,
     FLICKR_WIDE_MINIMUM_CUDA_PEAK_BYTES,
     KAGGLE_RUNS_BY_POC_ID,
@@ -30,6 +32,7 @@ GPU_MEMORY_TARGETS = {
     FLICKR_WIDE_KAGGLE_CUDA_SPEC.poc_id: FLICKR_WIDE_MINIMUM_CUDA_PEAK_BYTES,
     FLICKR_2048_KAGGLE_CUDA_SPEC.poc_id: FLICKR_2048_MINIMUM_CUDA_PEAK_BYTES,
     FLICKR_4096_KAGGLE_CUDA_SPEC.poc_id: FLICKR_4096_MINIMUM_CUDA_PEAK_BYTES,
+    FLICKR_8192_KAGGLE_CUDA_SPEC.poc_id: FLICKR_8192_MINIMUM_CUDA_PEAK_BYTES,
 }
 
 
@@ -293,6 +296,9 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
                     "aggregation",
                     "edge_chunk_size",
                     "activation_checkpointing",
+                    "root_node_chunk_size",
+                    "output_checkpointing",
+                    "best_state_on_cpu",
                 )
                 if key in cpu_execution
             },
@@ -327,6 +333,9 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
                     "aggregation",
                     "edge_chunk_size",
                     "activation_checkpointing",
+                    "root_node_chunk_size",
+                    "output_checkpointing",
+                    "best_state_on_cpu",
                 )
                 if key in gpu_execution
             },

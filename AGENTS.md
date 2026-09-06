@@ -48,6 +48,11 @@ are allowed.
   aggregation and pure-PyTorch activation checkpointing everywhere. Record
   backend workspace size as execution metadata: 32,768 edges on MPS and
   131,072 on Kaggle CPU/T4. Require at least 10 GiB T4 peak allocation.
+- POCs 15 and 16 are the pending 8,192-channel Flickr comparison. Keep full
+  FP32 training, exact mean aggregation, hidden- and output-layer checkpointing,
+  row-chunked root projections, and CPU-retained best state identical across
+  environments. Workspace sizes may differ and must be recorded. Require at
+  least 12 GiB T4 peak allocation.
 - Use a single Tesla T4 as the fixed Kaggle GPU baseline. Keep T4x2 open for a
   future explicitly multi-GPU POC; do not use P100 or another accelerator
   without explicit approval.

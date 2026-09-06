@@ -23,6 +23,9 @@ from kaggle_specs import (
     FLICKR_4096_KAGGLE_CPU_SPEC,
     FLICKR_4096_KAGGLE_CUDA_SPEC,
     FLICKR_4096_MINIMUM_CUDA_PEAK_BYTES,
+    FLICKR_8192_KAGGLE_CPU_SPEC,
+    FLICKR_8192_KAGGLE_CUDA_SPEC,
+    FLICKR_8192_MINIMUM_CUDA_PEAK_BYTES,
     FLICKR_KAGGLE_CPU_SPEC,
     FLICKR_KAGGLE_CUDA_SPEC,
     FLICKR_WIDE_KAGGLE_CPU_SPEC,
@@ -34,17 +37,37 @@ from result_artifact import artifact_from_logits, write_artifact
 
 
 DeviceProfile = Literal["cpu", "cuda"]
-BenchmarkVariant = Literal["baseline", "wide", "2048", "4096"]
+BenchmarkVariant = Literal["baseline", "wide", "2048", "4096", "8192"]
 VARIANT_HIDDEN_CHANNELS = {
     "baseline": 256,
     "wide": 1_024,
     "2048": 2_048,
     "4096": 4_096,
+    "8192": 8_192,
 }
-VARIANT_EPOCHS = {"baseline": 30, "wide": 20, "2048": 20, "4096": 20}
-VARIANT_PATIENCE = {"baseline": 8, "wide": 6, "2048": 6, "4096": 6}
-VARIANT_EDGE_CHUNK_SIZES = {"2048": 262_144, "4096": 131_072}
-CHECKPOINTED_VARIANTS = {"4096"}
+VARIANT_EPOCHS = {
+    "baseline": 30,
+    "wide": 20,
+    "2048": 20,
+    "4096": 20,
+    "8192": 8,
+}
+VARIANT_PATIENCE = {
+    "baseline": 8,
+    "wide": 6,
+    "2048": 6,
+    "4096": 6,
+    "8192": 3,
+}
+VARIANT_EDGE_CHUNK_SIZES = {
+    "2048": 262_144,
+    "4096": 131_072,
+    "8192": 8_192,
+}
+VARIANT_ROOT_NODE_CHUNK_SIZES = {"8192": 1_024}
+CHECKPOINTED_VARIANTS = {"4096", "8192"}
+OUTPUT_CHECKPOINTED_VARIANTS = {"8192"}
+BEST_STATE_ON_CPU_VARIANTS = {"8192"}
 
 
 def parse_arguments(
@@ -128,6 +151,9 @@ def main(
         arguments.weight_decay,
         VARIANT_EDGE_CHUNK_SIZES.get(variant),
         variant in CHECKPOINTED_VARIANTS,
+        VARIANT_ROOT_NODE_CHUNK_SIZES.get(variant),
+        variant in OUTPUT_CHECKPOINTED_VARIANTS,
+        variant in BEST_STATE_ON_CPU_VARIANTS,
     )
     execution = {
         "status": "PASS",
@@ -145,6 +171,13 @@ def main(
         execution["aggregation"] = "exact chunked mean"
         execution["edge_chunk_size"] = edge_chunk_size
         execution["activation_checkpointing"] = variant in CHECKPOINTED_VARIANTS
+        root_node_chunk_size = VARIANT_ROOT_NODE_CHUNK_SIZES.get(variant)
+        if root_node_chunk_size is not None:
+            execution["root_node_chunk_size"] = root_node_chunk_size
+        execution["output_checkpointing"] = (
+            variant in OUTPUT_CHECKPOINTED_VARIANTS
+        )
+        execution["best_state_on_cpu"] = variant in BEST_STATE_ON_CPU_VARIANTS
     if device.type == "cpu":
         execution.update(
             {
@@ -158,6 +191,7 @@ def main(
             "wide": FLICKR_WIDE_KAGGLE_CPU_SPEC,
             "2048": FLICKR_2048_KAGGLE_CPU_SPEC,
             "4096": FLICKR_4096_KAGGLE_CPU_SPEC,
+            "8192": FLICKR_8192_KAGGLE_CPU_SPEC,
         }
         spec = cpu_specs[variant]
     else:
@@ -168,6 +202,7 @@ def main(
             "wide": FLICKR_WIDE_MINIMUM_CUDA_PEAK_BYTES,
             "2048": FLICKR_2048_MINIMUM_CUDA_PEAK_BYTES,
             "4096": FLICKR_4096_MINIMUM_CUDA_PEAK_BYTES,
+            "8192": FLICKR_8192_MINIMUM_CUDA_PEAK_BYTES,
         }.get(variant)
         if minimum_peak is not None:
             require(
@@ -193,6 +228,7 @@ def main(
             "wide": FLICKR_WIDE_KAGGLE_CUDA_SPEC,
             "2048": FLICKR_2048_KAGGLE_CUDA_SPEC,
             "4096": FLICKR_4096_KAGGLE_CUDA_SPEC,
+            "8192": FLICKR_8192_KAGGLE_CUDA_SPEC,
         }
         spec = cuda_specs[variant]
 
@@ -211,7 +247,7 @@ def main(
     if variant == "2048":
         model["edge_chunk_size"] = VARIANT_EDGE_CHUNK_SIZES[variant]
         model["aggregation"] = "exact chunked mean"
-    if variant == "4096":
+    if variant in {"4096", "8192"}:
         model["aggregation"] = "exact chunked mean"
     artifact = artifact_from_logits(
         spec=spec, logits=logits, model=model, execution=execution

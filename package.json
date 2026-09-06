@@ -28,6 +28,8 @@
     "poc:kaggle:flickr:2048:cuda": ".venv/bin/python ./poc/run_kaggle_flickr_2048_cuda.py",
     "poc:kaggle:flickr:4096:cpu": ".venv/bin/python ./poc/run_kaggle_flickr_4096_cpu.py",
     "poc:kaggle:flickr:4096:cuda": ".venv/bin/python ./poc/run_kaggle_flickr_4096_cuda.py",
+    "poc:kaggle:flickr:8192:cpu": ".venv/bin/python ./poc/run_kaggle_flickr_8192_cpu.py",
+    "poc:kaggle:flickr:8192:cuda": ".venv/bin/python ./poc/run_kaggle_flickr_8192_cuda.py",
     "poc:kaggle:compare": ".venv/bin/python ./poc/compare_kaggle_results.py",
     "poc:compare:three": ".venv/bin/python ./poc/compare_three_environments.py",
     "poc:mps:karate:artifact": ".venv/bin/python ./poc/run_mps_karate_artifact.py",
@@ -36,6 +38,7 @@
     "poc:mps:flickr:wide": ".venv/bin/python ./poc/run_mps_flickr_wide.py",
     "poc:mps:flickr:2048": ".venv/bin/python ./poc/run_mps_flickr_2048.py",
     "poc:mps:flickr:4096": ".venv/bin/python ./poc/run_mps_flickr_4096.py",
+    "poc:mps:flickr:8192": ".venv/bin/python ./poc/run_mps_flickr_8192.py",
     "poc:kaggle:import": ".venv/bin/python ./poc/import_kaggle_result.py",
     "cuda:validate": ".venv/bin/python ./poc/cuda_portability_validator.py --root . --json-output .artifacts/cuda-portability/report.json --markdown-output .artifacts/cuda-portability/report.md"
   },

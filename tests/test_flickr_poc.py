@@ -60,6 +60,7 @@ class FlickrModelTests(unittest.TestCase):
             dropout=0,
             edge_chunk_size=2,
             activation_checkpointing=True,
+            output_checkpointing=True,
         )
         checkpointed.load_state_dict(standard.state_dict())
         expected = standard(graph)
@@ -72,6 +73,33 @@ class FlickrModelTests(unittest.TestCase):
         ):
             torch.testing.assert_close(
                 checkpointed_parameter.grad, standard_parameter.grad
+            )
+
+    def test_root_projection_chunking_preserves_training_gradients(self) -> None:
+        features = torch.randn((3, 2), generator=torch.Generator().manual_seed(7))
+        features.requires_grad_()
+        edge_index = torch.tensor([[0, 1, 2, 1], [1, 0, 1, 2]])
+        standard = poc.ChunkedSAGEConv(2, 1_024, edge_chunk_size=2)
+        chunked = poc.ChunkedSAGEConv(
+            2,
+            1_024,
+            edge_chunk_size=2,
+            root_node_chunk_size=1,
+        )
+        chunked.load_state_dict(standard.state_dict())
+        expected = standard(features, edge_index)
+        actual = chunked(features, edge_index)
+        torch.testing.assert_close(actual, expected)
+        expected.square().sum().backward(retain_graph=True)
+        expected_gradient = features.grad.detach().clone()
+        features.grad = None
+        actual.square().sum().backward()
+        torch.testing.assert_close(features.grad, expected_gradient)
+        for standard_parameter, chunked_parameter in zip(
+            standard.parameters(), chunked.parameters(), strict=True
+        ):
+            torch.testing.assert_close(
+                chunked_parameter.grad, standard_parameter.grad
             )
 
 
@@ -151,6 +179,25 @@ class FlickrArgumentTests(unittest.TestCase):
             self.assertEqual(getattr(cpu, name), getattr(cuda, name))
         self.assertIn("flickr-4096-cpu", str(cpu.output))
         self.assertIn("flickr-4096-cuda", str(cuda.output))
+
+    def test_8192_profiles_have_identical_bounded_memory_defaults(self) -> None:
+        cpu = parse_arguments("cpu", [], variant="8192")
+        cuda = parse_arguments("cuda", [], variant="8192")
+        self.assertEqual(cpu.hidden_channels, 8_192)
+        self.assertEqual(cpu.epochs, 8)
+        self.assertEqual(cpu.patience, 3)
+        for name in (
+            "epochs",
+            "patience",
+            "hidden_channels",
+            "dropout",
+            "seed",
+            "learning_rate",
+            "weight_decay",
+        ):
+            self.assertEqual(getattr(cpu, name), getattr(cuda, name))
+        self.assertIn("flickr-8192-cpu", str(cpu.output))
+        self.assertIn("flickr-8192-cuda", str(cuda.output))
 
 
 if __name__ == "__main__":
