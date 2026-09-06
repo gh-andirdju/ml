@@ -187,6 +187,7 @@ def build_comparison(
                     "best_state_on_cpu",
                     "destination_node_chunk_size",
                     "precision",
+                    "saved_tensors_on_cpu",
                 )
                 if key in mps["execution"]
             },

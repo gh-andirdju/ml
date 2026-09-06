@@ -300,6 +300,7 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
                     "best_state_on_cpu",
                     "destination_node_chunk_size",
                     "precision",
+                    "saved_tensors_on_cpu",
                 )
                 if key in cpu_execution
             },
@@ -338,6 +339,7 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
                     "best_state_on_cpu",
                     "destination_node_chunk_size",
                     "precision",
+                    "saved_tensors_on_cpu",
                 )
                 if key in gpu_execution
             },

@@ -52,8 +52,9 @@ are allowed.
   FP32 master weights, exact destination-node-chunked mean aggregation, hidden-
   and output-layer checkpointing, and CPU-retained best state across
   environments. MPS may use recorded FP16 activations with gradient scaling;
-  CPU and T4 stay FP32. Workspace sizes may differ and must be recorded. Require
-  at least 12 GiB T4 peak allocation.
+  CPU and T4 stay FP32. MPS may also offload checkpoint tensors to pageable CPU
+  memory. Workspace sizes may differ and must be recorded. Require at least 12
+  GiB T4 peak allocation.
 - Use a single Tesla T4 as the fixed Kaggle GPU baseline. Keep T4x2 open for a
   future explicitly multi-GPU POC; do not use P100 or another accelerator
   without explicit approval.

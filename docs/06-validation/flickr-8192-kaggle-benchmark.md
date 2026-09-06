@@ -10,8 +10,8 @@ This workload retains the complete open Flickr graph and increases both hidden
 GraphSAGE layers to 8,192 channels. All environments use FP32 master weights,
 the same data split, seed, Adam optimizer, eight requested epochs, and
 early-stopping patience three. MPS uses FP16 activations with gradient scaling;
-Kaggle CPU and T4 use FP32 activations. The model has 142,540,807 trainable
-parameters.
+checkpoint tensors are offloaded to pageable CPU memory. Kaggle CPU and T4 use
+FP32 activations. The model has 142,540,807 trainable parameters.
 
 ```mermaid
 flowchart LR
@@ -31,6 +31,7 @@ and output-layer checkpointing, and CPU-retained best-model state. Kaggle uses
 unified memory. Workspace sizes are execution metadata, not model parameters;
 the graph, layer formula, FP32 master weights, loss, optimizer, and trainable
 parameter count remain identical. Activation precision is recorded per backend.
+MPS saved-tensor offload is also recorded as execution metadata.
 
 ## Acceptance checks
 

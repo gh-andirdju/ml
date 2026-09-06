@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 import os
 import time
+from contextlib import nullcontext
 from pathlib import Path
 
 import torch
@@ -410,6 +411,7 @@ def train_on_device(
     best_state_on_cpu: bool = False,
     destination_node_chunk_size: int | None = None,
     mps_mixed_precision: bool = False,
+    saved_tensors_on_cpu: bool = False,
 ) -> tuple[Tensor, dict[str, float | int | str]]:
     require(
         device.type in {"cpu", "cuda", "mps"},
@@ -423,6 +425,10 @@ def train_on_device(
     require(
         not mps_mixed_precision or device.type == "mps",
         "MPS mixed precision requires an MPS device",
+    )
+    require(
+        not saved_tensors_on_cpu or device.type == "mps",
+        "Saved-tensor CPU offload requires an MPS device",
     )
     torch.manual_seed(seed)
     destination_edge_boundaries = None
@@ -492,12 +498,18 @@ def train_on_device(
     for epoch in range(1, epochs + 1):
         model.train()
         optimizer.zero_grad(set_to_none=True)
-        with autocast():
-            logits = model(device_graph)
-            training_loss = functional.cross_entropy(
-                logits[device_graph.train_mask],
-                device_graph.y[device_graph.train_mask],
-            )
+        saved_tensor_context = (
+            torch.autograd.graph.save_on_cpu(device_type="mps")
+            if saved_tensors_on_cpu
+            else nullcontext()
+        )
+        with saved_tensor_context:
+            with autocast():
+                logits = model(device_graph)
+                training_loss = functional.cross_entropy(
+                    logits[device_graph.train_mask],
+                    device_graph.y[device_graph.train_mask],
+                )
         if gradient_scaler is None:
             training_loss.backward()
             optimizer.step()

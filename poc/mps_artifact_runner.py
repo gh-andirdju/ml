@@ -73,6 +73,7 @@ MPS_VARIANT_DESTINATION_NODE_CHUNK_SIZES = {
     "8192": 256,
 }
 MPS_MIXED_PRECISION_VARIANTS = {"8192"}
+MPS_SAVED_TENSOR_OFFLOAD_VARIANTS = {"8192"}
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -193,6 +194,7 @@ def _flickr(
         variant in BEST_STATE_ON_CPU_VARIANTS,
         destination_node_chunk_size,
         variant in MPS_MIXED_PRECISION_VARIANTS,
+        variant in MPS_SAVED_TENSOR_OFFLOAD_VARIANTS,
     )
     metrics["accuracy"] = metrics["test_accuracy"]
     if edge_chunk_size is not None:
@@ -205,6 +207,9 @@ def _flickr(
             "fp16 activations with fp32 master weights"
             if variant in MPS_MIXED_PRECISION_VARIANTS
             else "fp32"
+        )
+        metrics["saved_tensors_on_cpu"] = (
+            variant in MPS_SAVED_TENSOR_OFFLOAD_VARIANTS
         )
     if destination_node_chunk_size is not None:
         metrics["aggregation"] = "exact destination-chunked mean"
