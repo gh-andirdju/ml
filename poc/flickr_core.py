@@ -125,6 +125,7 @@ class _DestinationChunkedSAGE(torch.autograd.Function):
     """Differentiate an exact GraphSAGE layer with bounded destination chunks."""
 
     @staticmethod
+    @torch.amp.custom_fwd(device_type="mps", cast_inputs=torch.float16)
     def forward(
         context,
         features: Tensor,
@@ -183,6 +184,7 @@ class _DestinationChunkedSAGE(torch.autograd.Function):
         return output
 
     @staticmethod
+    @torch.amp.custom_bwd(device_type="mps")
     def backward(context, gradient: Tensor):
         (
             features,
@@ -407,6 +409,7 @@ def train_on_device(
     output_checkpointing: bool = False,
     best_state_on_cpu: bool = False,
     destination_node_chunk_size: int | None = None,
+    mps_mixed_precision: bool = False,
 ) -> tuple[Tensor, dict[str, float | int | str]]:
     require(
         device.type in {"cpu", "cuda", "mps"},
@@ -417,6 +420,10 @@ def train_on_device(
             os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK", "0") != "1",
             "CPU fallback is enabled; this would not prove MPS execution",
         )
+    require(
+        not mps_mixed_precision or device.type == "mps",
+        "MPS mixed precision requires an MPS device",
+    )
     torch.manual_seed(seed)
     destination_edge_boundaries = None
     destination_degree = None
@@ -455,14 +462,25 @@ def train_on_device(
     optimizer = torch.optim.Adam(
         model.parameters(), lr=learning_rate, weight_decay=weight_decay
     )
+    gradient_scaler = (
+        torch.amp.GradScaler("mps") if mps_mixed_precision else None
+    )
+
+    def autocast():
+        return torch.autocast(
+            device_type="mps",
+            dtype=torch.float16,
+            enabled=mps_mixed_precision,
+        )
 
     model.eval()
     with torch.no_grad():
-        initial_logits = model(device_graph)
-        initial_training_loss = functional.cross_entropy(
-            initial_logits[device_graph.train_mask],
-            device_graph.y[device_graph.train_mask],
-        ).item()
+        with autocast():
+            initial_logits = model(device_graph)
+            initial_training_loss = functional.cross_entropy(
+                initial_logits[device_graph.train_mask],
+                device_graph.y[device_graph.train_mask],
+            ).item()
 
     best_validation_loss = math.inf
     best_epoch = 0
@@ -474,20 +492,28 @@ def train_on_device(
     for epoch in range(1, epochs + 1):
         model.train()
         optimizer.zero_grad(set_to_none=True)
-        logits = model(device_graph)
-        training_loss = functional.cross_entropy(
-            logits[device_graph.train_mask], device_graph.y[device_graph.train_mask]
-        )
-        training_loss.backward()
-        optimizer.step()
+        with autocast():
+            logits = model(device_graph)
+            training_loss = functional.cross_entropy(
+                logits[device_graph.train_mask],
+                device_graph.y[device_graph.train_mask],
+            )
+        if gradient_scaler is None:
+            training_loss.backward()
+            optimizer.step()
+        else:
+            gradient_scaler.scale(training_loss).backward()
+            gradient_scaler.step(optimizer)
+            gradient_scaler.update()
 
         model.eval()
         with torch.no_grad():
-            validation_logits = model(device_graph)
-            validation_loss = functional.cross_entropy(
-                validation_logits[device_graph.val_mask],
-                device_graph.y[device_graph.val_mask],
-            ).item()
+            with autocast():
+                validation_logits = model(device_graph)
+                validation_loss = functional.cross_entropy(
+                    validation_logits[device_graph.val_mask],
+                    device_graph.y[device_graph.val_mask],
+                ).item()
         if validation_loss < best_validation_loss - 1e-6:
             best_validation_loss = validation_loss
             best_epoch = epoch
@@ -509,11 +535,12 @@ def train_on_device(
     model.load_state_dict(best_state)
     model.eval()
     with torch.no_grad():
-        final_logits = model(device_graph)
-        final_training_loss = functional.cross_entropy(
-            final_logits[device_graph.train_mask],
-            device_graph.y[device_graph.train_mask],
-        ).item()
+        with autocast():
+            final_logits = model(device_graph)
+            final_training_loss = functional.cross_entropy(
+                final_logits[device_graph.train_mask],
+                device_graph.y[device_graph.train_mask],
+            ).item()
     synchronize(device)
 
     actual_device = final_logits.device

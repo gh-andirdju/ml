@@ -7,9 +7,11 @@
 - Scope: comparison only; no Neo4j import
 
 This workload retains the complete open Flickr graph and increases both hidden
-GraphSAGE layers to 8,192 channels. MPS, CPU, and CUDA use FP32, the same data
-split, seed, Adam optimizer, eight requested epochs, and early-stopping patience
-three. The model has 142,540,807 trainable parameters.
+GraphSAGE layers to 8,192 channels. All environments use FP32 master weights,
+the same data split, seed, Adam optimizer, eight requested epochs, and
+early-stopping patience three. MPS uses FP16 activations with gradient scaling;
+Kaggle CPU and T4 use FP32 activations. The model has 142,540,807 trainable
+parameters.
 
 ```mermaid
 flowchart LR
@@ -27,8 +29,8 @@ All environments use exact destination-node-chunked mean aggregation, hidden-
 and output-layer checkpointing, and CPU-retained best-model state. Kaggle uses
 1,024-destination-node workspaces. MPS uses 256-node workspaces to fit 16 GB
 unified memory. Workspace sizes are execution metadata, not model parameters;
-the graph, layer formula, FP32 weights, loss, optimizer, and trainable parameter
-count remain identical.
+the graph, layer formula, FP32 master weights, loss, optimizer, and trainable
+parameter count remain identical. Activation precision is recorded per backend.
 
 ## Acceptance checks
 

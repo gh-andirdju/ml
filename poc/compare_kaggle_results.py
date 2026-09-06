@@ -299,6 +299,7 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
                     "output_checkpointing",
                     "best_state_on_cpu",
                     "destination_node_chunk_size",
+                    "precision",
                 )
                 if key in cpu_execution
             },
@@ -336,6 +337,7 @@ def compare(cpu: dict[str, Any], gpu: dict[str, Any], minimum_agreement: float) 
                     "output_checkpointing",
                     "best_state_on_cpu",
                     "destination_node_chunk_size",
+                    "precision",
                 )
                 if key in gpu_execution
             },

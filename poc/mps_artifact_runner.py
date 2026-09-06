@@ -72,6 +72,7 @@ MPS_VARIANT_DESTINATION_NODE_CHUNK_SIZES = {
     **VARIANT_DESTINATION_NODE_CHUNK_SIZES,
     "8192": 256,
 }
+MPS_MIXED_PRECISION_VARIANTS = {"8192"}
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -191,6 +192,7 @@ def _flickr(
         variant in OUTPUT_CHECKPOINTED_VARIANTS,
         variant in BEST_STATE_ON_CPU_VARIANTS,
         destination_node_chunk_size,
+        variant in MPS_MIXED_PRECISION_VARIANTS,
     )
     metrics["accuracy"] = metrics["test_accuracy"]
     if edge_chunk_size is not None:
@@ -199,6 +201,11 @@ def _flickr(
         metrics["activation_checkpointing"] = variant in CHECKPOINTED_VARIANTS
         metrics["output_checkpointing"] = variant in OUTPUT_CHECKPOINTED_VARIANTS
         metrics["best_state_on_cpu"] = variant in BEST_STATE_ON_CPU_VARIANTS
+        metrics["precision"] = (
+            "fp16 activations with fp32 master weights"
+            if variant in MPS_MIXED_PRECISION_VARIANTS
+            else "fp32"
+        )
     if destination_node_chunk_size is not None:
         metrics["aggregation"] = "exact destination-chunked mean"
         metrics["destination_node_chunk_size"] = destination_node_chunk_size

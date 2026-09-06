@@ -183,6 +183,7 @@ def main(
             variant in OUTPUT_CHECKPOINTED_VARIANTS
         )
         execution["best_state_on_cpu"] = variant in BEST_STATE_ON_CPU_VARIANTS
+        execution["precision"] = "fp32"
     if device.type == "cpu":
         execution.update(
             {

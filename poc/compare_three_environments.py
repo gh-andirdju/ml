@@ -186,6 +186,7 @@ def build_comparison(
                     "output_checkpointing",
                     "best_state_on_cpu",
                     "destination_node_chunk_size",
+                    "precision",
                 )
                 if key in mps["execution"]
             },
