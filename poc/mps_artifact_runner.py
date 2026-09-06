@@ -30,6 +30,7 @@ from kaggle_flickr_runner import (
     VARIANT_HIDDEN_CHANNELS,
     VARIANT_GRADIENT_CLIP_NORMS,
     VARIANT_LEARNING_RATES,
+    VARIANT_OPTIMIZERS,
     VARIANT_PATIENCE,
 )
 from kaggle_specs import (
@@ -179,6 +180,7 @@ def _flickr(
     hidden_channels = VARIANT_HIDDEN_CHANNELS[variant]
     learning_rate = VARIANT_LEARNING_RATES.get(variant, 0.01)
     gradient_clip_norm = VARIANT_GRADIENT_CLIP_NORMS.get(variant)
+    optimizer_name = VARIANT_OPTIMIZERS.get(variant, "adam")
     edge_chunk_size = MPS_VARIANT_EDGE_CHUNK_SIZES.get(variant)
     destination_node_chunk_size = MPS_VARIANT_DESTINATION_NODE_CHUNK_SIZES.get(
         variant
@@ -202,6 +204,7 @@ def _flickr(
         saved_tensors_on_cpu=variant in MPS_SAVED_TENSOR_OFFLOAD_VARIANTS,
         gradient_clip_norm=gradient_clip_norm,
         hidden_l2_normalization=variant in L2_NORMALIZED_VARIANTS,
+        optimizer_name=optimizer_name,
     )
     metrics["accuracy"] = metrics["test_accuracy"]
     if edge_chunk_size is not None:
@@ -241,6 +244,7 @@ def _flickr(
         "seed": 42,
         "learning_rate": learning_rate,
         "weight_decay": 5e-4,
+        "optimizer": optimizer_name,
     }
     if variant != "baseline":
         model["benchmark_variant"] = variant

@@ -150,6 +150,7 @@ class FlickrArgumentTests(unittest.TestCase):
             "learning_rate",
             "weight_decay",
             "gradient_clip_norm",
+            "optimizer",
         ):
             self.assertEqual(getattr(cpu, name), getattr(cuda, name))
 
@@ -173,6 +174,7 @@ class FlickrArgumentTests(unittest.TestCase):
             "learning_rate",
             "weight_decay",
             "gradient_clip_norm",
+            "optimizer",
         ):
             self.assertEqual(getattr(cpu, name), getattr(cuda, name))
         self.assertIn("flickr-wide-cpu", str(cpu.output))
@@ -193,6 +195,7 @@ class FlickrArgumentTests(unittest.TestCase):
             "learning_rate",
             "weight_decay",
             "gradient_clip_norm",
+            "optimizer",
         ):
             self.assertEqual(getattr(cpu, name), getattr(cuda, name))
         self.assertIn("flickr-2048-cpu", str(cpu.output))
@@ -213,6 +216,7 @@ class FlickrArgumentTests(unittest.TestCase):
             "learning_rate",
             "weight_decay",
             "gradient_clip_norm",
+            "optimizer",
         ):
             self.assertEqual(getattr(cpu, name), getattr(cuda, name))
         self.assertIn("flickr-4096-cpu", str(cpu.output))
@@ -224,8 +228,9 @@ class FlickrArgumentTests(unittest.TestCase):
         self.assertEqual(cpu.hidden_channels, 8_192)
         self.assertEqual(cpu.epochs, 8)
         self.assertEqual(cpu.patience, 3)
-        self.assertEqual(cpu.learning_rate, 0.005)
+        self.assertEqual(cpu.learning_rate, 0.1)
         self.assertEqual(cpu.gradient_clip_norm, 1.0)
+        self.assertEqual(cpu.optimizer, "sgd")
         for name in (
             "epochs",
             "patience",
@@ -235,6 +240,7 @@ class FlickrArgumentTests(unittest.TestCase):
             "learning_rate",
             "weight_decay",
             "gradient_clip_norm",
+            "optimizer",
         ):
             self.assertEqual(getattr(cpu, name), getattr(cuda, name))
         self.assertIn("flickr-8192-cpu", str(cpu.output))

@@ -459,6 +459,7 @@ def train_on_device(
     saved_tensors_on_cpu: bool = False,
     gradient_clip_norm: float | None = None,
     hidden_l2_normalization: bool = False,
+    optimizer_name: str = "adam",
 ) -> tuple[Tensor, dict[str, float | int | str]]:
     require(
         device.type in {"cpu", "cuda", "mps"},
@@ -481,6 +482,7 @@ def train_on_device(
         gradient_clip_norm is None or gradient_clip_norm > 0,
         "Gradient clip norm must be positive",
     )
+    require(optimizer_name in {"adam", "sgd"}, "Unsupported optimizer")
     torch.manual_seed(seed)
     destination_edge_boundaries = None
     destination_degree = None
@@ -517,7 +519,11 @@ def train_on_device(
         destination_degree,
         hidden_l2_normalization,
     ).to(device)
-    optimizer = torch.optim.Adam(
+    optimizer_class = {
+        "adam": torch.optim.Adam,
+        "sgd": torch.optim.SGD,
+    }[optimizer_name]
+    optimizer = optimizer_class(
         model.parameters(), lr=learning_rate, weight_decay=weight_decay
     )
     def autocast():

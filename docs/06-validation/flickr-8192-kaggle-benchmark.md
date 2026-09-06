@@ -8,8 +8,8 @@
 
 This workload retains the complete open Flickr graph and increases both hidden
 GraphSAGE layers to 8,192 channels. All environments use FP32 master weights,
-the same data split, seed, Adam optimizer, eight requested epochs, and
-early-stopping patience three. All environments use learning rate 0.005 and
+the same data split, seed, state-free SGD optimizer, eight requested epochs,
+and early-stopping patience three. All environments use learning rate 0.1 and
 maximum gradient norm 1.0. MPS uses BF16 activations;
 checkpoint tensors are offloaded to pageable CPU memory. Kaggle CPU and T4 use
 FP32 activations. The model has 142,540,807 trainable parameters.
@@ -28,7 +28,8 @@ flowchart LR
 
 All environments use exact destination-node-chunked mean aggregation, hidden-
 and output-layer checkpointing, L2-normalized hidden node embeddings, and
-CPU-retained best-model state. Kaggle uses
+CPU-retained best-model state. State-free SGD avoids paging two additional
+full-model Adam moment tensors on the 16 GB laptop. Kaggle uses
 1,024-destination-node workspaces. MPS uses 256-node workspaces to fit 16 GB
 unified memory. Workspace sizes are execution metadata, not model parameters;
 the graph, layer formula, FP32 master weights, loss, optimizer, and trainable

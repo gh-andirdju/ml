@@ -64,8 +64,9 @@ VARIANT_EDGE_CHUNK_SIZES = {
     "4096": 131_072,
 }
 VARIANT_DESTINATION_NODE_CHUNK_SIZES = {"8192": 1_024}
-VARIANT_LEARNING_RATES = {"8192": 0.005}
+VARIANT_LEARNING_RATES = {"8192": 0.1}
 VARIANT_GRADIENT_CLIP_NORMS = {"8192": 1.0}
+VARIANT_OPTIMIZERS = {"8192": "sgd"}
 L2_NORMALIZED_VARIANTS = {"8192"}
 CHECKPOINTED_VARIANTS = {"4096", "8192"}
 OUTPUT_CHECKPOINTED_VARIANTS = {"8192"}
@@ -117,6 +118,11 @@ def parse_arguments(
         "--gradient-clip-norm",
         type=float,
         default=VARIANT_GRADIENT_CLIP_NORMS.get(variant),
+    )
+    parser.add_argument(
+        "--optimizer",
+        choices=("adam", "sgd"),
+        default=VARIANT_OPTIMIZERS.get(variant, "adam"),
     )
     parser.add_argument("--force", action="store_true")
     return parser.parse_args(argv)
@@ -174,6 +180,7 @@ def main(
         ),
         gradient_clip_norm=arguments.gradient_clip_norm,
         hidden_l2_normalization=variant in L2_NORMALIZED_VARIANTS,
+        optimizer_name=arguments.optimizer,
     )
     execution = {
         "status": "PASS",
@@ -268,6 +275,7 @@ def main(
         "seed": arguments.seed,
         "learning_rate": arguments.learning_rate,
         "weight_decay": arguments.weight_decay,
+        "optimizer": arguments.optimizer,
     }
     if variant != "baseline":
         model["benchmark_variant"] = variant

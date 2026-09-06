@@ -51,7 +51,8 @@ are allowed.
 - POCs 15 and 16 are the pending 8,192-channel Flickr comparison. Keep full
   FP32 master weights, exact destination-node-chunked mean aggregation, hidden-
   and output-layer checkpointing, L2 hidden normalization, and CPU-retained
-  best state across environments. MPS may use recorded BF16 activations;
+  best state across environments. Use state-free SGD to avoid paging Adam
+  moment tensors on 16 GB unified memory. MPS may use recorded BF16 activations;
   CPU and T4 stay FP32. MPS may also offload checkpoint tensors to pageable CPU
   memory. Workspace sizes may differ and must be recorded. Require at least 12
   GiB T4 peak allocation.
