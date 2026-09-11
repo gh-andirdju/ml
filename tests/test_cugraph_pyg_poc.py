@@ -10,6 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "poc"))
 
 from cugraph_pyg_flickr_runner import parse_arguments, validate_arguments  # noqa: E402
+from kaggle_specs import CUGRAPH_PYG_KAGGLE_SOURCE_REVISION  # noqa: E402
 from poc_runtime import ProofError  # noqa: E402
 from validate_cugraph_pyg_result import validate_execution  # noqa: E402
 
@@ -52,10 +53,15 @@ class CuGraphPyGPocTests(unittest.TestCase):
         requirements = (
             PROJECT_ROOT / "requirements-kaggle-cugraph.txt"
         ).read_text(encoding="utf8")
+        wrapper = (
+            PROJECT_ROOT / "kaggle" / "cugraph-pyg-cuda" / "kernel.py"
+        ).read_text(encoding="utf8")
         self.assertTrue(metadata["enable_gpu"] == "true")
         self.assertEqual(metadata["machine_shape"], "NvidiaTeslaT4")
         self.assertIn("torch-geometric==2.8.0.post1", requirements)
         self.assertIn("cugraph-pyg-cu12==26.8.0", requirements)
+        self.assertEqual(len(CUGRAPH_PYG_KAGGLE_SOURCE_REVISION), 40)
+        self.assertIn(CUGRAPH_PYG_KAGGLE_SOURCE_REVISION, wrapper)
 
     def test_defaults_define_three_layer_sampled_training(self) -> None:
         arguments = parse_arguments([])
