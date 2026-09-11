@@ -28,7 +28,7 @@ FLICKR_8192_KAGGLE_CUDA_SOURCE_REVISION = (
 FLICKR_8192_MINIMUM_CUDA_PEAK_BYTES = 12 * 1024**3
 CUGRAPH_PYG_KAGGLE_SOURCE_REVISION = "75a50bf0a89b00d6d53ed6dd760cdc9de0158ae8"
 FULLBATCH_BACKEND_KAGGLE_SOURCE_REVISION = (
-    "2d1b50bd0fba997c3effb07ad4426ef562e9e616"
+    "723e0b5e0b62b8d203496dd67db2e6129c56a9d2"
 )
 
 
@@ -432,13 +432,13 @@ KAGGLE_RUNS_BY_POC_ID = {
     ),
     FLICKR_FULLBATCH_PYG_KAGGLE_SPEC.poc_id: KaggleRunSpec(
         "andird/ml-poc-18-flickr-full-batch-pyg-t4",
-        1,
+        2,
         "kaggle/flickr-fullbatch-pyg-cuda",
         True,
     ),
     FLICKR_FULLBATCH_CUGRAPH_PYG_KAGGLE_SPEC.poc_id: KaggleRunSpec(
         "andird/ml-poc-19-flickr-full-batch-cugraph-pyg-t4",
-        1,
+        2,
         "kaggle/flickr-fullbatch-cugraph-pyg-cuda",
         True,
     ),

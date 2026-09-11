@@ -15,6 +15,7 @@ from kaggle_specs import (  # noqa: E402
     FLICKR_FULLBATCH_CUGRAPH_PYG_KAGGLE_SPEC,
     FLICKR_FULLBATCH_PYG_KAGGLE_SPEC,
     FULLBATCH_BACKEND_KAGGLE_SOURCE_REVISION,
+    KAGGLE_RUNS_BY_POC_ID,
 )
 from poc_runtime import ProofError  # noqa: E402
 
@@ -112,6 +113,16 @@ class FullBatchBackendPocTests(unittest.TestCase):
             self.assertEqual(metadata["id"], expected_id)
             self.assertIn('"CUDA_VISIBLE_DEVICES": "0"', wrapper)
             self.assertIn(FULLBATCH_BACKEND_KAGGLE_SOURCE_REVISION, wrapper)
+        self.assertEqual(
+            KAGGLE_RUNS_BY_POC_ID[FLICKR_FULLBATCH_PYG_KAGGLE_SPEC.poc_id].version,
+            2,
+        )
+        self.assertEqual(
+            KAGGLE_RUNS_BY_POC_ID[
+                FLICKR_FULLBATCH_CUGRAPH_PYG_KAGGLE_SPEC.poc_id
+            ].version,
+            2,
+        )
 
     def test_comparison_accepts_identical_predictions(self) -> None:
         result = compare(
