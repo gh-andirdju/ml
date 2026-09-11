@@ -181,6 +181,7 @@ def materialize_cugraph(graph: Data) -> tuple[Data, dict[str, object]]:
             batch_size=graph.num_nodes,
             shuffle=False,
             drop_last=False,
+            local_seeds_per_call=graph.num_nodes,
         )
         iterator = iter(loader)
         batch = next(iterator)
@@ -221,6 +222,7 @@ def materialize_cugraph(graph: Data) -> tuple[Data, dict[str, object]]:
             "exact_full_graph_verified": True,
             "full_neighbor_fanout": [-1],
             "materialized_batches": 1,
+            "local_seeds_per_call": graph.num_nodes,
             "cugraph_comms_initialized": True,
             "distributed_backend": distributed.get_backend(),
             "distributed_world_size": distributed.get_world_size(),

@@ -76,6 +76,10 @@ def validate_execution(
         )
         require(execution.get("full_neighbor_fanout") == [-1], "Fanout is not full")
         require(execution.get("materialized_batches") == 1, "Not exactly one batch")
+        require(
+            execution.get("local_seeds_per_call") == 89_250,
+            "cuGraph seed call does not cover the one-batch workload",
+        )
         require(execution.get("distributed_backend") == "nccl", "NCCL missing")
         require(execution.get("distributed_world_size") == 1, "World size differs")
         for field in ("loader_module", "graph_store_module", "feature_store_module"):

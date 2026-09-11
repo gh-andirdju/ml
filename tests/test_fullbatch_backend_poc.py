@@ -54,12 +54,13 @@ def artifact(backend: str, *, cugraph: bool) -> dict[str, object]:
         "pylibwholegraph": "26.2.1",
         "cugraph_comms_initialized": cugraph,
         "materialized_batches": 1 if cugraph else 0,
-        "full_neighbor_fanout": [-1] if cugraph else None,
+                "full_neighbor_fanout": [-1] if cugraph else None,
         "test_accuracy": 0.42,
     }
     if cugraph:
         execution.update(
             {
+                "local_seeds_per_call": 89_250,
                 "distributed_backend": "nccl",
                 "distributed_world_size": 1,
                 "loader_module": "cugraph_pyg.loader.neighbor_loader",
