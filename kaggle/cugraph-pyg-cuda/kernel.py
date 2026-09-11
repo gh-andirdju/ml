@@ -37,6 +37,10 @@ subprocess.run(
 subprocess.run(
     [sys.executable, str(project / "poc" / "run_kaggle_cugraph_pyg_cuda.py")],
     cwd=project,
-    env={**os.environ, "ML_SOURCE_REVISION": SOURCE_REVISION},
+    env={
+        **os.environ,
+        "CUDA_VISIBLE_DEVICES": "0",
+        "ML_SOURCE_REVISION": SOURCE_REVISION,
+    },
     check=True,
 )

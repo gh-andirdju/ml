@@ -65,6 +65,7 @@ class CuGraphPyGPocTests(unittest.TestCase):
         self.assertIn("cugraph-pyg-cu12==26.2.1", requirements)
         self.assertEqual(len(CUGRAPH_PYG_KAGGLE_SOURCE_REVISION), 40)
         self.assertIn(CUGRAPH_PYG_KAGGLE_SOURCE_REVISION, wrapper)
+        self.assertIn('"CUDA_VISIBLE_DEVICES": "0"', wrapper)
 
     def test_defaults_define_three_layer_sampled_training(self) -> None:
         arguments = parse_arguments([])
