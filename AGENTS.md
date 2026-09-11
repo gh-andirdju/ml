@@ -75,9 +75,11 @@ are allowed.
   materialize one exact full-neighbor batch before the shared PyG training
   path. Record backend preparation separately and do not attribute training-
   only variance to cuGraph convolution acceleration.
-- Use a single Tesla T4 as the fixed Kaggle GPU baseline. Keep T4x2 open for a
-  future explicitly multi-GPU POC; do not use P100 or another accelerator
-  without explicit approval.
+- Use a single Tesla T4 as the fixed Kaggle GPU baseline. A proposed
+  `ogbn-products` T4x2 cuGraph-PyG benchmark is reserved as POCs 20 through 22
+  under `docs/05-plan/cugraph-pyg-t4x2-poc.md`; it requires separate explicit
+  implementation approval. Do not use P100 or another accelerator without
+  explicit approval.
 - Keep Mac Python host-native so PyTorch can use MPS.
 - Use Apple Container for the verified local Neo4j proof.
 - Pin Neo4j and workload images to explicit versions.

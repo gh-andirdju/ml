@@ -111,7 +111,7 @@ local RTX Blackwell `sm_120` targets.
 | [Apple Silicon development](docs/02-local-development/apple-silicon.md) | [Production topology](docs/04-decisions/ADR-003-production-topology.md) |
 | [H200 cluster design](docs/03-deployment/h200-server.md) | [Local NVIDIA device](docs/04-decisions/ADR-004-local-nvidia-device.md) |
 | [Implementation phases](docs/05-plan/phases.md) | [Minimal local proof](docs/06-validation/minimal-local-poc.md) |
-|  | [Larger WikiCS proof](docs/06-validation/larger-wikics-poc.md) |
+| [Proposed cuGraph-PyG T4x2 proof](docs/05-plan/cugraph-pyg-t4x2-poc.md) | [Larger WikiCS proof](docs/06-validation/larger-wikics-poc.md) |
 |  | [Kaggle CUDA proofs](docs/06-validation/kaggle-cuda-pocs.md) |
 |  | [Kaggle CPU comparison](docs/06-validation/kaggle-cpu-comparison.md) |
 |  | [Flickr CPU and GPU benchmark](docs/06-validation/flickr-kaggle-benchmark.md) |
