@@ -92,10 +92,15 @@ class FullBatchBackendPocTests(unittest.TestCase):
 
     def test_both_kernels_share_one_t4_and_one_source_revision(self) -> None:
         self.assertEqual(len(FULLBATCH_BACKEND_KAGGLE_SOURCE_REVISION), 40)
-        for directory in (
-            "flickr-fullbatch-pyg-cuda",
-            "flickr-fullbatch-cugraph-pyg-cuda",
-        ):
+        expected_ids = {
+            "flickr-fullbatch-pyg-cuda": (
+                "andird/ml-poc-18-flickr-full-batch-pyg-t4"
+            ),
+            "flickr-fullbatch-cugraph-pyg-cuda": (
+                "andird/ml-poc-19-flickr-full-batch-cugraph-pyg-t4"
+            ),
+        }
+        for directory, expected_id in expected_ids.items():
             root = PROJECT_ROOT / "kaggle" / directory
             metadata = json.loads(
                 (root / "kernel-metadata.json").read_text(encoding="utf8")
@@ -103,6 +108,7 @@ class FullBatchBackendPocTests(unittest.TestCase):
             wrapper = (root / "kernel.py").read_text(encoding="utf8")
             self.assertEqual(metadata["enable_gpu"], "true")
             self.assertEqual(metadata["machine_shape"], "NvidiaTeslaT4")
+            self.assertEqual(metadata["id"], expected_id)
             self.assertIn('"CUDA_VISIBLE_DEVICES": "0"', wrapper)
             self.assertIn(FULLBATCH_BACKEND_KAGGLE_SOURCE_REVISION, wrapper)
 

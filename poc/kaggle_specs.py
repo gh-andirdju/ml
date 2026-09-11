@@ -431,13 +431,13 @@ KAGGLE_RUNS_BY_POC_ID = {
         True,
     ),
     FLICKR_FULLBATCH_PYG_KAGGLE_SPEC.poc_id: KaggleRunSpec(
-        "andird/ml-poc-18-flickr-fullbatch-pyg-t4",
+        "andird/ml-poc-18-flickr-full-batch-pyg-t4",
         1,
         "kaggle/flickr-fullbatch-pyg-cuda",
         True,
     ),
     FLICKR_FULLBATCH_CUGRAPH_PYG_KAGGLE_SPEC.poc_id: KaggleRunSpec(
-        "andird/ml-poc-19-flickr-fullbatch-cugraph-pyg-t4",
+        "andird/ml-poc-19-flickr-full-batch-cugraph-pyg-t4",
         1,
         "kaggle/flickr-fullbatch-cugraph-pyg-cuda",
         True,
