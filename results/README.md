@@ -1,7 +1,7 @@
 # Execution results
 
 These files record compact evidence from successful laptop and Kaggle executions
-through 2026-09-11. They contain no credentials or generated model
+through 2026-09-12. They contain no credentials or generated model
 artifacts.
 
 | POC | Environment | Result |
@@ -26,6 +26,7 @@ artifacts.
 | Flickr GraphSAGE 4,096 | MPS versus Kaggle CPU versus T4 | [`flickr-4096-mps-cpu-cuda.json`](flickr-4096-mps-cpu-cuda.json) |
 | Flickr GraphSAGE 8,192 | MPS versus Kaggle CPU versus T4 | [`flickr-8192-mps-cpu-cuda.json`](flickr-8192-mps-cpu-cuda.json) |
 | 17 - Flickr cuGraph-PyG | Kaggle Tesla T4 CUDA | [`kaggle-flickr-cugraph-pyg-t4.json`](kaggle-flickr-cugraph-pyg-t4.json) |
+| 18 and 19 - Full-batch PyG versus cuGraph-PyG | Matched Kaggle Tesla T4 CUDA | [`kaggle-flickr-fullbatch-pyg-vs-cugraph-pyg-t4.json`](kaggle-flickr-fullbatch-pyg-vs-cugraph-pyg-t4.json) |
 
 Full Kaggle prediction artifacts and detached checksums are downloaded under
 ignored `.artifacts/` storage. Only compact execution/import evidence is kept in
@@ -46,4 +47,5 @@ Reproduce the live proof checks after downloading the ignored artifacts:
 ./poc/compare_kaggle_results.py .artifacts/flickr-4096-cpu/flickr-4096-cpu-result.json .artifacts/flickr-4096-cuda/flickr-4096-cuda-result.json --verify-kaggle-status --cpu-resource-usage .artifacts/flickr-4096-cpu/flickr-4096-cpu-resource-usage.json
 bun run poc:compare:three -- .artifacts/flickr-8192-mps/flickr-8192-mps-result.json .artifacts/flickr-8192-cpu/flickr-8192-cpu-result.json .artifacts/flickr-8192-cuda/flickr-8192-cuda-result.json --verify-kaggle-status --cpu-resource-usage .artifacts/flickr-8192-cpu/flickr-8192-cpu-resource-usage.json --output results/flickr-8192-mps-cpu-cuda.json
 bun run poc:kaggle:cugraph-pyg:validate -- .artifacts/cugraph-pyg-v3/cugraph-pyg-flickr-result.json --verify-kaggle-status --force
+bun run poc:kaggle:fullbatch:compare -- .artifacts/fullbatch-pyg-v2/flickr-fullbatch-pyg-result.json .artifacts/fullbatch-cugraph-v2/flickr-fullbatch-cugraph-pyg-result.json --verify-kaggle-status --force
 ```

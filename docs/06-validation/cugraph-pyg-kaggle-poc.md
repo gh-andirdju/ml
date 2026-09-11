@@ -39,6 +39,9 @@ The 36.320-second measurement covers sampled training and full-graph validation
 for this POC. It is not a speed comparison with the earlier full-batch Flickr
 workloads because the execution strategies differ.
 
+The matched full-batch follow-up is documented in
+[`flickr-fullbatch-cugraph-pyg-benchmark.md`](flickr-fullbatch-cugraph-pyg-benchmark.md).
+
 The checksum-valid artifact records Python 3.12.13, PyTorch 2.10.0 with CUDA
 12.8, PyG 2.7.0, cuGraph-PyG 26.2.1, pylibcugraph 26.2.0, and
 pylibwholegraph 26.2.1. The committed compact record is

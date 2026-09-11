@@ -83,6 +83,21 @@ def artifact(backend: str, *, cugraph: bool) -> dict[str, object]:
 
 
 class FullBatchBackendPocTests(unittest.TestCase):
+    def test_committed_comparison_is_a_complete_proof(self) -> None:
+        result = json.loads(
+            (
+                PROJECT_ROOT
+                / "results"
+                / "kaggle-flickr-fullbatch-pyg-vs-cugraph-pyg-t4.json"
+            ).read_text(encoding="utf8")
+        )
+        self.assertEqual(result["status"], "PASS")
+        self.assertEqual(result["proof_status"], "PASS")
+        self.assertTrue(all(result["proof"].values()))
+        self.assertEqual(result["prediction_comparison"]["class_agreement"], 1.0)
+        self.assertEqual(result["kaggle_runs"]["plain_pyg"]["kernel_version"], 2)
+        self.assertEqual(result["kaggle_runs"]["cugraph_pyg"]["kernel_version"], 2)
+
     def test_default_contract_matches_original_flickr_benchmark(self) -> None:
         for backend in ("pyg", "cugraph-pyg"):
             arguments = parse_arguments(backend, [])

@@ -3,7 +3,8 @@
 - POC 3: Karate Club on one Kaggle NVIDIA GPU
 - POC 4: pinned WikiCS on one Kaggle NVIDIA GPU
 - POC 17: Flickr GraphSAGE with cuGraph-PyG sampling on one visible T4
-- Status: Verified PASS through 2026-09-11
+- POCs 18 and 19: matched full-batch PyG and cuGraph-PyG on one visible T4
+- Status: Verified PASS through 2026-09-12
 
 These jobs prove ordinary single-device CUDA portability before access to the
 self-managed H200 cluster. They use Kaggle's free notebook GPU allocation and
@@ -77,6 +78,10 @@ under `results/`.
 POC 17 is a separate database-free integration proof. It uses source revision
 `75a50bf0a89b00d6d53ed6dd760cdc9de0158ae8`; its compact result is
 [`kaggle-flickr-cugraph-pyg-t4.json`](../../results/kaggle-flickr-cugraph-pyg-t4.json).
+
+POCs 18 and 19 are a database-free, model-identical full-batch pair from source
+revision `723e0b5e0b62b8d203496dd67db2e6129c56a9d2`. Their committed comparison is
+[`kaggle-flickr-fullbatch-pyg-vs-cugraph-pyg-t4.json`](../../results/kaggle-flickr-fullbatch-pyg-vs-cugraph-pyg-t4.json).
 
 ## Sources
 

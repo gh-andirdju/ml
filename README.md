@@ -2,8 +2,9 @@
 
 ## Current summary
 
-Seventeen verified execution proofs cover seven portable GNN workloads plus a
-CUDA-only cuGraph-PyG integration proof. Every portable workload has a recorded
+Nineteen verified execution proofs cover seven portable GNN workloads plus
+three CUDA-only graph-backend proofs, two involving cuGraph-PyG. Every portable
+workload has a recorded
 three-way comparison using Apple
 MPS, Kaggle CPU only, and Kaggle Tesla T4. Karate and WikiCS retain their local
 Neo4j proofs; Kaggle and Flickr comparison jobs remain database-free. A larger
@@ -25,6 +26,12 @@ faster than Kaggle CPU and 9.239x faster than MPS.
 POC 17 verifies that a PyG GraphSAGE model can train from cuGraph-PyG
 `GraphStore`, `FeatureStore`, and `NeighborLoader` batches on one visible
 Kaggle T4. It reached 42.36% Flickr test accuracy in 36.32 seconds.
+
+POCs 18 and 19 compare exact full-batch PyG against the same PyG training path
+after cuGraph-PyG full-neighbor materialization. Training took 6.712 and 6.238
+seconds respectively with 100% prediction agreement. Including preparation,
+the cuGraph path took 17.718 seconds versus 6.879 seconds plain, so cuGraph adds
+cost when this entire graph already fits comfortably on one T4.
 
 ```mermaid
 flowchart LR
@@ -68,6 +75,8 @@ the model code:
 ./poc/run_kaggle_flickr_8192_cpu.py
 ./poc/run_kaggle_flickr_8192_cuda.py
 ./poc/run_kaggle_cugraph_pyg_cuda.py
+./poc/run_kaggle_fullbatch_pyg_cuda.py
+./poc/run_kaggle_fullbatch_cugraph_pyg_cuda.py
 
 # Host-native MPS comparison artifacts
 ./poc/run_mps_karate_artifact.py
@@ -111,5 +120,6 @@ local RTX Blackwell `sm_120` targets.
 |  | [Flickr 4,096-channel benchmark](docs/06-validation/flickr-4096-kaggle-benchmark.md) |
 |  | [Flickr 8,192-channel benchmark](docs/06-validation/flickr-8192-kaggle-benchmark.md) |
 |  | [cuGraph-PyG Kaggle proof](docs/06-validation/cugraph-pyg-kaggle-poc.md) |
+|  | [Full-batch PyG versus cuGraph-PyG](docs/06-validation/flickr-fullbatch-cugraph-pyg-benchmark.md) |
 |  | [Three-environment comparison](docs/06-validation/three-environment-comparison.md) |
 |  | [CUDA portability validator](docs/06-validation/cuda-portability-validator.md) |

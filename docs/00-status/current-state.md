@@ -1,6 +1,6 @@
 # Current laptop state
 
-Observed and verified through 2026-09-11.
+Observed and verified through 2026-09-12.
 
 | Area | Current condition |
 | --- | --- |
@@ -9,7 +9,7 @@ Observed and verified through 2026-09-11.
 | Storage | Approximately 512 GiB free when observed |
 | Homebrew | 6.0.21 |
 | Python | 3.14.7 project `.venv`; dependency check passes |
-| GNN | All seventeen execution POCs pass; all seven portable workloads have MPS/CPU/T4 records |
+| GNN | All nineteen execution POCs pass; all seven portable workloads have MPS/CPU/T4 records |
 | Java | Temurin 21 and 25; interactive `JAVA_HOME` selects Temurin 25 |
 | Apple Container | Homebrew CLI and service 1.3.1; active |
 | Neo4j | Community 2026.07.1, Linux ARM64, running as `neo4j-poc` |
@@ -27,6 +27,7 @@ Observed and verified through 2026-09-11.
 | 4,096-channel pair | PASS: T4 is 38.388x faster; 11.10 GB allocated, 15.25 GB reserved |
 | 8,192-channel pair | PASS: T4 is 25.848x faster; 12.68 GiB allocated; CPU peak RSS 15.52 GiB |
 | cuGraph-PyG | PASS: sampled Flickr GraphSAGE on one visible Kaggle T4 |
+| Full-batch backend pair | PASS: exact graph and 100% prediction agreement; cuGraph-inclusive path is 2.576x slower |
 | Three-environment matrix | PASS: all 21 pairwise/environment cells recorded |
 | PDF tooling | Bun 1.4.1 with local Playwright, Chromium, Marked, and Mermaid |
 | Constraints | 16 GB limit; MPS needs host Python; container needs Local Network access |

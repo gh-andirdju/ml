@@ -171,6 +171,24 @@ def compare(
         "dataset": plain["dataset"],
         "model": plain["model"],
         "frameworks": {field: plain_execution[field] for field in FRAMEWORK_FIELDS},
+        "measurement_boundary": {
+            "backend_preparation": (
+                "Starts after dataset loading and covers backend graph preparation "
+                "plus exact graph verification"
+            ),
+            "training": (
+                "Shared train_on_device timed region after device transfer, model "
+                "construction, and untimed warm-up inference"
+            ),
+            "backend_inclusive": (
+                "Backend preparation plus training; excludes dependency installation "
+                "and dataset loading"
+            ),
+            "cuda_peak_memory": (
+                "PyTorch allocator peak reset after backend preparation and measured "
+                "through final inference"
+            ),
+        },
         "prediction_comparison": {
             "nodes": prediction_count,
             "class_matches": matches,

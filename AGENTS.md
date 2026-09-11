@@ -2,12 +2,13 @@
 
 ## Scope and mode
 
-These instructions apply to this repository. All seventeen POCs pass. Karate and
+These instructions apply to this repository. All nineteen POCs pass. Karate and
 WikiCS are verified on the laptop and private Kaggle CPU/T4 jobs. Both Flickr
 256, 1,024, 2,048, 4,096, and 8,192 comparisons pass. Kaggle GPU predictions for
 Karate and WikiCS pass checksum-checked local Neo4j import. H200 and production
-Neo4j remain design-only. POC 17 verifies PyG with cuGraph-PyG on one visible
-Kaggle T4. Every portable logical workload has a committed
+Neo4j remain design-only. POC 17 verifies sampled PyG with cuGraph-PyG, while
+POCs 18 and 19 compare exact full-batch PyG with cuGraph-PyG materialization on
+one visible Kaggle T4. Every portable logical workload has a committed
 three-environment comparison covering host-native MPS, Kaggle CPU only, and one
 Kaggle Tesla T4.
 
@@ -67,6 +68,13 @@ are allowed.
   T4, a checksum-valid artifact, and at least 30% Flickr test accuracy. Keep it
   comparison-only and database-free. Its sampled training time is not directly
   comparable with the full-batch Flickr benchmarks.
+- POCs 18 and 19 are the matched full-batch backend comparison. Keep the
+  dataset, exact edge multiset, features, labels, masks, model, FP32 precision,
+  optimizer, seed, stopping rule, source revision, framework versions, T4, and
+  training timing boundary identical. POC 19 may use cuGraph-PyG only to
+  materialize one exact full-neighbor batch before the shared PyG training
+  path. Record backend preparation separately and do not attribute training-
+  only variance to cuGraph convolution acceleration.
 - Use a single Tesla T4 as the fixed Kaggle GPU baseline. Keep T4x2 open for a
   future explicitly multi-GPU POC; do not use P100 or another accelerator
   without explicit approval.
@@ -90,7 +98,7 @@ are allowed.
 - Homebrew Python 3.14.7 and a project `.venv` are active for the POC.
 - The local POCs pin PyTorch 2.14.0, PyG 2.8.0.post1, Neo4j Driver 6.3.0, and
   SciPy 1.18.1 for Flickr dataset processing.
-- MPS and CPU profiles pass locally; all fifteen Kaggle CPU/T4 jobs pass.
+- MPS and CPU profiles pass locally; all seventeen Kaggle CPU/T4 jobs pass.
 - Temurin 21 and 25 are installed; interactive shells select Temurin 25.
 - No Homebrew OpenJDK formula or `uv` is installed.
 - Homebrew Apple Container 1.3.1 runs Neo4j Community 2026.07.1 as Linux ARM64.
@@ -162,6 +170,16 @@ are allowed.
   26.2.1. It processed 440 batches and 86,154,606 sampled edges in 36.32
   seconds, reached 42.36% test accuracy, allocated 2.32 GiB at peak, and passed
   as private Kaggle version 3.
+- POCs 18 and 19 used the same full-batch Flickr graph and training function.
+  Plain PyG trained in 6.712 seconds and cuGraph-materialized PyG in 6.238
+  seconds, with identical 42.35% test accuracy and 100% class agreement. The
+  small training-only difference is run variance, not cuGraph message-passing
+  acceleration. Including backend preparation took 6.879 versus 17.718 seconds,
+  so the cuGraph path was 2.576 times slower for this graph that already fits.
+- In cuGraph-PyG 26.2.1, full-neighbor fanout defaults to 32,768 local seeds per
+  call. A one-batch workload larger than that yields a zero effective split;
+  set and record `local_seeds_per_call` at least as large as the batch. POC 19
+  uses exactly 89,250.
 - For a newly created Kaggle kernel, the title-derived slug must match the
   metadata `id`; use the canonical ID returned by the first push.
 - In the current Kaggle T4 image, passing a `torch.device` to CUDA peak-memory
