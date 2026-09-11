@@ -36,6 +36,8 @@ import run_kaggle_flickr_4096_cuda
 import run_kaggle_flickr_8192_cpu
 import run_kaggle_flickr_8192_cuda
 import run_kaggle_cugraph_pyg_cuda
+import run_kaggle_fullbatch_pyg_cuda
+import run_kaggle_fullbatch_cugraph_pyg_cuda
 """
         subprocess.run([sys.executable, "-c", script], check=True)
 

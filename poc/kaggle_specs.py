@@ -27,6 +27,9 @@ FLICKR_8192_KAGGLE_CUDA_SOURCE_REVISION = (
 )
 FLICKR_8192_MINIMUM_CUDA_PEAK_BYTES = 12 * 1024**3
 CUGRAPH_PYG_KAGGLE_SOURCE_REVISION = "75a50bf0a89b00d6d53ed6dd760cdc9de0158ae8"
+FULLBATCH_BACKEND_KAGGLE_SOURCE_REVISION = (
+    "0000000000000000000000000000000000000000"
+)
 
 
 @dataclass(frozen=True)
@@ -299,6 +302,28 @@ CUGRAPH_PYG_FLICKR_KAGGLE_SPEC = ArtifactSpec(
     source_revision=CUGRAPH_PYG_KAGGLE_SOURCE_REVISION,
 )
 
+FLICKR_FULLBATCH_PYG_KAGGLE_SPEC = ArtifactSpec(
+    poc_id="kaggle-flickr-fullbatch-pyg-t4-v1",
+    target_poc_id="comparison-only",
+    dataset_name="Flickr",
+    nodes=89_250,
+    classes=7,
+    minimum_accuracy=0.30,
+    identity=FLICKR_IDENTITY,
+    source_revision=FULLBATCH_BACKEND_KAGGLE_SOURCE_REVISION,
+)
+
+FLICKR_FULLBATCH_CUGRAPH_PYG_KAGGLE_SPEC = ArtifactSpec(
+    poc_id="kaggle-flickr-fullbatch-cugraph-pyg-t4-v1",
+    target_poc_id="comparison-only",
+    dataset_name="Flickr",
+    nodes=89_250,
+    classes=7,
+    minimum_accuracy=0.30,
+    identity=FLICKR_IDENTITY,
+    source_revision=FULLBATCH_BACKEND_KAGGLE_SOURCE_REVISION,
+)
+
 SPECS_BY_POC_ID = {
     KARATE_KAGGLE_SPEC.poc_id: KARATE_KAGGLE_SPEC,
     WIKICS_KAGGLE_SPEC.poc_id: WIKICS_KAGGLE_SPEC,
@@ -326,6 +351,10 @@ COMPARISON_SPECS_BY_POC_ID = {
     FLICKR_8192_KAGGLE_CUDA_SPEC.poc_id: FLICKR_8192_KAGGLE_CUDA_SPEC,
     FLICKR_8192_MPS_SPEC.poc_id: FLICKR_8192_MPS_SPEC,
     CUGRAPH_PYG_FLICKR_KAGGLE_SPEC.poc_id: CUGRAPH_PYG_FLICKR_KAGGLE_SPEC,
+    FLICKR_FULLBATCH_PYG_KAGGLE_SPEC.poc_id: FLICKR_FULLBATCH_PYG_KAGGLE_SPEC,
+    FLICKR_FULLBATCH_CUGRAPH_PYG_KAGGLE_SPEC.poc_id: (
+        FLICKR_FULLBATCH_CUGRAPH_PYG_KAGGLE_SPEC
+    ),
 }
 
 KAGGLE_RUNS_BY_POC_ID = {
@@ -399,6 +428,18 @@ KAGGLE_RUNS_BY_POC_ID = {
         "andird/ml-poc-17-flickr-cugraph-pyg-t4",
         3,
         "kaggle/cugraph-pyg-cuda",
+        True,
+    ),
+    FLICKR_FULLBATCH_PYG_KAGGLE_SPEC.poc_id: KaggleRunSpec(
+        "andird/ml-poc-18-flickr-fullbatch-pyg-t4",
+        1,
+        "kaggle/flickr-fullbatch-pyg-cuda",
+        True,
+    ),
+    FLICKR_FULLBATCH_CUGRAPH_PYG_KAGGLE_SPEC.poc_id: KaggleRunSpec(
+        "andird/ml-poc-19-flickr-fullbatch-cugraph-pyg-t4",
+        1,
+        "kaggle/flickr-fullbatch-cugraph-pyg-cuda",
         True,
     ),
 }
