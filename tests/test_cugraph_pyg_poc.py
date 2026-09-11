@@ -21,7 +21,10 @@ def valid_artifact() -> dict:
             "cuda_device_name": "Tesla T4",
             "cuda_capability": [7, 5],
             "cuda_device_count": 1,
-            "cugraph_pyg": "26.8.0",
+            "torch_geometric": "2.7.0",
+            "cugraph_pyg": "26.2.1",
+            "pylibcugraph": "26.2.1",
+            "pylibwholegraph": "26.2.0",
             "loader_module": "cugraph_pyg.loader.neighbor_loader",
             "graph_store_module": "cugraph_pyg.data.graph_store",
             "feature_store_module": "cugraph_pyg.data.feature_store",
@@ -58,8 +61,8 @@ class CuGraphPyGPocTests(unittest.TestCase):
         ).read_text(encoding="utf8")
         self.assertTrue(metadata["enable_gpu"] == "true")
         self.assertEqual(metadata["machine_shape"], "NvidiaTeslaT4")
-        self.assertIn("torch-geometric==2.8.0.post1", requirements)
-        self.assertIn("cugraph-pyg-cu12==26.8.0", requirements)
+        self.assertIn("torch-geometric==2.7.0", requirements)
+        self.assertIn("cugraph-pyg-cu12==26.2.1", requirements)
         self.assertEqual(len(CUGRAPH_PYG_KAGGLE_SOURCE_REVISION), 40)
         self.assertIn(CUGRAPH_PYG_KAGGLE_SOURCE_REVISION, wrapper)
 

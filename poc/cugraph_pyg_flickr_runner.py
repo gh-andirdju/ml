@@ -36,6 +36,9 @@ from result_artifact import artifact_from_logits, write_artifact
 
 
 DEFAULT_FANOUT = (15, 10, 5)
+EXPECTED_CUGRAPH_RELEASE = "26.2"
+EXPECTED_CUGRAPH_PYG_VERSION = "26.2.1"
+EXPECTED_PYG_VERSION = "2.7.0"
 
 
 class SampledGraphSAGE(torch.nn.Module):
@@ -359,6 +362,29 @@ def package_version(name: str) -> str:
     return importlib.metadata.version(name)
 
 
+def framework_versions() -> dict[str, str]:
+    versions = {
+        "torch_geometric": torch_geometric.__version__,
+        "cugraph_pyg": package_version("cugraph-pyg-cu12"),
+        "pylibcugraph": package_version("pylibcugraph-cu12"),
+        "pylibwholegraph": package_version("pylibwholegraph-cu12"),
+    }
+    require(
+        versions["torch_geometric"] == EXPECTED_PYG_VERSION,
+        "The installed PyG version does not match the Kaggle pin",
+    )
+    require(
+        versions["cugraph_pyg"] == EXPECTED_CUGRAPH_PYG_VERSION,
+        "The installed cuGraph-PyG version does not match the Kaggle pin",
+    )
+    for package in ("pylibcugraph", "pylibwholegraph"):
+        require(
+            versions[package].startswith(EXPECTED_CUGRAPH_RELEASE + "."),
+            f"{package} is outside the aligned RAPIDS release family",
+        )
+    return versions
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     arguments = parse_arguments(argv)
     validate_arguments(arguments)
@@ -369,6 +395,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         graph = source_graph(arguments.data_root)
         require(graph.num_edges == EXPECTED_EDGES, "Flickr edge count changed")
+        versions = framework_versions()
         loader, backend_identity = create_loader(graph, arguments)
         logits, metrics = train(graph, loader, arguments, device)
         peak_allocated = torch.cuda.max_memory_allocated()
@@ -380,11 +407,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             "accuracy": metrics["test_accuracy"],
             "python": platform.python_version(),
             "torch": torch.__version__,
-            "torch_geometric": torch_geometric.__version__,
+            "torch_geometric": versions["torch_geometric"],
             "torch_cuda": torch.version.cuda,
-            "cugraph_pyg": package_version("cugraph-pyg-cu12"),
-            "pylibcugraph": package_version("pylibcugraph-cu12"),
-            "pylibwholegraph": package_version("pylibwholegraph-cu12"),
+            "cugraph_pyg": versions["cugraph_pyg"],
+            "pylibcugraph": versions["pylibcugraph"],
+            "pylibwholegraph": versions["pylibwholegraph"],
             "source_revision": revision,
             "cuda_device_name": torch.cuda.get_device_name(device),
             "cuda_capability": list(torch.cuda.get_device_capability(device)),

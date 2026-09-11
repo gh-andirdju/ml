@@ -15,7 +15,8 @@ from proof_common import require
 from result_artifact import load_and_validate_artifact, utc_now
 
 
-EXPECTED_CUGRAPH_PYG_VERSION = "26.8.0"
+EXPECTED_CUGRAPH_PYG_VERSION = "26.2.1"
+EXPECTED_PYG_VERSION = "2.7.0"
 
 
 def validate_execution(artifact: dict[str, Any]) -> dict[str, Any]:
@@ -27,6 +28,15 @@ def validate_execution(artifact: dict[str, Any]) -> dict[str, Any]:
         execution.get("cugraph_pyg") == EXPECTED_CUGRAPH_PYG_VERSION,
         "Unexpected cuGraph-PyG version",
     )
+    require(
+        execution.get("torch_geometric") == EXPECTED_PYG_VERSION,
+        "Unexpected PyG version",
+    )
+    for package in ("pylibcugraph", "pylibwholegraph"):
+        require(
+            str(execution.get(package, "")).startswith("26.2."),
+            f"{package} is outside the aligned RAPIDS release family",
+        )
     require(
         str(execution.get("loader_module", "")).startswith("cugraph_pyg.loader"),
         "The recorded loader was not cuGraph-PyG",

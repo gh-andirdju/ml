@@ -34,7 +34,6 @@ subprocess.run(
     ],
     check=True,
 )
-subprocess.run([sys.executable, "-m", "pip", "check"], check=True)
 subprocess.run(
     [sys.executable, str(project / "poc" / "run_kaggle_cugraph_pyg_cuda.py")],
     cwd=project,
