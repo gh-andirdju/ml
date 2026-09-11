@@ -397,7 +397,7 @@ KAGGLE_RUNS_BY_POC_ID = {
     ),
     CUGRAPH_PYG_FLICKR_KAGGLE_SPEC.poc_id: KaggleRunSpec(
         "andird/ml-poc-17-flickr-cugraph-pyg-t4",
-        1,
+        3,
         "kaggle/cugraph-pyg-cuda",
         True,
     ),

@@ -2,10 +2,11 @@
 
 - Status: Verified PASS through 2026-09-11
 - Environments: Apple M2 Pro MPS, Kaggle CPU only, and Kaggle Tesla T4 CUDA
-- Coverage: every logical GNN workload
+- Coverage: every portable GNN workload
 - Agreement gate: at least 95% for every environment pair
 
-The sixteen numbered execution proofs represent seven model-and-dataset workloads.
+The first sixteen numbered execution proofs represent seven portable
+model-and-dataset workloads. POC 17 is a separate CUDA-only integration proof.
 Each workload now has checksummed prediction evidence from all three compute
 environments. MPS runs are host-native with CPU fallback disabled. Kaggle CPU
 runs reject CUDA, and Kaggle GPU runs require a single Tesla T4.

@@ -1,10 +1,11 @@
 # Implementation phases
 
-Both laptop proofs and all fourteen Kaggle CPU/CUDA jobs are complete. Five timed
+Both laptop proofs and all fifteen Kaggle CPU/CUDA jobs are complete. Five timed
 Flickr comparisons pass through 8,192 hidden channels, using exact bounded-memory
 aggregation and activation checkpointing for the largest models. All seven
-workloads have MPS, Kaggle CPU, and Kaggle T4 comparison records. Data-center
-implementation remains pending.
+portable workloads have MPS, Kaggle CPU, and Kaggle T4 comparison records. A
+separate CUDA-only Flickr proof verifies PyG with cuGraph-PyG sampling on one
+visible T4. Data-center implementation remains pending.
 
 ```mermaid
 flowchart LR
@@ -15,7 +16,8 @@ flowchart LR
     memory --> larger_memory[Flickr 2,048 pair<br/>verified]
     larger_memory --> high_memory[Flickr 4,096 pair<br/>verified]
     high_memory --> maximum_memory[Flickr 8,192 pair<br/>verified]
-    maximum_memory --> foundation[Project foundation]
+    maximum_memory --> cugraph[cuGraph-PyG on T4<br/>verified]
+    cugraph --> foundation[Project foundation]
     foundation --> cluster[H200 packaging]
     cluster --> operations[Operations]
 ```

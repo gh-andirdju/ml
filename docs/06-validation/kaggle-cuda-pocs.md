@@ -2,7 +2,8 @@
 
 - POC 3: Karate Club on one Kaggle NVIDIA GPU
 - POC 4: pinned WikiCS on one Kaggle NVIDIA GPU
-- Status: Verified PASS on 2026-09-05
+- POC 17: Flickr GraphSAGE with cuGraph-PyG sampling on one visible T4
+- Status: Verified PASS through 2026-09-11
 
 These jobs prove ordinary single-device CUDA portability before access to the
 self-managed H200 cluster. They use Kaggle's free notebook GPU allocation and
@@ -19,7 +20,7 @@ flowchart LR
     validate --> neo[Local Neo4j Community]
 ```
 
-## Four-POC matrix
+## Base four-POC matrix
 
 | POC | Dataset | Compute | Neo4j behavior |
 | --- | --- | --- | --- |
@@ -72,6 +73,10 @@ Both artifacts came from source revision
 `c9fe91f0de80ad82d5c76ce4908ee3e8473b6165`. Full predictions remain in
 ignored local artifact storage and Kaggle output. Compact evidence is committed
 under `results/`.
+
+POC 17 is a separate database-free integration proof. It uses source revision
+`75a50bf0a89b00d6d53ed6dd760cdc9de0158ae8`; its compact result is
+[`kaggle-flickr-cugraph-pyg-t4.json`](../../results/kaggle-flickr-cugraph-pyg-t4.json).
 
 ## Sources
 

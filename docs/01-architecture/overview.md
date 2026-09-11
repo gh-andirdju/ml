@@ -60,11 +60,15 @@ flowchart LR
 | 14 | Kaggle Tesla T4 CUDA | Flickr 4,096: 177.87 seconds, 11.10 GB peak allocated |
 | 15 | Kaggle CPU only | Flickr 8,192: 13,491.88 seconds, 15.52 GiB peak RSS |
 | 16 | Kaggle Tesla T4 CUDA | Flickr 8,192: 521.98 seconds, 12.68 GiB peak allocated |
+| 17 | Kaggle Tesla T4 CUDA | Flickr PyG plus cuGraph-PyG sampling: verified PASS |
 
-All sixteen keep compute selection outside model definitions. Kaggle receives no
-database credential and runs no Neo4j process.
+The first sixteen keep compute selection outside model definitions. POC 17 is
+intentionally CUDA-only and isolates NVIDIA graph sampling behind PyG-compatible
+store and loader interfaces. Kaggle receives no database credential and runs no
+Neo4j process.
 
-Every logical workload has checksummed MPS, Kaggle CPU, and Kaggle T4 evidence.
+Every portable logical workload has checksummed MPS, Kaggle CPU, and Kaggle T4
+evidence.
 All 21 environment cells pass, and every pairwise class-agreement result is
 above the 95% gate.
 

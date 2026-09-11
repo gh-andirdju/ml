@@ -25,6 +25,7 @@ artifacts.
 | Flickr GraphSAGE 2,048 | MPS versus Kaggle CPU versus T4 | [`flickr-2048-mps-cpu-cuda.json`](flickr-2048-mps-cpu-cuda.json) |
 | Flickr GraphSAGE 4,096 | MPS versus Kaggle CPU versus T4 | [`flickr-4096-mps-cpu-cuda.json`](flickr-4096-mps-cpu-cuda.json) |
 | Flickr GraphSAGE 8,192 | MPS versus Kaggle CPU versus T4 | [`flickr-8192-mps-cpu-cuda.json`](flickr-8192-mps-cpu-cuda.json) |
+| 17 - Flickr cuGraph-PyG | Kaggle Tesla T4 CUDA | [`kaggle-flickr-cugraph-pyg-t4.json`](kaggle-flickr-cugraph-pyg-t4.json) |
 
 Full Kaggle prediction artifacts and detached checksums are downloaded under
 ignored `.artifacts/` storage. Only compact execution/import evidence is kept in
@@ -44,4 +45,5 @@ Reproduce the live proof checks after downloading the ignored artifacts:
 ./poc/compare_kaggle_results.py .artifacts/flickr-2048-cpu/flickr-2048-cpu-result.json .artifacts/flickr-2048-cuda/flickr-2048-cuda-result.json --verify-kaggle-status --cpu-resource-usage .artifacts/flickr-2048-cpu/flickr-2048-cpu-resource-usage.json
 ./poc/compare_kaggle_results.py .artifacts/flickr-4096-cpu/flickr-4096-cpu-result.json .artifacts/flickr-4096-cuda/flickr-4096-cuda-result.json --verify-kaggle-status --cpu-resource-usage .artifacts/flickr-4096-cpu/flickr-4096-cpu-resource-usage.json
 bun run poc:compare:three -- .artifacts/flickr-8192-mps/flickr-8192-mps-result.json .artifacts/flickr-8192-cpu/flickr-8192-cpu-result.json .artifacts/flickr-8192-cuda/flickr-8192-cuda-result.json --verify-kaggle-status --cpu-resource-usage .artifacts/flickr-8192-cpu/flickr-8192-cpu-resource-usage.json --output results/flickr-8192-mps-cpu-cuda.json
+bun run poc:kaggle:cugraph-pyg:validate -- .artifacts/cugraph-pyg-v3/cugraph-pyg-flickr-result.json --verify-kaggle-status --force
 ```

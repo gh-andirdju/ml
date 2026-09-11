@@ -1,0 +1,101 @@
+{
+  "artifact_sha256": "a9afd4adefd3f5086d6c0890f20b1082c81da9685a8dfb7559a9238ed11f1128",
+  "dataset": {
+    "classes": 7,
+    "edges": 899756,
+    "features": 500,
+    "name": "Flickr",
+    "nodes": 89250,
+    "source": "torch_geometric.datasets.Flickr",
+    "test_nodes": 22313,
+    "training_nodes": 44625,
+    "validation_nodes": 22312
+  },
+  "execution": {
+    "batches_processed": 440,
+    "best_epoch": 7,
+    "cuda_capability": [
+      7,
+      5
+    ],
+    "cuda_device_count": 1,
+    "cuda_device_name": "Tesla T4",
+    "cuda_device_total_memory_bytes": 15636037632,
+    "cuda_peak_memory_bytes": 2489652224,
+    "cuda_peak_reserved_memory_bytes": 3477078016,
+    "device": "cuda:0",
+    "distributed_backend": "nccl",
+    "distributed_world_size": 1,
+    "epochs_completed": 10,
+    "feature_store_class": "FeatureStore",
+    "feature_store_module": "cugraph_pyg.data.feature_store",
+    "graph_store_class": "GraphStore",
+    "graph_store_module": "cugraph_pyg.data.graph_store",
+    "loader_class": "NeighborLoader",
+    "loader_module": "cugraph_pyg.loader.neighbor_loader",
+    "model_parameters": 391175,
+    "optimization_seconds": 24.51141,
+    "sampled_edges_processed": 86154606,
+    "sampled_nodes_processed": 27741458,
+    "sampling_seconds": 10.425472,
+    "seed_nodes_processed": 446250,
+    "source_revision": "75a50bf0a89b00d6d53ed6dd760cdc9de0158ae8",
+    "test_accuracy": 0.423565,
+    "training_seconds": 36.32021,
+    "validation_accuracy": 0.423897,
+    "validation_seconds": 0.943027
+  },
+  "frameworks": {
+    "cugraph_pyg": "26.2.1",
+    "pylibcugraph": "26.2.0",
+    "pylibwholegraph": "26.2.1",
+    "python": "3.12.13",
+    "torch": "2.10.0+cu128",
+    "torch_cuda": "12.8",
+    "torch_geometric": "2.7.0"
+  },
+  "generated_at": "2026-09-11T16:17:12Z",
+  "kaggle_run": {
+    "enable_gpu": true,
+    "enable_tpu": false,
+    "is_private": true,
+    "kernel_id": "andird/ml-poc-17-flickr-cugraph-pyg-t4",
+    "kernel_version": 3,
+    "machine_shape": "NvidiaTeslaT4",
+    "status": "COMPLETE",
+    "status_checked_at": "2026-09-11T16:17:12Z",
+    "url": "https://www.kaggle.com/code/andird/ml-poc-17-flickr-cugraph-pyg-t4",
+    "version_reference": "andird/ml-poc-17-flickr-cugraph-pyg-t4/3"
+  },
+  "model": {
+    "batch_size": 1024,
+    "dropout": 0.5,
+    "epochs_requested": 10,
+    "fanout": [
+      15,
+      10,
+      5
+    ],
+    "framework": "PyTorch Geometric",
+    "hidden_channels": 256,
+    "learning_rate": 0.01,
+    "patience": 4,
+    "sampling_backend": "cuGraph-PyG",
+    "seed": 42,
+    "type": "three-layer sampled GraphSAGE",
+    "weight_decay": 0.0005
+  },
+  "poc_id": "kaggle-flickr-cugraph-pyg-t4-v1",
+  "proof": {
+    "artifact_checksum_and_schema_valid": true,
+    "cugraph_comms_and_nccl_initialized": true,
+    "cugraph_pyg_loader_and_stores": true,
+    "flickr_accuracy_threshold_met": true,
+    "immutable_kaggle_version_complete": true,
+    "pytorch_geometric_model": true,
+    "single_t4_cuda": true
+  },
+  "proof_status": "PASS",
+  "status": "PASS",
+  "workload": "flickr-cugraph-pyg"
+}

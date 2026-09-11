@@ -2,8 +2,9 @@
 
 ## Current summary
 
-Sixteen verified execution proofs form seven GNN workloads across laptop and Kaggle
-compute. Every workload now has a recorded three-way comparison using Apple
+Seventeen verified execution proofs cover seven portable GNN workloads plus a
+CUDA-only cuGraph-PyG integration proof. Every portable workload has a recorded
+three-way comparison using Apple
 MPS, Kaggle CPU only, and Kaggle Tesla T4. Karate and WikiCS retain their local
 Neo4j proofs; Kaggle and Flickr comparison jobs remain database-free. A larger
 Flickr GraphSAGE CPU/T4 benchmark is the
@@ -20,6 +21,10 @@ GB capacity.
 POCs 15 and 16 verify an 8,192-channel, 142,540,807-parameter GraphSAGE model.
 Every environment pair agrees on 100% of predicted classes; the T4 is 25.848x
 faster than Kaggle CPU and 9.239x faster than MPS.
+
+POC 17 verifies that a PyG GraphSAGE model can train from cuGraph-PyG
+`GraphStore`, `FeatureStore`, and `NeighborLoader` batches on one visible
+Kaggle T4. It reached 42.36% Flickr test accuracy in 36.32 seconds.
 
 ```mermaid
 flowchart LR
@@ -62,6 +67,7 @@ the model code:
 ./poc/run_kaggle_flickr_4096_cuda.py
 ./poc/run_kaggle_flickr_8192_cpu.py
 ./poc/run_kaggle_flickr_8192_cuda.py
+./poc/run_kaggle_cugraph_pyg_cuda.py
 
 # Host-native MPS comparison artifacts
 ./poc/run_mps_karate_artifact.py
@@ -104,5 +110,6 @@ local RTX Blackwell `sm_120` targets.
 |  | [Flickr 2,048-channel benchmark](docs/06-validation/flickr-2048-kaggle-benchmark.md) |
 |  | [Flickr 4,096-channel benchmark](docs/06-validation/flickr-4096-kaggle-benchmark.md) |
 |  | [Flickr 8,192-channel benchmark](docs/06-validation/flickr-8192-kaggle-benchmark.md) |
+|  | [cuGraph-PyG Kaggle proof](docs/06-validation/cugraph-pyg-kaggle-poc.md) |
 |  | [Three-environment comparison](docs/06-validation/three-environment-comparison.md) |
 |  | [CUDA portability validator](docs/06-validation/cuda-portability-validator.md) |

@@ -44,6 +44,21 @@ def valid_artifact() -> dict:
 
 
 class CuGraphPyGPocTests(unittest.TestCase):
+    def test_committed_result_is_a_complete_version_three_proof(self) -> None:
+        result = json.loads(
+            (
+                PROJECT_ROOT / "results" / "kaggle-flickr-cugraph-pyg-t4.json"
+            ).read_text(encoding="utf8")
+        )
+        self.assertEqual(result["status"], "PASS")
+        self.assertEqual(result["proof_status"], "PASS")
+        self.assertTrue(all(result["proof"].values()))
+        self.assertEqual(result["kaggle_run"]["kernel_version"], 3)
+        self.assertEqual(result["kaggle_run"]["status"], "COMPLETE")
+        self.assertEqual(result["frameworks"]["cugraph_pyg"], "26.2.1")
+        self.assertEqual(result["execution"]["cuda_device_count"], 1)
+        self.assertGreaterEqual(result["execution"]["test_accuracy"], 0.30)
+
     def test_kaggle_environment_is_pinned_to_one_t4(self) -> None:
         metadata = json.loads(
             (
