@@ -30,6 +30,8 @@
     "poc:kaggle:flickr:4096:cuda": ".venv/bin/python ./poc/run_kaggle_flickr_4096_cuda.py",
     "poc:kaggle:flickr:8192:cpu": ".venv/bin/python ./poc/run_kaggle_flickr_8192_cpu.py",
     "poc:kaggle:flickr:8192:cuda": ".venv/bin/python ./poc/run_kaggle_flickr_8192_cuda.py",
+    "poc:kaggle:cugraph-pyg:cuda": ".venv/bin/python ./poc/run_kaggle_cugraph_pyg_cuda.py",
+    "poc:kaggle:cugraph-pyg:validate": ".venv/bin/python ./poc/validate_cugraph_pyg_result.py",
     "poc:kaggle:compare": ".venv/bin/python ./poc/compare_kaggle_results.py",
     "poc:compare:three": ".venv/bin/python ./poc/compare_three_environments.py",
     "poc:mps:karate:artifact": ".venv/bin/python ./poc/run_mps_karate_artifact.py",

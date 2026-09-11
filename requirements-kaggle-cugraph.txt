@@ -1,0 +1,2 @@
+torch-geometric==2.8.0.post1
+cugraph-pyg-cu12==26.8.0

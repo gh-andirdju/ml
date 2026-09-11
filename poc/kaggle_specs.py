@@ -26,6 +26,7 @@ FLICKR_8192_KAGGLE_CUDA_SOURCE_REVISION = (
     "7948fe518ffdd9f5115a79edae0f1ef3cc69e603"
 )
 FLICKR_8192_MINIMUM_CUDA_PEAK_BYTES = 12 * 1024**3
+CUGRAPH_PYG_KAGGLE_SOURCE_REVISION = "0000000000000000000000000000000000000000"
 
 
 @dataclass(frozen=True)
@@ -287,6 +288,17 @@ FLICKR_8192_MPS_SPEC = ArtifactSpec(
     device_type="mps",
 )
 
+CUGRAPH_PYG_FLICKR_KAGGLE_SPEC = ArtifactSpec(
+    poc_id="kaggle-flickr-cugraph-pyg-t4-v1",
+    target_poc_id="comparison-only",
+    dataset_name="Flickr",
+    nodes=89_250,
+    classes=7,
+    minimum_accuracy=0.30,
+    identity=FLICKR_IDENTITY,
+    source_revision=CUGRAPH_PYG_KAGGLE_SOURCE_REVISION,
+)
+
 SPECS_BY_POC_ID = {
     KARATE_KAGGLE_SPEC.poc_id: KARATE_KAGGLE_SPEC,
     WIKICS_KAGGLE_SPEC.poc_id: WIKICS_KAGGLE_SPEC,
@@ -313,6 +325,7 @@ COMPARISON_SPECS_BY_POC_ID = {
     FLICKR_8192_KAGGLE_CPU_SPEC.poc_id: FLICKR_8192_KAGGLE_CPU_SPEC,
     FLICKR_8192_KAGGLE_CUDA_SPEC.poc_id: FLICKR_8192_KAGGLE_CUDA_SPEC,
     FLICKR_8192_MPS_SPEC.poc_id: FLICKR_8192_MPS_SPEC,
+    CUGRAPH_PYG_FLICKR_KAGGLE_SPEC.poc_id: CUGRAPH_PYG_FLICKR_KAGGLE_SPEC,
 }
 
 KAGGLE_RUNS_BY_POC_ID = {
@@ -380,6 +393,12 @@ KAGGLE_RUNS_BY_POC_ID = {
         "andird/ml-poc-16-flickr-8192-graphsage-cuda",
         2,
         "kaggle/flickr-8192-cuda",
+        True,
+    ),
+    CUGRAPH_PYG_FLICKR_KAGGLE_SPEC.poc_id: KaggleRunSpec(
+        "andird/ml-poc-17-flickr-cugraph-pyg-t4",
+        1,
+        "kaggle/cugraph-pyg-cuda",
         True,
     ),
 }
