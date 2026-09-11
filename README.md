@@ -2,7 +2,7 @@
 
 ## Current summary
 
-Fourteen verified execution proofs form six GNN workloads across laptop and Kaggle
+Sixteen verified execution proofs form seven GNN workloads across laptop and Kaggle
 compute. Every workload now has a recorded three-way comparison using Apple
 MPS, Kaggle CPU only, and Kaggle Tesla T4. Karate and WikiCS retain their local
 Neo4j proofs; Kaggle and Flickr comparison jobs remain database-free. A larger
@@ -17,8 +17,9 @@ POCs 13 and 14 increase the width to 4,096 with activation checkpointing: T4 is
 38.388x faster than CPU, allocates 11.10 GB, and reserves 15.25 GB of its 15.64
 GB capacity.
 
-POCs 15 and 16 are ready to test an 8,192-channel, 142,540,807-parameter FP32
-GraphSAGE model with additional portable bounded-memory execution controls.
+POCs 15 and 16 verify an 8,192-channel, 142,540,807-parameter GraphSAGE model.
+Every environment pair agrees on 100% of predicted classes; the T4 is 25.848x
+faster than Kaggle CPU and 9.239x faster than MPS.
 
 ```mermaid
 flowchart LR

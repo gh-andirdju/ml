@@ -79,6 +79,51 @@ def valid_mps_artifact() -> dict:
 
 
 class ArtifactTests(unittest.TestCase):
+    def test_bfloat16_logits_export_fp32_normalized_scores(self) -> None:
+        artifact = artifact_from_logits(
+            spec=SPEC,
+            logits=torch.tensor(
+                [[3.0, 1.0], [1.0, 3.0]], dtype=torch.bfloat16
+            ),
+            model={"type": "test"},
+            execution={
+                "status": "PASS",
+                "device": "cuda:0",
+                "cuda_device_name": "Test GPU",
+                "accuracy": 1.0,
+                "precision": "bf16 activations with fp32 master weights",
+            },
+        )
+        for prediction in artifact["predictions"]:
+            self.assertAlmostEqual(sum(prediction["scores"]), 1.0, places=6)
+
+    def test_legacy_bfloat16_score_rounding_is_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "result.json"
+            artifact = valid_mps_artifact()
+            artifact["execution"]["precision"] = (
+                "bf16 activations with fp32 master weights"
+            )
+            artifact["predictions"][0]["scores"] = [
+                0.4990234375,
+                0.4990234375,
+            ]
+            write_artifact(path, artifact)
+            load_and_validate_artifact(path, MPS_SPEC)
+
+    def test_fp32_score_sum_keeps_strict_tolerance(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "result.json"
+            artifact = valid_artifact()
+            artifact["execution"]["precision"] = "fp32"
+            artifact["predictions"][0]["scores"] = [
+                0.4990234375,
+                0.4990234375,
+            ]
+            write_artifact(path, artifact)
+            with self.assertRaisesRegex(ProofError, "sum to one"):
+                load_and_validate_artifact(path, SPEC)
+
     def test_round_trip_validates_checksum_and_predictions(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "result.json"

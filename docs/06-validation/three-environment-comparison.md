@@ -1,11 +1,11 @@
 # Three-environment GNN comparison
 
-- Status: Verified PASS on 2026-09-06
+- Status: Verified PASS through 2026-09-11
 - Environments: Apple M2 Pro MPS, Kaggle CPU only, and Kaggle Tesla T4 CUDA
 - Coverage: every logical GNN workload
 - Agreement gate: at least 95% for every environment pair
 
-The fourteen numbered execution proofs represent six model-and-dataset workloads.
+The sixteen numbered execution proofs represent seven model-and-dataset workloads.
 Each workload now has checksummed prediction evidence from all three compute
 environments. MPS runs are host-native with CPU fallback disabled. Kaggle CPU
 runs reject CUDA, and Kaggle GPU runs require a single Tesla T4.
@@ -31,6 +31,7 @@ flowchart LR
 | Flickr GraphSAGE 1,024 | 99.3232% | 99.3580% | 99.9003% | 158.84s / 599.42s / 17.17s |
 | Flickr GraphSAGE 2,048 | 99.9238% | 99.9272% | 99.8723% | 576.98s / 1,521.33s / 56.58s |
 | Flickr GraphSAGE 4,096 | 99.5664% | 99.2807% | 99.3669% | 448.47s / 6,828.02s / 177.87s |
+| Flickr GraphSAGE 8,192 | 100.0000% | 100.0000% | 100.0000% | 4,822.46s / 13,491.88s / 521.98s |
 
 For Flickr-256, MPS was 6.458 times faster than Kaggle CPU and T4 was 6.035
 times faster than MPS. For Flickr-1,024, MPS was 3.774 times faster than Kaggle
@@ -41,6 +42,9 @@ For Flickr-2,048, MPS was 2.637 times faster than Kaggle CPU and T4 was
 
 For Flickr-4,096, MPS was 15.225 times faster than Kaggle CPU and T4 was 2.521
 times faster than MPS. The T4 was 38.388 times faster than Kaggle CPU.
+
+For Flickr-8,192, MPS was 2.798 times faster than Kaggle CPU and T4 was 9.239
+times faster than MPS. The T4 was 25.848 times faster than Kaggle CPU.
 
 Karate and WikiCS Kaggle artifacts did not define a training-only timing
 boundary, so their comparison is correctness-only. This is recorded as `null`,
@@ -69,6 +73,7 @@ behavior across backends, not bit-identical framework environments or scores.
 - [`flickr-wide-mps-cpu-cuda.json`](../../results/flickr-wide-mps-cpu-cuda.json)
 - [`flickr-2048-mps-cpu-cuda.json`](../../results/flickr-2048-mps-cpu-cuda.json)
 - [`flickr-4096-mps-cpu-cuda.json`](../../results/flickr-4096-mps-cpu-cuda.json)
+- [`flickr-8192-mps-cpu-cuda.json`](../../results/flickr-8192-mps-cpu-cuda.json)
 
 Full prediction artifacts remain in ignored `.artifacts/` storage. Flickr and
 CPU comparison artifacts are comparison-only and must not be imported into

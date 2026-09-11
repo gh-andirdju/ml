@@ -1,8 +1,8 @@
 # Implementation phases
 
-Both laptop proofs and all twelve Kaggle CPU/CUDA jobs are complete. Four timed
-Flickr comparisons pass through 4,096 hidden channels, using exact bounded-memory
-aggregation and activation checkpointing for the largest models. All six
+Both laptop proofs and all fourteen Kaggle CPU/CUDA jobs are complete. Five timed
+Flickr comparisons pass through 8,192 hidden channels, using exact bounded-memory
+aggregation and activation checkpointing for the largest models. All seven
 workloads have MPS, Kaggle CPU, and Kaggle T4 comparison records. Data-center
 implementation remains pending.
 
@@ -13,7 +13,8 @@ flowchart LR
     cpu --> larger[Larger Flickr timing pair<br/>verified]
     larger --> memory[Wide Flickr memory pair<br/>verified]
     memory --> larger_memory[Flickr 2,048 pair<br/>verified]
-    larger_memory --> maximum_memory[Flickr 4,096 pair<br/>verified]
+    larger_memory --> high_memory[Flickr 4,096 pair<br/>verified]
+    high_memory --> maximum_memory[Flickr 8,192 pair<br/>verified]
     maximum_memory --> foundation[Project foundation]
     foundation --> cluster[H200 packaging]
     cluster --> operations[Operations]

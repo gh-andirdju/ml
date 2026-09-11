@@ -18,6 +18,8 @@ from proof_common import ProofError, require
 SCHEMA_VERSION = 1
 ARTIFACT_TYPE = "gnn-node-predictions"
 MAX_ARTIFACT_BYTES = 50 * 1024 * 1024
+FP32_SCORE_SUM_TOLERANCE = 1e-4
+BF16_SCORE_SUM_TOLERANCE = 2e-3
 
 
 @dataclass(frozen=True)
@@ -45,7 +47,7 @@ def artifact_from_logits(
     execution: dict[str, Any],
 ) -> dict[str, Any]:
     require(tuple(logits.shape) == (spec.nodes, spec.classes), "Artifact logits shape mismatch")
-    probabilities = logits.softmax(dim=1)
+    probabilities = logits.float().softmax(dim=1)
     predictions = [
         {
             "node_id": node_id,
@@ -185,6 +187,12 @@ def load_and_validate_artifact(
     predictions = artifact.get("predictions")
     require(isinstance(predictions, list), "Predictions must be a list")
     require(len(predictions) == spec.nodes, "Prediction count does not match dataset")
+    precision = str(execution.get("precision", "")).lower()
+    score_sum_tolerance = (
+        BF16_SCORE_SUM_TOLERANCE
+        if "bf16" in precision
+        else FP32_SCORE_SUM_TOLERANCE
+    )
     for expected_id, prediction in enumerate(predictions):
         require(isinstance(prediction, dict), f"Prediction {expected_id} is not an object")
         require(prediction.get("node_id") == expected_id, "Prediction node IDs are incomplete")
@@ -206,6 +214,10 @@ def load_and_validate_artifact(
             ),
             f"Scores are outside [0, 1] for node {expected_id}",
         )
-        require(abs(sum(float(score) for score in scores) - 1.0) <= 1e-4, f"Scores do not sum to one for node {expected_id}")
+        require(
+            abs(sum(float(score) for score in scores) - 1.0)
+            <= score_sum_tolerance,
+            f"Scores do not sum to one for node {expected_id}",
+        )
         require(max(range(spec.classes), key=lambda index: scores[index]) == predicted_class, f"Prediction is not the score argmax for node {expected_id}")
     return artifact, actual_digest

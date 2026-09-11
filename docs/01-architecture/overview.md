@@ -54,12 +54,18 @@ flowchart LR
 | 8 | Kaggle Tesla T4 CUDA | Flickr GraphSAGE: 6.31 seconds, 42.35% test accuracy |
 | 9 | Kaggle CPU only | Wide Flickr GraphSAGE: 599.42 seconds, 42.33% test accuracy |
 | 10 | Kaggle Tesla T4 CUDA | Wide Flickr: 17.17 seconds, 6.88 GB peak allocated |
+| 11 | Kaggle CPU only | Flickr 2,048: 1,521.33 seconds, 12.13 GB peak RSS |
+| 12 | Kaggle Tesla T4 CUDA | Flickr 2,048: 56.58 seconds, 10.35 GB peak allocated |
+| 13 | Kaggle CPU only | Flickr 4,096: 6,828.02 seconds, 11.72 GB peak RSS |
+| 14 | Kaggle Tesla T4 CUDA | Flickr 4,096: 177.87 seconds, 11.10 GB peak allocated |
+| 15 | Kaggle CPU only | Flickr 8,192: 13,491.88 seconds, 15.52 GiB peak RSS |
+| 16 | Kaggle Tesla T4 CUDA | Flickr 8,192: 521.98 seconds, 12.68 GiB peak allocated |
 
-All ten keep compute selection outside model definitions. Kaggle receives no
+All sixteen keep compute selection outside model definitions. Kaggle receives no
 database credential and runs no Neo4j process.
 
 Every logical workload has checksummed MPS, Kaggle CPU, and Kaggle T4 evidence.
-All twelve environment cells pass, and every pairwise class-agreement result is
+All 21 environment cells pass, and every pairwise class-agreement result is
 above the 95% gate.
 
 ## Open decisions

@@ -1,6 +1,6 @@
 # Flickr 8,192-channel benchmark
 
-- Status: MPS and T4 pass; Kaggle CPU version 1 running
+- Status: Verified PASS on MPS, Kaggle CPU version 1, and Kaggle T4 version 2
 - POC 15: Flickr GraphSAGE on Kaggle CPU only
 - POC 16: the identical workload on one Kaggle Tesla T4
 - Third environment: host-native Apple MPS with CPU fallback disabled
@@ -38,18 +38,20 @@ the graph, layer formula, FP32 master weights, loss, optimizer, and trainable
 parameter count remain identical. Activation precision is recorded per backend.
 MPS saved-tensor offload is also recorded as execution metadata.
 
-## Verified results so far
+## Verified results
 
 | Environment | Training time | Test accuracy | Result |
 | --- | ---: | ---: | --- |
 | Apple MPS | 4,822.456 s | 42.343% | PASS |
 | Kaggle Tesla T4 | 521.977 s | 42.343% | PASS |
-| Kaggle CPU only | Running | Pending | Pending |
+| Kaggle CPU only | 13,491.876 s | 42.343% | PASS |
 
-The T4 is 9.239 times faster than MPS for training and used 13,618,750,976
-bytes (12.68 GiB) peak CUDA allocation. MPS and T4 agree on the predicted class
-for all 89,250 nodes. The compact partial record is
-[`results/flickr-8192-mps-vs-t4.json`](../../results/flickr-8192-mps-vs-t4.json).
+The T4 is 25.848 times faster than Kaggle CPU and 9.239 times faster than MPS;
+MPS is 2.798 times faster than Kaggle CPU. Every environment pair agrees on the
+predicted class for all 89,250 nodes. T4 peak CUDA allocation was 13,618,750,976
+bytes (12.68 GiB), while the CPU runner reached 16,666,816,512 bytes (15.52 GiB)
+peak RSS. The canonical record is
+[`results/flickr-8192-mps-cpu-cuda.json`](../../results/flickr-8192-mps-cpu-cuda.json).
 
 ## Acceptance checks
 
